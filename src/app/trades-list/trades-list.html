@@ -1,1 +1,37 @@
-<p>trades-list works!</p>
+<div class="p-6">
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-xl font-semibold">Your Trades</h1>
+    <button (click)="logout()" class="text-sm text-red-600">Log out</button>
+  </div>
+
+  @if (trades().length === 0) {
+    <p class="text-gray-500">No trades yet.</p>
+  } @else {
+    <table class="w-full border-collapse">
+      <thead>
+        <tr class="text-left border-b">
+          <th class="py-2">Date</th>
+          <th class="py-2">Symbol</th>
+          <th class="py-2">Direction</th>
+          <th class="py-2">Net P/L</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (trade of trades(); track trade.id) {
+          <tr class="border-b">
+            <td class="py-2">{{ trade.trade_date }}</td>
+            <td class="py-2">{{ trade.symbol }}</td>
+            <td class="py-2">{{ trade.direction }}</td>
+            <td
+              class="py-2"
+              [class.text-green-600]="trade.netPnl > 0"
+              [class.text-red-600]="trade.netPnl < 0"
+            >
+              {{ trade.netPnl }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
