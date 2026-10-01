@@ -2,79 +2,90 @@
   <h1 class="text-xl font-semibold mb-4">Edit Trade</h1>
 
   @if (loaded()) {
-    <form (ngSubmit)="onSubmit()">
+    <form (ngSubmit)="onSubmit()" class="bg-bg-surface border border-border-default rounded-lg p-6">
       @if (errorMessage) {
-        <p class="text-red-600 text-sm mb-3">{{ errorMessage }}</p>
+        <p class="text-danger text-sm mb-3">{{ errorMessage }}</p>
       }
 
-      <label class="block text-sm mb-1">Date</label>
+      <label class="block text-sm mb-1 text-text-secondary">Date</label>
       <input
         type="date"
         [(ngModel)]="trade_date"
         name="trade_date"
-        class="w-full border rounded px-3 py-2 mb-3"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
       />
 
-      <label class="block text-sm mb-1">Symbol</label>
-      <select [(ngModel)]="symbol" name="symbol" class="w-full border rounded px-3 py-2 mb-3">
+      <label class="block text-sm mb-1 text-text-secondary">Symbol</label>
+      <select
+        [(ngModel)]="symbol"
+        name="symbol"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
+      >
         <option value="MNQ">MNQ</option>
         <option value="NQ">NQ</option>
       </select>
 
-      <label class="block text-sm mb-1">Direction</label>
-      <select [(ngModel)]="direction" name="direction" class="w-full border rounded px-3 py-2 mb-3">
+      <label class="block text-sm mb-1 text-text-secondary">Direction</label>
+      <select
+        [(ngModel)]="direction"
+        name="direction"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
+      >
         <option value="long">Long</option>
         <option value="short">Short</option>
       </select>
 
-      <label class="block text-sm mb-1">Contracts</label>
+      <label class="block text-sm mb-1 text-text-secondary">Contracts</label>
       <input
         type="number"
         [(ngModel)]="contracts"
         name="contracts"
-        class="w-full border rounded px-3 py-2 mb-3"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
       />
 
-      <label class="block text-sm mb-1">Entry Price</label>
+      <label class="block text-sm mb-1 text-text-secondary">Entry Price</label>
       <input
         type="number"
         step="0.01"
         [(ngModel)]="entry_price"
         name="entry_price"
-        class="w-full border rounded px-3 py-2 mb-3"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
       />
 
-      <label class="block text-sm mb-1">Exit Price</label>
+      <label class="block text-sm mb-1 text-text-secondary">Exit Price</label>
       <input
         type="number"
         step="0.01"
         [(ngModel)]="exit_price"
         name="exit_price"
-        class="w-full border rounded px-3 py-2 mb-3"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
       />
 
-      <label class="block text-sm mb-1">Fees</label>
+      <label class="block text-sm mb-1 text-text-secondary">Fees</label>
       <input
         type="number"
         step="0.01"
         [(ngModel)]="fees"
         name="fees"
-        class="w-full border rounded px-3 py-2 mb-3"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-3 text-text-primary"
       />
 
-      <label class="block text-sm mb-1">Strategy</label>
+      <label class="block text-sm mb-1 text-text-secondary">Strategy</label>
       <input
         type="text"
         [(ngModel)]="strategy"
         name="strategy"
-        class="w-full border rounded px-3 py-2 mb-4"
+        class="w-full bg-bg-raised border border-border-default rounded px-3 py-2 mb-4 text-text-primary"
       />
 
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+      <button
+        type="submit"
+        class="w-full bg-accent-solid text-text-on-accent py-2 rounded hover:opacity-90"
+      >
         Save Changes
       </button>
     </form>
   } @else {
-    <p class="text-gray-500">Loading...</p>
+    <p class="text-text-muted">Loading...</p>
   }
 </div>

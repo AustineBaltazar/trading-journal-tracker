@@ -1,3 +1,25 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --color-bg-app: #0f1115;
+  --color-bg-surface: #161a22;
+  --color-bg-raised: #1f2430;
+  --color-border-default: #2b313d;
+  --color-text-primary: #e6e9f0;
+  --color-text-secondary: #a0a8b8;
+  --color-text-muted: #6e7686;
+  --color-success: #4ade80;
+  --color-success-bg: #12281d;
+  --color-success-border: #1f4d35;
+  --color-danger: #f87171;
+  --color-danger-bg: #2e1719;
+  --color-danger-border: #5a2528;
+  --color-accent: #7fb0ff;
+  --color-accent-bg: #16233a;
+  --color-accent-solid: #4f8cff;
+}
+
+body {
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+}

@@ -2,43 +2,43 @@
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-xl font-semibold">Your Trades</h1>
     <div class="flex gap-3">
-      <a routerLink="/trades/new" class="text-sm text-blue-600">+ New Trade</a>
-      <button (click)="logout()" class="text-sm text-red-600">Log out</button>
+      <a routerLink="/trades/new" class="text-sm text-accent">+ New Trade</a>
+      <button (click)="logout()" class="text-sm text-danger">Log out</button>
     </div>
   </div>
 
   @if (trades().length === 0) {
-    <p class="text-gray-500">No trades yet.</p>
+    <p class="text-text-muted">No trades yet.</p>
   } @else {
-    <table class="w-full border-collapse">
+    <table
+      class="w-full border-collapse bg-bg-surface border border-border-default rounded-lg overflow-hidden"
+    >
       <thead>
-        <tr class="text-left border-b">
-          <th class="py-2">Date</th>
-          <th class="py-2">Symbol</th>
-          <th class="py-2">Direction</th>
-          <th class="py-2">Net P/L</th>
-          <th class="py-2"></th>
+        <tr class="text-left border-b border-border-default">
+          <th class="py-2 px-3 text-text-secondary text-sm font-medium">Date</th>
+          <th class="py-2 px-3 text-text-secondary text-sm font-medium">Symbol</th>
+          <th class="py-2 px-3 text-text-secondary text-sm font-medium">Direction</th>
+          <th class="py-2 px-3 text-text-secondary text-sm font-medium">Net P/L</th>
+          <th class="py-2 px-3"></th>
         </tr>
       </thead>
       <tbody>
         @for (trade of trades(); track trade.id) {
-          <tr class="border-b">
-            <td class="py-2">{{ trade.trade_date }}</td>
-            <td class="py-2">{{ trade.symbol }}</td>
-            <td class="py-2">{{ trade.direction }}</td>
+          <tr class="border-b border-border-default">
+            <td class="py-2 px-3">{{ trade.trade_date }}</td>
+            <td class="py-2 px-3">{{ trade.symbol }}</td>
+            <td class="py-2 px-3">{{ trade.direction }}</td>
             <td
-              class="py-2"
-              [class.text-green-600]="trade.netPnl > 0"
-              [class.text-red-600]="trade.netPnl < 0"
+              class="py-2 px-3"
+              [class.text-success]="trade.netPnl > 0"
+              [class.text-danger]="trade.netPnl < 0"
             >
               {{ trade.netPnl }}
             </td>
-            <td class="py-2">
-              <a [routerLink]="['/trades', trade.id]" class="text-sm text-blue-600 mr-3">View</a>
-              <a [routerLink]="['/trades/edit', trade.id]" class="text-sm text-blue-600 mr-3"
-                >Edit</a
-              >
-              <button (click)="deleteTrade(trade.id)" class="text-sm text-red-600">Delete</button>
+            <td class="py-2 px-3">
+              <a [routerLink]="['/trades', trade.id]" class="text-sm text-accent mr-3">View</a>
+              <a [routerLink]="['/trades/edit', trade.id]" class="text-sm text-accent mr-3">Edit</a>
+              <button (click)="deleteTrade(trade.id)" class="text-sm text-danger">Delete</button>
             </td>
           </tr>
         }

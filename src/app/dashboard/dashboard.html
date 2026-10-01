@@ -2,33 +2,33 @@
   <h1 class="text-xl font-semibold mb-4">Dashboard</h1>
 
   @if (summary() === null) {
-    <p class="text-gray-500">Loading...</p>
+    <p class="text-text-muted">Loading...</p>
   } @else {
     <div class="grid grid-cols-4 gap-4">
-      <div class="border rounded p-4">
-        <p class="text-sm text-gray-500">Total P/L</p>
+      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
+        <p class="text-sm text-text-secondary">Total P/L</p>
         <p
           class="text-2xl font-semibold"
-          [class.text-green-600]="summary().totalPnl > 0"
-          [class.text-red-600]="summary().totalPnl < 0"
+          [class.text-success]="summary().totalPnl > 0"
+          [class.text-danger]="summary().totalPnl < 0"
         >
           {{ summary().totalPnl }}
         </p>
       </div>
-      <div class="border rounded p-4">
-        <p class="text-sm text-gray-500">Win Rate</p>
+      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
+        <p class="text-sm text-text-secondary">Win Rate</p>
         <p class="text-2xl font-semibold">{{ summary().winRate }}%</p>
       </div>
-      <div class="border rounded p-4">
-        <p class="text-sm text-gray-500">Trades</p>
+      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
+        <p class="text-sm text-text-secondary">Trades</p>
         <p class="text-2xl font-semibold">{{ summary().totalTrades }}</p>
       </div>
-      <div class="border rounded p-4">
-        <p class="text-sm text-gray-500">Wins / Losses</p>
+      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
+        <p class="text-sm text-text-secondary">Wins / Losses</p>
         <p class="text-2xl font-semibold">{{ summary().wins }} / {{ summary().losses }}</p>
       </div>
     </div>
   }
 
-  <a routerLink="/trades" class="inline-block mt-6 text-sm text-blue-600">View all trades →</a>
+  <a routerLink="/trades" class="inline-block mt-6 text-sm text-accent">View all trades →</a>
 </div>
