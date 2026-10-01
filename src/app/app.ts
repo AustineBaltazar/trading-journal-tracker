@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { TradesList } from './trades-list/trades-list';
 
 @Component({
   imports: [RouterOutlet],

@@ -1,0 +1,29 @@
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+  <form (ngSubmit)="onSubmit()" class="bg-white p-8 rounded-lg shadow-md w-80">
+    <h1 class="text-xl font-semibold mb-4">Log in</h1>
+
+    @if (errorMessage) {
+      <p class="text-red-600 text-sm mb-3">{{ errorMessage }}</p>
+    }
+
+    <label class="block text-sm mb-1">Email</label>
+    <input
+      type="text"
+      [(ngModel)]="email"
+      name="email"
+      class="w-full border rounded px-3 py-2 mb-3"
+    />
+
+    <label class="block text-sm mb-1">Password</label>
+    <input
+      type="password"
+      [(ngModel)]="password"
+      name="password"
+      class="w-full border rounded px-3 py-2 mb-4"
+    />
+
+    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+      Log in
+    </button>
+  </form>
+</div>
