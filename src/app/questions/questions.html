@@ -1,0 +1,31 @@
+<div class="p-6 max-w-md">
+  <h1 class="text-xl font-semibold mb-4">Playbook: Review Questions</h1>
+
+  @if (errorMessage) {
+    <p class="text-red-600 text-sm mb-3">{{ errorMessage }}</p>
+  }
+
+  <form (ngSubmit)="addQuestion()" class="flex gap-2 mb-6">
+    <input
+      type="text"
+      [(ngModel)]="newQuestionText"
+      name="newQuestionText"
+      placeholder="New question"
+      class="flex-1 border rounded px-3 py-2"
+    />
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
+  </form>
+
+  @if (questions().length === 0) {
+    <p class="text-gray-500">No questions yet.</p>
+  } @else {
+    <ul>
+      @for (q of questions(); track q.id) {
+        <li class="flex justify-between items-center border-b py-2">
+          <span>{{ q.question_text }}</span>
+          <button (click)="deleteQuestion(q.id)" class="text-sm text-red-600">Delete</button>
+        </li>
+      }
+    </ul>
+  }
+</div>

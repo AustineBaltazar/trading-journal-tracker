@@ -1,0 +1,20 @@
+<div class="flex min-h-screen">
+  <nav class="w-48 border-r p-4 flex flex-col gap-2">
+    <a routerLink="/dashboard" routerLinkActive="font-bold text-blue-600" class="text-gray-700"
+      >Dashboard</a
+    >
+    <a routerLink="/trades" routerLinkActive="font-bold text-blue-600" class="text-gray-700"
+      >Trades</a
+    >
+    <a routerLink="/rules" routerLinkActive="font-bold text-blue-600" class="text-gray-700"
+      >Rules</a
+    >
+    <a routerLink="/questions" routerLinkActive="font-bold text-blue-600" class="text-gray-700"
+      >Questions</a
+    >
+  </nav>
+
+  <div class="flex-1">
+    <router-outlet />
+  </div>
+</div>

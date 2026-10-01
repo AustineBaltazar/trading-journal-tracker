@@ -34,6 +34,7 @@
               {{ trade.netPnl }}
             </td>
             <td class="py-2">
+              <a [routerLink]="['/trades', trade.id]" class="text-sm text-blue-600 mr-3">View</a>
               <a [routerLink]="['/trades/edit', trade.id]" class="text-sm text-blue-600 mr-3"
                 >Edit</a
               >

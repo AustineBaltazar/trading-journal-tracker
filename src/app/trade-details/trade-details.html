@@ -1,0 +1,81 @@
+<div class="p-6 max-w-2xl">
+  @if (trade() === null) {
+    <p class="text-gray-500">Loading...</p>
+  } @else {
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-xl font-semibold">
+        {{ trade().symbol }} {{ trade().direction }} — {{ trade().trade_date }}
+      </h1>
+      <a [routerLink]="['/trades/edit', trade().id]" class="text-sm text-blue-600">Edit Trade</a>
+    </div>
+
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="border rounded p-3">
+        <p class="text-xs text-gray-500">Entry</p>
+        <p class="font-semibold">{{ trade().entry_price }}</p>
+      </div>
+      <div class="border rounded p-3">
+        <p class="text-xs text-gray-500">Exit</p>
+        <p class="font-semibold">{{ trade().exit_price }}</p>
+      </div>
+      <div class="border rounded p-3">
+        <p class="text-xs text-gray-500">Contracts</p>
+        <p class="font-semibold">{{ trade().contracts }}</p>
+      </div>
+      <div class="border rounded p-3">
+        <p class="text-xs text-gray-500">Net P/L</p>
+        <p
+          class="font-semibold"
+          [class.text-green-600]="trade().netPnl > 0"
+          [class.text-red-600]="trade().netPnl < 0"
+        >
+          {{ trade().netPnl }}
+        </p>
+      </div>
+    </div>
+
+    <h2 class="font-semibold mb-2">Rules Followed</h2>
+    <div class="mb-6">
+      @if (allRules().length === 0) {
+        <p class="text-gray-500 text-sm">No rules in your Playbook yet.</p>
+      } @else {
+        @for (rule of allRules(); track rule.id) {
+          <label class="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              [checked]="isRuleFollowed(rule.id)"
+              (change)="toggleRule(rule.id, $event)"
+            />
+            <span>{{ rule.name }}</span>
+          </label>
+        }
+      }
+    </div>
+
+    <h2 class="font-semibold mb-2">Review Questions</h2>
+    <div>
+      @if (allQuestions().length === 0) {
+        <p class="text-gray-500 text-sm">No questions in your Playbook yet.</p>
+      } @else {
+        @for (q of allQuestions(); track q.id) {
+          <div class="border rounded p-3 mb-3">
+            <p class="text-sm mb-2">{{ q.question_text }}</p>
+            <div class="flex gap-4">
+              @for (option of ['yes', 'no', 'other']; track option) {
+                <label class="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    [name]="'q' + q.id"
+                    [checked]="getAnswer(q.id)?.choice === option"
+                    (change)="saveAnswer(q.id, option, getAnswer(q.id)?.comment || '')"
+                  />
+                  {{ option }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+</div>
