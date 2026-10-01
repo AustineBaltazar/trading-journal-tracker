@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-trades-list',
   styleUrl: './trades-list.css',
   templateUrl: './trades-list.html',
@@ -22,6 +23,18 @@ export class TradesList implements OnInit {
       })
       .subscribe((response) => {
         this.trades.set(response.trades);
+      });
+  }
+
+  deleteTrade(id: number) {
+    const token = localStorage.getItem('token');
+
+    this.http
+      .delete<any>(`http://localhost:3001/trades/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .subscribe(() => {
+        this.trades.update((current) => current.filter((trade) => trade.id !== id));
       });
   }
 

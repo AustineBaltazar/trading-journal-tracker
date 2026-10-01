@@ -1,0 +1,80 @@
+<div class="p-6 max-w-md">
+  <h1 class="text-xl font-semibold mb-4">Edit Trade</h1>
+
+  @if (loaded()) {
+    <form (ngSubmit)="onSubmit()">
+      @if (errorMessage) {
+        <p class="text-red-600 text-sm mb-3">{{ errorMessage }}</p>
+      }
+
+      <label class="block text-sm mb-1">Date</label>
+      <input
+        type="date"
+        [(ngModel)]="trade_date"
+        name="trade_date"
+        class="w-full border rounded px-3 py-2 mb-3"
+      />
+
+      <label class="block text-sm mb-1">Symbol</label>
+      <select [(ngModel)]="symbol" name="symbol" class="w-full border rounded px-3 py-2 mb-3">
+        <option value="MNQ">MNQ</option>
+        <option value="NQ">NQ</option>
+      </select>
+
+      <label class="block text-sm mb-1">Direction</label>
+      <select [(ngModel)]="direction" name="direction" class="w-full border rounded px-3 py-2 mb-3">
+        <option value="long">Long</option>
+        <option value="short">Short</option>
+      </select>
+
+      <label class="block text-sm mb-1">Contracts</label>
+      <input
+        type="number"
+        [(ngModel)]="contracts"
+        name="contracts"
+        class="w-full border rounded px-3 py-2 mb-3"
+      />
+
+      <label class="block text-sm mb-1">Entry Price</label>
+      <input
+        type="number"
+        step="0.01"
+        [(ngModel)]="entry_price"
+        name="entry_price"
+        class="w-full border rounded px-3 py-2 mb-3"
+      />
+
+      <label class="block text-sm mb-1">Exit Price</label>
+      <input
+        type="number"
+        step="0.01"
+        [(ngModel)]="exit_price"
+        name="exit_price"
+        class="w-full border rounded px-3 py-2 mb-3"
+      />
+
+      <label class="block text-sm mb-1">Fees</label>
+      <input
+        type="number"
+        step="0.01"
+        [(ngModel)]="fees"
+        name="fees"
+        class="w-full border rounded px-3 py-2 mb-3"
+      />
+
+      <label class="block text-sm mb-1">Strategy</label>
+      <input
+        type="text"
+        [(ngModel)]="strategy"
+        name="strategy"
+        class="w-full border rounded px-3 py-2 mb-4"
+      />
+
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        Save Changes
+      </button>
+    </form>
+  } @else {
+    <p class="text-gray-500">Loading...</p>
+  }
+</div>

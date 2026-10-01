@@ -1,7 +1,10 @@
 <div class="p-6">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-xl font-semibold">Your Trades</h1>
-    <button (click)="logout()" class="text-sm text-red-600">Log out</button>
+    <div class="flex gap-3">
+      <a routerLink="/trades/new" class="text-sm text-blue-600">+ New Trade</a>
+      <button (click)="logout()" class="text-sm text-red-600">Log out</button>
+    </div>
   </div>
 
   @if (trades().length === 0) {
@@ -14,6 +17,7 @@
           <th class="py-2">Symbol</th>
           <th class="py-2">Direction</th>
           <th class="py-2">Net P/L</th>
+          <th class="py-2"></th>
         </tr>
       </thead>
       <tbody>
@@ -28,6 +32,12 @@
               [class.text-red-600]="trade.netPnl < 0"
             >
               {{ trade.netPnl }}
+            </td>
+            <td class="py-2">
+              <a [routerLink]="['/trades/edit', trade.id]" class="text-sm text-blue-600 mr-3"
+                >Edit</a
+              >
+              <button (click)="deleteTrade(trade.id)" class="text-sm text-red-600">Delete</button>
             </td>
           </tr>
         }
