@@ -17,9 +17,40 @@
   --color-accent: #7fb0ff;
   --color-accent-bg: #16233a;
   --color-accent-solid: #4f8cff;
+  --color-space-950: #070a0f;
+  --color-space-900: #0b0f17;
+  --color-space-850: #0e1420;
+  --color-space-800: #141b2d;
+  --color-space-700: #1e293b;
+  --color-space-600: #334155;
+  --color-carbon-950: #07090e;
+  --color-carbon-900: #0b0f17;
+  --color-carbon-850: #0f1422;
+  --color-carbon-800: #131b2e;
+  --color-carbon-700: #1e293d;
+  --color-carbon-600: #2d3b55;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+.surface-card {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.7) 0%, rgba(11, 15, 23, 0.95) 100%);
+  backdrop-filter: blur(12px);
 }
 
 body {
   background-color: var(--color-bg-app);
   color: var(--color-text-primary);
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-default);
+  border-radius: 3px;
 }

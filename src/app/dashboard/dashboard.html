@@ -1,34 +1,319 @@
-<div class="p-6">
-  <h1 class="text-xl font-semibold mb-4">Dashboard</h1>
+<div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-base font-semibold text-white tracking-tight">Dashboard</h1>
+      <p class="text-[11px] text-slate-500">{{ monthLabel() }} overview</p>
+    </div>
+    <a
+      routerLink="/trades"
+      class="px-3.5 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90 text-slate-950 text-xs font-semibold transition"
+    >
+      + New trade
+    </a>
+  </div>
 
   @if (summary() === null) {
-    <p class="text-text-muted">Loading...</p>
+    <p class="text-slate-500">Loading...</p>
   } @else {
-    <div class="grid grid-cols-4 gap-4">
-      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
-        <p class="text-sm text-text-secondary">Total P/L</p>
-        <p
-          class="text-2xl font-semibold"
-          [class.text-success]="summary().totalPnl > 0"
-          [class.text-danger]="summary().totalPnl < 0"
+    <!-- KPI cards -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="surface-card border border-slate-800/80 rounded-xl p-4">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+          <span class="font-medium">Total P/L</span>
+        </div>
+        <div
+          class="text-2xl font-bold font-mono tracking-tight"
+          [class.text-emerald-400]="summary().totalPnl > 0"
+          [class.text-rose-400]="summary().totalPnl < 0"
+          [class.text-white]="summary().totalPnl === 0"
         >
-          {{ summary().totalPnl }}
-        </p>
+          {{ summary().totalPnl > 0 ? '+' : '' }}{{ summary().totalPnl | number: '1.2-2' }}
+        </div>
+        <div class="text-[11px] text-slate-500 mt-1 font-mono">
+          avg {{ kpiStats().avgPerTrade > 0 ? '+' : '' }}{{ kpiStats().avgPerTrade }}/trade
+        </div>
       </div>
-      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
-        <p class="text-sm text-text-secondary">Win Rate</p>
-        <p class="text-2xl font-semibold">{{ summary().winRate }}%</p>
-      </div>
-      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
-        <p class="text-sm text-text-secondary">Trades</p>
-        <p class="text-2xl font-semibold">{{ summary().totalTrades }}</p>
-      </div>
-      <div class="bg-bg-surface border border-border-default rounded-lg p-4">
-        <p class="text-sm text-text-secondary">Wins / Losses</p>
-        <p class="text-2xl font-semibold">{{ summary().wins }} / {{ summary().losses }}</p>
-      </div>
-    </div>
-  }
 
-  <a routerLink="/trades" class="inline-block mt-6 text-sm text-accent">View all trades →</a>
+      <div class="surface-card border border-slate-800/80 rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-medium mb-1.5">Win rate</div>
+        <div class="text-2xl font-bold font-mono text-white tracking-tight">
+          {{ summary().winRate }}%
+        </div>
+        <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+          <div
+            class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full"
+            [style.width.%]="summary().winRate"
+          ></div>
+        </div>
+      </div>
+
+      <div class="surface-card border border-slate-800/80 rounded-xl p-4">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+          <span class="font-medium">Trades</span>
+          <span>{{ kpiStats().tradingDays }} trading days</span>
+        </div>
+        <div class="text-2xl font-bold font-mono text-white tracking-tight">
+          {{ summary().totalTrades }}
+        </div>
+        <div class="text-[11px] text-slate-500 mt-1 font-mono">
+          avg {{ kpiStats().avgPerDay }}/day
+        </div>
+      </div>
+
+      <div class="surface-card border border-slate-800/80 rounded-xl p-4">
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+          <span class="font-medium">Wins / losses</span>
+          <span
+            class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700"
+            >{{ kpiStats().profitFactor }} PF</span
+          >
+        </div>
+        <div class="text-2xl font-bold font-mono tracking-tight flex items-center gap-2">
+          <span class="text-emerald-400">{{ summary().wins }}</span>
+          <span class="text-slate-600 font-normal">/</span>
+          <span class="text-rose-400">{{ summary().losses }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Equity curve -->
+    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+      <div class="flex items-baseline gap-2 mb-4">
+        <h2 class="text-sm font-semibold text-white tracking-wide">Equity curve</h2>
+        <span class="text-xs text-slate-400">Cumulative net P/L</span>
+      </div>
+
+      @if (trades().length === 0) {
+        <p class="text-slate-500 text-sm">No trades yet to chart.</p>
+      } @else {
+        <svg viewBox="0 0 660 190" class="w-full h-56">
+          <defs>
+            <linearGradient id="equityFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.22" />
+              <stop offset="100%" stop-color="#38BDF8" stop-opacity="0" />
+            </linearGradient>
+            <linearGradient id="equityStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#60A5FA" />
+              <stop offset="50%" stop-color="#38BDF8" />
+              <stop offset="100%" stop-color="#34D399" />
+            </linearGradient>
+          </defs>
+
+          <line
+            x1="60"
+            y1="20"
+            x2="660"
+            y2="20"
+            stroke="#1E293B"
+            stroke-dasharray="4 4"
+            stroke-width="1"
+          />
+          <line
+            x1="60"
+            y1="85"
+            x2="660"
+            y2="85"
+            stroke="#1E293B"
+            stroke-dasharray="4 4"
+            stroke-width="1"
+          />
+          <line x1="60" y1="150" x2="660" y2="150" stroke="#334155" stroke-width="1" />
+
+          <text x="50" y="24" fill="#64748B" font-size="11" text-anchor="end">
+            ${{ chartData().maxValue | number: '1.0-0' }}
+          </text>
+          <text x="50" y="89" fill="#64748B" font-size="11" text-anchor="end">
+            ${{ chartData().maxValue / 2 | number: '1.0-0' }}
+          </text>
+          <text x="50" y="154" fill="#64748B" font-size="11" text-anchor="end">$0</text>
+
+          <g transform="translate(60, 0)">
+            <polygon [attr.points]="chartData().areaPoints" fill="url(#equityFill)" />
+            <polyline
+              [attr.points]="chartData().linePoints"
+              fill="none"
+              stroke="url(#equityStroke)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle
+              [attr.cx]="chartData().lastX"
+              [attr.cy]="chartData().lastY"
+              r="4.5"
+              fill="#38BDF8"
+              stroke="#0B0F17"
+              stroke-width="2"
+            />
+            <circle
+              [attr.cx]="chartData().lastX"
+              [attr.cy]="chartData().lastY"
+              r="8"
+              fill="#38BDF8"
+              opacity="0.3"
+              class="animate-ping"
+            />
+          </g>
+
+          <text x="60" y="180" fill="#64748B" font-size="11">{{ chartData().firstDate }}</text>
+          <text x="660" y="180" fill="#64748B" font-size="11" text-anchor="end">
+            {{ chartData().lastDate }}
+          </text>
+        </svg>
+      }
+    </section>
+
+    <!-- Calendar heatmap -->
+    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+      <div class="flex items-center justify-between pb-5 border-b border-slate-800/80">
+        <h3 class="text-sm font-semibold text-white tracking-wide">Monthly trading heatmap</h3>
+        <div
+          class="flex items-center gap-4 bg-space-900 px-3 py-1.5 rounded-lg border border-slate-800"
+        >
+          <button (click)="previousMonth()" class="text-slate-400 hover:text-white transition">
+            ‹
+          </button>
+          <span class="font-semibold text-xs text-white font-mono">{{ monthLabel() }}</span>
+          <button (click)="nextMonth()" class="text-slate-400 hover:text-white transition">
+            ›
+          </button>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-400">Month net:</span>
+          <span
+            class="font-mono font-bold px-2 py-0.5 rounded border"
+            [class.text-emerald-400]="monthlyTotal() > 0"
+            [class.bg-emerald-500]="monthlyTotal() > 0"
+            [class.border-emerald-500]="monthlyTotal() > 0"
+            [class.text-rose-400]="monthlyTotal() < 0"
+            [class.bg-rose-500]="monthlyTotal() < 0"
+            [class.border-rose-500]="monthlyTotal() < 0"
+            style="background-opacity: 0.1"
+          >
+            {{ monthlyTotal() > 0 ? '+' : '' }}{{ monthlyTotal() }}
+          </span>
+        </div>
+      </div>
+
+      <div
+        class="grid grid-cols-5 gap-2.5 mt-5 text-center text-[11px] font-medium text-slate-400 font-mono uppercase tracking-wider"
+      >
+        @for (d of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; track d) {
+          <div class="py-1">{{ d }}</div>
+        }
+      </div>
+
+      @for (week of calendarDays(); track $index) {
+        <div class="grid grid-cols-5 gap-2.5 mt-2.5">
+          @for (cell of week; track $index) {
+            @if (cell.day === null) {
+              <div class="h-20"></div>
+            } @else {
+              <div
+                class="h-20 rounded-xl p-2.5 flex flex-col justify-between border transition"
+                [class.border-emerald-500]="(dailyPnl().get(cell.date!) || 0) > 0"
+                [class.bg-emerald-950]="(dailyPnl().get(cell.date!) || 0) > 0"
+                [class.border-rose-500]="(dailyPnl().get(cell.date!) || 0) < 0"
+                [class.bg-rose-950]="(dailyPnl().get(cell.date!) || 0) < 0"
+                [class.border-slate-800]="!dailyPnl().get(cell.date!)"
+                [class.bg-space-900]="!dailyPnl().get(cell.date!)"
+              >
+                <div class="flex justify-between items-start">
+                  <span class="text-xs font-mono font-semibold text-slate-300">{{ cell.day }}</span>
+                  @if (dailyCount().get(cell.date!)) {
+                    <span
+                      class="text-[9px] font-mono px-1 rounded"
+                      [class.text-emerald-400]="(dailyPnl().get(cell.date!) || 0) > 0"
+                      [class.text-rose-400]="(dailyPnl().get(cell.date!) || 0) < 0"
+                    >
+                      {{ dailyCount().get(cell.date!) }}
+                      {{ dailyCount().get(cell.date!) === 1 ? 'trade' : 'trades' }}
+                    </span>
+                  }
+                </div>
+                @if (dailyPnl().get(cell.date!)) {
+                  <div
+                    class="text-sm font-bold font-mono tracking-tight"
+                    [class.text-emerald-400]="dailyPnl().get(cell.date!)! > 0"
+                    [class.text-rose-400]="dailyPnl().get(cell.date!)! < 0"
+                  >
+                    {{ dailyPnl().get(cell.date!)! > 0 ? '+$' : '-$'
+                    }}{{ absValue(dailyPnl().get(cell.date!)!) }}
+                  </div>
+                } @else {
+                  <div class="text-[11px] text-slate-600 font-mono italic">No trades</div>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+    </section>
+
+    <!-- Rule adherence -->
+    <section class="surface-card border border-slate-800/80 rounded-xl p-6 space-y-6">
+      <h3 class="text-sm font-semibold text-white tracking-wide">
+        Rule adherence &amp; execution discipline
+      </h3>
+
+      @if (ruleStats()) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="bg-space-900/80 border border-slate-800 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 font-medium">Followed all rules</span>
+            <div class="mt-2 flex items-baseline gap-2">
+              <span class="text-2xl font-bold font-mono text-white"
+                >{{ ruleStats().followedAllPercentage }}%</span
+              >
+              <span class="text-xs text-slate-400 font-mono"
+                >{{ ruleStats().followedTradesCount }} of
+                {{ ruleStats().totalTradesWithRules }} trades</span
+              >
+            </div>
+          </div>
+          <div class="bg-space-900/80 border border-emerald-500/20 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 font-medium">Avg P/L, rules followed</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-emerald-400">
+              +${{ ruleStats().avgPnlRulesFollowed }}
+            </div>
+          </div>
+          <div class="bg-space-900/80 border border-rose-500/20 rounded-xl p-3.5">
+            <span class="text-xs text-slate-400 font-medium">Avg P/L, rule broken</span>
+            <div class="mt-2 text-2xl font-bold font-mono text-rose-400">
+              -${{ absValue(ruleStats().avgPnlRuleBroken) }}
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (ruleAdherence().length === 0) {
+        <p class="text-slate-500 text-sm">No rules linked to trades yet.</p>
+      } @else {
+        <div class="space-y-4 pt-2">
+          @for (rule of ruleAdherence(); track rule.name) {
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1.5 font-medium">
+                <span class="text-slate-300 flex items-center gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  {{ rule.name }}
+                </span>
+                <span class="font-mono text-slate-400">
+                  <span class="text-white font-semibold">{{ rule.followedCount }}</span> /
+                  {{ rule.total }}
+                  <span class="text-emerald-400 ml-1">({{ rule.percentage }}%)</span>
+                </span>
+              </div>
+              <div
+                class="h-2 w-full bg-space-900 rounded-full overflow-hidden border border-slate-800/80"
+              >
+                <div
+                  class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                  [style.width.%]="rule.percentage"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
 </div>
