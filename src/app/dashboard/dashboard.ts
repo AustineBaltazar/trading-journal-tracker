@@ -1,16 +1,18 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, UpperCasePipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, UpperCasePipe],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
 })
 export class Dashboard implements OnInit {
   private http = inject(HttpClient);
+  private router = inject(Router);
   summary = signal<any>(null);
   trades = signal<any[]>([]);
   ruleAdherence = signal<any[]>([]);
@@ -195,4 +197,93 @@ export class Dashboard implements OnInit {
       lastY: coords[coords.length - 1].y,
     };
   });
+
+  dailyTrades = computed(() => {
+    const map = new Map<string, any[]>();
+    for (const trade of this.trades()) {
+      const date = trade.trade_date.substring(0, 10);
+      const list = map.get(date) || [];
+      list.push(trade);
+      map.set(date, list);
+    }
+    return map;
+  });
+
+  selectedDayTrades = signal<any[] | null>(null);
+  selectedDayDate = signal('');
+
+  onDayClick(date: string | null) {
+    if (!date) return;
+    const trades = this.dailyTrades().get(date);
+    if (!trades || trades.length === 0) return;
+
+    this.selectedDayTrades.set(trades);
+    this.selectedDayDate.set(date);
+  }
+
+  closeDayPopover() {
+    this.selectedDayTrades.set(null);
+  }
+
+  goToTrade(id: number) {
+    this.selectedDayTrades.set(null);
+    this.router.navigate(['/trades', id]);
+  }
+
+  selectedDayLabel(): string {
+    const dateStr = this.selectedDayDate();
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+    return `${weekday}, ${monthName} ${day}, ${year}`;
+  }
+
+  dayNetPnl(): number {
+    const trades = this.selectedDayTrades() || [];
+    return Math.round(trades.reduce((sum, t) => sum + t.netPnl, 0) * 100) / 100;
+  }
+
+  dayWinRate(): number {
+    const trades = this.selectedDayTrades() || [];
+    if (trades.length === 0) return 0;
+    const wins = trades.filter((t) => t.netPnl > 0).length;
+    return Math.round((wins / trades.length) * 100);
+  }
+
+  dayWinLossCounts(): { wins: number; losses: number } {
+    const trades = this.selectedDayTrades() || [];
+    return {
+      wins: trades.filter((t) => t.netPnl > 0).length,
+      losses: trades.filter((t) => t.netPnl < 0).length,
+    };
+  }
+
+  dayRulesMetPercent(): number | null {
+    const trades = (this.selectedDayTrades() || []).filter((t) => t.rulesFollowed !== null);
+    if (trades.length === 0) return null;
+    const followed = trades.filter((t) => t.rulesFollowed === true).length;
+    return Math.round((followed / trades.length) * 100);
+  }
+
+  tradePointDiff(trade: any): number {
+    const diff =
+      trade.direction === 'long'
+        ? trade.exit_price - trade.entry_price
+        : trade.entry_price - trade.exit_price;
+    return Math.round(diff * 100) / 100;
+  }
+  dateRangeLabel(): string {
+    const trades = this.trades();
+    if (trades.length === 0) return 'No trades yet';
+    const sorted = [...trades].sort((a, b) => a.trade_date.localeCompare(b.trade_date));
+    const format = (dateStr: string) => {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+    const first = format(sorted[0].trade_date.substring(0, 10));
+    const last = format(sorted[sorted.length - 1].trade_date.substring(0, 10));
+    return first === last ? first : `${first} - ${last}`;
+  }
 }

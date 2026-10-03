@@ -2,9 +2,10 @@ import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',
@@ -28,6 +29,7 @@ export class Login {
       .subscribe({
         next: (response) => {
           localStorage.setItem('token', response.token);
+          localStorage.setItem('userName', response.user?.name || '');
           this.router.navigate(['/trades']);
         },
         error: (err) => {

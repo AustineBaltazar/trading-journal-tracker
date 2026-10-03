@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 
 @Component({
@@ -10,8 +10,11 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 export class Layout {
   private router = inject(Router);
 
+  userName = signal(localStorage.getItem('userName') || 'Account');
+
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('userName');
     this.router.navigate(['/login']);
   }
 }

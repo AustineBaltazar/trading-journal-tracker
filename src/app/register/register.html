@@ -29,8 +29,8 @@
       (ngSubmit)="onSubmit()"
       class="bg-[#121722] border border-[#1F293D] rounded-2xl p-6 shadow-xl"
     >
-      <h1 class="text-lg font-semibold text-white mb-1">Welcome back</h1>
-      <p class="text-xs text-slate-400 mb-6">Log in to your trading journal</p>
+      <h1 class="text-lg font-semibold text-white mb-1">Create your account</h1>
+      <p class="text-xs text-slate-400 mb-6">Start journaling your trades</p>
 
       @if (errorMessage) {
         <p
@@ -39,6 +39,21 @@
           {{ errorMessage }}
         </p>
       }
+      @if (successMessage) {
+        <p
+          class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2 mb-4"
+        >
+          {{ successMessage }}
+        </p>
+      }
+
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Name</label>
+      <input
+        type="text"
+        [(ngModel)]="name"
+        name="name"
+        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+      />
 
       <label class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
       <input
@@ -60,12 +75,12 @@
         type="submit"
         class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all"
       >
-        Log in
+        Create account
       </button>
 
       <p class="text-center text-xs text-slate-500 mt-5">
-        Don't have an account?
-        <a routerLink="/register" class="text-blue-400 hover:text-blue-300 font-medium">Sign up</a>
+        Already have an account?
+        <a routerLink="/login" class="text-blue-400 hover:text-blue-300 font-medium">Log in</a>
       </p>
     </form>
   </div>

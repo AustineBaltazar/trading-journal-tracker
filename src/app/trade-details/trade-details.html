@@ -1,4 +1,40 @@
 <div class="bg-[#070A10] min-h-screen text-slate-200 font-sans">
+  @if (showEditModal() && trade()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="w-full max-w-[530px] max-h-[90vh] overflow-y-auto">
+        <app-edit-trade [tradeId]="trade().id" (saved)="onEditSaved()" (cancelled)="closeEdit()" />
+      </div>
+    </div>
+  }
+
+  @if (showDeleteConfirm()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div
+        class="w-full max-w-sm bg-[#111726] border border-white/10 rounded-2xl p-6"
+        style="box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8)"
+      >
+        <h3 class="text-base font-semibold text-white mb-2">Delete this trade?</h3>
+        <p class="text-sm text-slate-400 mb-6">
+          This also removes its linked rules and answers. This cannot be undone.
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            (click)="confirmDelete()"
+            class="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2.5 rounded-xl transition-all"
+          >
+            Delete
+          </button>
+          <button
+            (click)="closeDeleteConfirm()"
+            class="w-full bg-[#182133] hover:bg-[#202c42] text-slate-300 hover:text-white font-medium text-xs py-2.5 rounded-xl border border-[#2b3a55] transition-all"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   @if (trade() === null) {
     <p class="text-slate-500 p-6">Loading...</p>
   } @else {
@@ -42,8 +78,8 @@
       </div>
 
       <div class="flex items-center gap-2.5">
-        <a
-          [routerLink]="['/trades/edit', trade().id]"
+        <button
+          (click)="openEdit()"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-[#131B2E] hover:bg-[#182239] border border-white/10 transition-all"
         >
           <svg
@@ -60,9 +96,9 @@
             />
           </svg>
           Edit
-        </a>
+        </button>
         <button
-          (click)="deleteTrade()"
+          (click)="openDeleteConfirm()"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-300 hover:text-rose-200 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 transition-all"
         >
           <svg
@@ -84,7 +120,6 @@
     </header>
 
     <div class="p-6 sm:p-8 max-w-6xl w-full mx-auto space-y-6">
-      <!-- Primary metrics -->
       <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
           class="relative overflow-hidden rounded-xl border border-white/10 bg-[#131B2E]/60 backdrop-blur-sm p-4"
@@ -94,6 +129,7 @@
             <span class="text-2xl lg:text-3xl font-bold tracking-tight text-white font-mono">{{
               trade().entry_price | number: '1.0-2'
             }}</span>
+            <span class="text-[11px] text-slate-400 font-mono">pts</span>
           </div>
         </div>
 
@@ -105,6 +141,18 @@
             <span class="text-2xl lg:text-3xl font-bold tracking-tight text-white font-mono">{{
               trade().exit_price | number: '1.0-2'
             }}</span>
+            <span class="text-[11px] text-slate-400 font-mono">pts</span>
+            <span
+              class="text-xs font-semibold font-mono px-1.5 py-0.5 rounded border"
+              [class.text-black]="pointDifference() > 0"
+              [class.bg-emerald-500]="pointDifference() > 0"
+              [class.border-emerald-500]="pointDifference() > 0"
+              [class.text-black]="pointDifference() < 0"
+              [class.bg-rose-500]="pointDifference() < 0"
+              [class.border-rose-500]="pointDifference() < 0"
+            >
+              {{ pointDifference() > 0 ? '+' : '' }}{{ pointDifference() }} pts
+            </span>
           </div>
         </div>
 
@@ -118,6 +166,9 @@
             }}</span>
             <span class="text-xs text-slate-400">lots</span>
           </div>
+          <p class="text-[11px] text-slate-400 mt-1 font-mono">
+            ${{ pointValue() | number: '1.2-2' }} / pt per contract
+          </p>
         </div>
 
         <div
@@ -156,7 +207,6 @@
         </div>
       </section>
 
-      <!-- Setup details -->
       <section
         class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-5"
       >
@@ -249,7 +299,6 @@
         }
       </section>
 
-      <!-- Rules followed -->
       <section
         class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-4"
       >
@@ -313,7 +362,6 @@
         }
       </section>
 
-      <!-- Review questions -->
       <section
         class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-6"
       >

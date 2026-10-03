@@ -1,16 +1,266 @@
 <div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
-  <div class="flex items-center justify-between mb-6">
+  <header
+    class="px-2 py-3 border-b border-[#1F293D]/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
+  >
     <div>
-      <h1 class="text-base font-semibold text-white tracking-tight">Dashboard</h1>
-      <p class="text-[11px] text-slate-500">{{ monthLabel() }} overview</p>
+      <div class="flex items-center gap-2">
+        <h1 class="text-xl font-semibold text-white tracking-tight">Dashboard</h1>
+      </div>
+      <p class="text-xs text-slate-400 mt-0.5">{{ monthLabel() }} overview</p>
     </div>
-    <a
-      routerLink="/trades"
-      class="px-3.5 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-90 text-slate-950 text-xs font-semibold transition"
+
+    <div class="flex items-center flex-wrap gap-2.5">
+      <div
+        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1322] border border-[#1b253b] text-[11px] text-slate-300"
+      >
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span>MNQ Futures</span>
+      </div>
+      @if (trades().length > 0) {
+        <div
+          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1322] border border-[#1b253b] text-[11px] text-slate-400 font-mono"
+        >
+          <span>{{ dateRangeLabel() }}</span>
+        </div>
+      }
+      <a
+        routerLink="/trades"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-semibold shadow-sm transition"
+      >
+        <svg
+          class="w-3.5 h-3.5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+        >
+          <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        New trade
+      </a>
+    </div>
+  </header>
+
+  @if (selectedDayTrades()) {
+    <div
+      class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      (click)="closeDayPopover()"
     >
-      + New trade
-    </a>
-  </div>
+      <div
+        class="w-full max-w-xl rounded-2xl bg-[#0c1017] border border-white/10 overflow-hidden flex flex-col"
+        style="box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85)"
+        (click)="$event.stopPropagation()"
+      >
+        <div
+          class="px-5 py-4 border-b border-white/5 bg-[#111622]/60 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-2.5 h-2.5 rounded-full"
+              [class.bg-emerald-500]="dayNetPnl() >= 0"
+              [class.bg-rose-500]="dayNetPnl() < 0"
+            ></div>
+            <div>
+              <h3 class="text-base font-bold text-white tracking-tight">
+                {{ selectedDayLabel() }}
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ selectedDayDate() }} · Micro E-mini Nasdaq (MNQ)
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="text-xs font-mono font-semibold px-2.5 py-1 rounded-md border"
+              [class]="
+                dayNetPnl() >= 0
+                  ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                  : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+              "
+            >
+              {{ dayNetPnl() > 0 ? '+' : '' }}{{ dayNetPnl() }} Net P/L
+            </span>
+            <button
+              (click)="closeDayPopover()"
+              class="text-slate-500 hover:text-white p-1 rounded-lg hover:bg-white/10 transition"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+          <div
+            class="grid grid-cols-4 gap-2.5 p-3 rounded-xl bg-black/30 border border-white/5 text-center"
+          >
+            <div class="flex flex-col">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold"
+                >Net result</span
+              >
+              <span
+                class="text-sm font-bold font-mono"
+                [class.text-emerald-400]="dayNetPnl() >= 0"
+                [class.text-rose-400]="dayNetPnl() < 0"
+              >
+                {{ dayNetPnl() > 0 ? '+' : '' }}{{ dayNetPnl() }}
+              </span>
+            </div>
+            <div class="flex flex-col border-l border-white/5">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold"
+                >Trades</span
+              >
+              <span class="text-sm font-semibold font-mono text-white">{{
+                selectedDayTrades()!.length
+              }}</span>
+            </div>
+            <div class="flex flex-col border-l border-white/5">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold"
+                >Win rate</span
+              >
+              <span class="text-sm font-semibold font-mono text-white">
+                {{ dayWinRate() }}%
+                <span class="text-[10px] text-slate-500 font-normal"
+                  >({{ dayWinLossCounts().wins }}W / {{ dayWinLossCounts().losses }}L)</span
+                >
+              </span>
+            </div>
+            <div class="flex flex-col border-l border-white/5">
+              <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold"
+                >Rules met</span
+              >
+              @if (dayRulesMetPercent() !== null) {
+                <span class="text-sm font-semibold font-mono text-emerald-400"
+                  >{{ dayRulesMetPercent() }}%</span
+                >
+              } @else {
+                <span class="text-sm font-semibold font-mono text-slate-600">—</span>
+              }
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              >Executed trades ({{ selectedDayTrades()!.length }})</span
+            >
+          </div>
+
+          <div class="space-y-2.5">
+            @for (trade of selectedDayTrades(); track trade.id) {
+              <div
+                (click)="goToTrade(trade.id)"
+                class="group relative rounded-xl border border-white/10 bg-[#111622]/80 hover:bg-[#111622] p-3.5 transition duration-150 flex items-center justify-between cursor-pointer"
+                [class.hover:border-emerald-500]="trade.netPnl >= 0"
+                [class.hover:border-rose-500]="trade.netPnl < 0"
+              >
+                <div
+                  class="absolute left-0 inset-y-0 w-1 rounded-l-xl"
+                  [class.bg-emerald-500]="trade.netPnl >= 0"
+                  [class.bg-rose-500]="trade.netPnl < 0"
+                ></div>
+                <div class="flex items-center gap-3.5 pl-1.5">
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
+                    [class]="
+                      trade.netPnl >= 0
+                        ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                    "
+                  >
+                    @if (trade.direction === 'long') {
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    } @else {
+                      <svg
+                        class="w-4 h-4 rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M5 10l7-7m0 0l7 7m-7-7v18"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    }
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-xs font-bold text-white font-mono tracking-tight"
+                        >{{ trade.symbol }} {{ trade.direction | uppercase }}</span
+                      >
+                      @if (trade.strategy) {
+                        <span
+                          class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 border border-white/10"
+                          >{{ trade.strategy }}</span
+                        >
+                      }
+                    </div>
+                    <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                      <span
+                        >{{ trade.contracts }} contract{{ trade.contracts > 1 ? 's' : '' }}</span
+                      >
+                      <span class="text-slate-700">·</span>
+                      <span>Entry: {{ trade.entry_price }}</span>
+                      <span class="text-slate-700">·</span>
+                      <span>Exit: {{ trade.exit_price }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-right">
+                    <div
+                      class="text-sm font-bold font-mono"
+                      [class.text-emerald-400]="trade.netPnl >= 0"
+                      [class.text-rose-400]="trade.netPnl < 0"
+                    >
+                      {{ trade.netPnl > 0 ? '+' : '' }}{{ trade.netPnl }}
+                    </div>
+                    <div
+                      class="text-[11px] font-mono"
+                      [class.text-emerald-400]="tradePointDiff(trade) >= 0"
+                      [class.text-rose-400]="tradePointDiff(trade) < 0"
+                    >
+                      {{ tradePointDiff(trade) > 0 ? '+' : '' }}{{ tradePointDiff(trade) }} pts
+                    </div>
+                  </div>
+                  <svg
+                    class="w-4 h-4 text-slate-700 group-hover:text-slate-400 transition"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   @if (summary() === null) {
     <p class="text-slate-500">Loading...</p>
@@ -211,6 +461,9 @@
             } @else {
               <div
                 class="h-20 rounded-xl p-2.5 flex flex-col justify-between border transition"
+                [class.cursor-pointer]="dailyCount().get(cell.date!)"
+                [class.hover:border-slate-600]="dailyCount().get(cell.date!)"
+                (click)="onDayClick(cell.date)"
                 [class.border-emerald-500]="(dailyPnl().get(cell.date!) || 0) > 0"
                 [class.bg-emerald-950]="(dailyPnl().get(cell.date!) || 0) > 0"
                 [class.border-rose-500]="(dailyPnl().get(cell.date!) || 0) < 0"

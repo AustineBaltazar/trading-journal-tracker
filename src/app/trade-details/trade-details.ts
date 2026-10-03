@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { EditTrade } from '../edit-trade/edit-trade';
 
 interface DraftAnswer {
   choice: string;
@@ -10,7 +11,7 @@ interface DraftAnswer {
 }
 
 @Component({
-  imports: [FormsModule, RouterLink, DecimalPipe, SlicePipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, SlicePipe, EditTrade],
   selector: 'app-trade-details',
   styleUrl: './trade-details.css',
   templateUrl: './trade-details.html',
@@ -29,6 +30,9 @@ export class TradeDetails implements OnInit {
 
   draftAnswers = signal<Map<number, DraftAnswer>>(new Map());
   saveStatus = signal<'idle' | 'saving' | 'success' | 'error'>('idle');
+
+  showEditModal = signal(false);
+  showDeleteConfirm = signal(false);
 
   ngOnInit() {
     this.tradeId = this.route.snapshot.paramMap.get('id')!;
@@ -169,9 +173,46 @@ export class TradeDetails implements OnInit {
     setTimeout(() => this.saveStatus.set('idle'), 2500);
   }
 
-  deleteTrade() {
+  openEdit() {
+    this.showEditModal.set(true);
+  }
+
+  closeEdit() {
+    this.showEditModal.set(false);
+  }
+
+  onEditSaved() {
+    this.showEditModal.set(false);
+    this.loadTrade();
+    this.loadRules();
+  }
+
+  openDeleteConfirm() {
+    this.showDeleteConfirm.set(true);
+  }
+
+  closeDeleteConfirm() {
+    this.showDeleteConfirm.set(false);
+  }
+
+  confirmDelete() {
     this.http
       .delete<any>(`http://localhost:3001/trades/${this.tradeId}`, this.authHeaders())
       .subscribe(() => this.router.navigate(['/trades']));
+  }
+
+  pointDifference(): number {
+    const t = this.trade();
+    if (!t) return 0;
+    const diff =
+      t.direction === 'long' ? t.exit_price - t.entry_price : t.entry_price - t.exit_price;
+    return Math.round(diff * 100) / 100;
+  }
+
+  pointValue(): number {
+    const t = this.trade();
+    if (!t) return 0;
+    const values: Record<string, number> = { MNQ: 2, NQ: 20 };
+    return values[t.symbol] || 0;
   }
 }
