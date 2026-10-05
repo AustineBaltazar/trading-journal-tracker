@@ -1,6 +1,7 @@
 import { Component, inject, Input, Output, EventEmitter, OnChanges, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule],
@@ -47,7 +48,7 @@ export class EditTrade implements OnChanges {
 
   loadTrade() {
     this.http
-      .get<any>(`http://localhost:3001/trades/${this.tradeId}`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
       .subscribe((trade) => {
         this.trade_date = trade.trade_date.substring(0, 10);
         this.symbol = trade.symbol;
@@ -64,10 +65,10 @@ export class EditTrade implements OnChanges {
   }
 
   loadRules() {
-    this.http.get<any>('http://localhost:3001/rules', this.authHeaders()).subscribe((response) => {
+    this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
       this.allRules.set(response.rules);
       this.http
-        .get<any>(`http://localhost:3001/trades/${this.tradeId}/rules`, this.authHeaders())
+        .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
         .subscribe((linkedResponse) => {
           const checked = new Set<number>(
             linkedResponse.rules.filter((r: any) => r.followed).map((r: any) => r.id),
@@ -105,7 +106,7 @@ export class EditTrade implements OnChanges {
 
     this.http
       .put<any>(
-        `http://localhost:3001/trades/${this.tradeId}`,
+        `${environment.apiUrl}/trades/${this.tradeId}`,
         {
           trade_date: this.trade_date,
           symbol: this.symbol,
@@ -136,7 +137,7 @@ export class EditTrade implements OnChanges {
     }
 
     this.http
-      .get<any>(`http://localhost:3001/trades/${this.tradeId}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
       .subscribe((linkedResponse) => {
         const linkedIds = new Set<number>(linkedResponse.rules.map((r: any) => r.id));
         let remaining = allRules.length;
@@ -150,7 +151,7 @@ export class EditTrade implements OnChanges {
           if (linkedIds.has(rule.id)) {
             this.http
               .put<any>(
-                `http://localhost:3001/trades/${this.tradeId}/rules/${rule.id}`,
+                `${environment.apiUrl}/trades/${this.tradeId}/rules/${rule.id}`,
                 { followed },
                 this.authHeaders(),
               )
@@ -158,7 +159,7 @@ export class EditTrade implements OnChanges {
           } else {
             this.http
               .post<any>(
-                'http://localhost:3001/trade-rules',
+                `${environment.apiUrl}/trade-rules`,
                 { trade_id: this.tradeId, rule_id: rule.id, followed },
                 this.authHeaders(),
               )

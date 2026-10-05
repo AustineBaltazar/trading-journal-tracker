@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [RouterLink, DecimalPipe, UpperCasePipe],
@@ -46,15 +47,15 @@ export class Dashboard implements OnInit {
 
   ngOnInit() {
     this.http
-      .get<any>('http://localhost:3001/trades/summary', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/summary`, this.authHeaders())
       .subscribe((response) => this.summary.set(response));
 
     this.http
-      .get<any>('http://localhost:3001/trades', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades`, this.authHeaders())
       .subscribe((response) => this.trades.set(response.trades));
 
     this.http
-      .get<any>('http://localhost:3001/rule-adherence', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rule-adherence`, this.authHeaders())
       .subscribe((response) => {
         this.ruleAdherence.set(response.adherence);
         this.ruleStats.set(response);

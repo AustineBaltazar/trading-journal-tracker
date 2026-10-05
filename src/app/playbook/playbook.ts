@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule],
@@ -38,19 +39,19 @@ export class Playbook implements OnInit {
 
   loadRules() {
     this.http
-      .get<any>('http://localhost:3001/rules', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rules`, this.authHeaders())
       .subscribe((response) => this.rules.set(response.rules));
   }
 
   loadQuestions() {
     this.http
-      .get<any>('http://localhost:3001/questions', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/questions`, this.authHeaders())
       .subscribe((response) => this.questions.set(response.questions));
   }
 
   loadCompliance() {
     this.http
-      .get<any>('http://localhost:3001/rule-adherence', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rule-adherence`, this.authHeaders())
       .subscribe((response) => {
         this.overallCompliance.set(
           typeof response.followedAllPercentage === 'number'
@@ -65,7 +66,7 @@ export class Playbook implements OnInit {
     if (!this.newRuleName.trim()) return;
 
     this.http
-      .post<any>('http://localhost:3001/rules', { name: this.newRuleName }, this.authHeaders())
+      .post<any>(`${environment.apiUrl}/rules`, { name: this.newRuleName }, this.authHeaders())
       .subscribe({
         next: (newRule) => {
           this.rules.update((current) => [...current, newRule]);
@@ -80,7 +81,7 @@ export class Playbook implements OnInit {
   deleteRule(id: number) {
     if (!confirm('Delete this rule? Any trades linked to it will lose that link.')) return;
     this.http
-      .delete<any>(`http://localhost:3001/rules/${id}`, this.authHeaders())
+      .delete<any>(`${environment.apiUrl}/rules/${id}`, this.authHeaders())
       .subscribe(() => this.rules.update((current) => current.filter((r) => r.id !== id)));
   }
 
@@ -97,7 +98,7 @@ export class Playbook implements OnInit {
     if (!this.editRuleName.trim()) return;
     this.http
       .put<any>(
-        `http://localhost:3001/rules/${id}`,
+        `${environment.apiUrl}/rules/${id}`,
         { name: this.editRuleName },
         this.authHeaders(),
       )
@@ -120,7 +121,7 @@ export class Playbook implements OnInit {
 
     this.http
       .post<any>(
-        'http://localhost:3001/questions',
+        `${environment.apiUrl}/questions`,
         { question_text: this.newQuestionText },
         this.authHeaders(),
       )
@@ -143,7 +144,7 @@ export class Playbook implements OnInit {
     )
       return;
     this.http
-      .delete<any>(`http://localhost:3001/questions/${id}`, this.authHeaders())
+      .delete<any>(`${environment.apiUrl}/questions/${id}`, this.authHeaders())
       .subscribe(() => this.questions.update((current) => current.filter((q) => q.id !== id)));
   }
 
@@ -160,7 +161,7 @@ export class Playbook implements OnInit {
     if (!this.editQuestionText.trim()) return;
     this.http
       .put<any>(
-        `http://localhost:3001/questions/${id}`,
+        `${environment.apiUrl}/questions/${id}`,
         { question_text: this.editQuestionText },
         this.authHeaders(),
       )

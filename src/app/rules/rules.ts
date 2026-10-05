@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule],
@@ -22,7 +23,7 @@ export class Rules implements OnInit {
   loadRules() {
     const token = localStorage.getItem('token');
     this.http
-      .get<any>('http://localhost:3001/rules', {
+      .get<any>(`${environment.apiUrl}/rules`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe((response) => {
@@ -36,7 +37,7 @@ export class Rules implements OnInit {
 
     this.http
       .post<any>(
-        'http://localhost:3001/rules',
+        `${environment.apiUrl}/rules`,
         { name: this.newRuleName },
         { headers: { Authorization: `Bearer ${token}` } },
       )
@@ -54,7 +55,7 @@ export class Rules implements OnInit {
   deleteRule(id: number) {
     const token = localStorage.getItem('token');
     this.http
-      .delete<any>(`http://localhost:3001/rules/${id}`, {
+      .delete<any>(`${environment.apiUrl}/rules/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe(() => {
