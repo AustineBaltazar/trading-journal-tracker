@@ -1,12 +1,12 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
 
 @Component({
-  imports: [RouterLink, SlicePipe, FormsModule, NewTrade],
+  imports: [SlicePipe, FormsModule, NewTrade],
   selector: 'app-trades-list',
   styleUrl: './trades-list.css',
   templateUrl: './trades-list.html',
