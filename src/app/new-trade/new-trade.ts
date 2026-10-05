@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule],
@@ -37,7 +38,7 @@ export class NewTrade implements OnInit {
   }
 
   ngOnInit() {
-    this.http.get<any>('http://localhost:3001/rules', this.authHeaders()).subscribe((response) => {
+    this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
       this.allRules.set(response.rules);
       this.checkedRuleIds.set(new Set(response.rules.map((r: any) => r.id)));
     });
@@ -71,7 +72,7 @@ export class NewTrade implements OnInit {
 
     this.http
       .post<any>(
-        'http://localhost:3001/trades',
+        `${environment.apiUrl}/trades`,
         {
           trade_date: this.trade_date,
           symbol: this.symbol,
@@ -107,7 +108,7 @@ export class NewTrade implements OnInit {
       const followed = this.checkedRuleIds().has(rule.id);
       this.http
         .post<any>(
-          'http://localhost:3001/trade-rules',
+          `${environment.apiUrl}/trade-rules`,
           { trade_id: tradeId, rule_id: rule.id, followed },
           this.authHeaders(),
         )

@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EditTrade } from '../edit-trade/edit-trade';
+import { environment } from '../../environments/environment';
 
 interface DraftAnswer {
   choice: string;
@@ -48,17 +49,17 @@ export class TradeDetails implements OnInit {
 
   loadTrade() {
     this.http
-      .get<any>(`http://localhost:3001/trades/${this.tradeId}`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
       .subscribe((trade) => this.trade.set(trade));
   }
 
   loadRules() {
     this.http
-      .get<any>('http://localhost:3001/rules', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rules`, this.authHeaders())
       .subscribe((response) => this.allRules.set(response.rules));
 
     this.http
-      .get<any>(`http://localhost:3001/trades/${this.tradeId}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
       .subscribe((response) => this.linkedRules.set(response.rules));
   }
 
@@ -81,11 +82,11 @@ export class TradeDetails implements OnInit {
 
   loadQuestions() {
     this.http
-      .get<any>('http://localhost:3001/questions', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/questions`, this.authHeaders())
       .subscribe((response) => this.allQuestions.set(response.questions));
 
     this.http
-      .get<any>(`http://localhost:3001/trades/${this.tradeId}/answers`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers`, this.authHeaders())
       .subscribe((response) => {
         this.answers.set(response.answers);
         const draft = new Map<number, DraftAnswer>();
@@ -138,12 +139,12 @@ export class TradeDetails implements OnInit {
       const existing = this.getAnswer(questionId);
       const request = existing
         ? this.http.put<any>(
-            `http://localhost:3001/trades/${this.tradeId}/answers/${questionId}`,
+            `${environment.apiUrl}/trades/${this.tradeId}/answers/${questionId}`,
             { choice: draft.choice, comment: draft.comment },
             this.authHeaders(),
           )
         : this.http.post<any>(
-            'http://localhost:3001/trade-answers',
+            `${environment.apiUrl}/trade-answers`,
             {
               trade_id: this.tradeId,
               question_id: questionId,
@@ -197,7 +198,7 @@ export class TradeDetails implements OnInit {
 
   confirmDelete() {
     this.http
-      .delete<any>(`http://localhost:3001/trades/${this.tradeId}`, this.authHeaders())
+      .delete<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
       .subscribe(() => this.router.navigate(['/trades']));
   }
 

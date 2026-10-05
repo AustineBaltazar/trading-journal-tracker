@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule],
@@ -22,7 +23,7 @@ export class Questions implements OnInit {
   loadQuestions() {
     const token = localStorage.getItem('token');
     this.http
-      .get<any>('http://localhost:3001/questions', {
+      .get<any>(`${environment.apiUrl}/questions`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe((response) => {
@@ -36,7 +37,7 @@ export class Questions implements OnInit {
 
     this.http
       .post<any>(
-        'http://localhost:3001/questions',
+        `${environment.apiUrl}/questions`,
         { question_text: this.newQuestionText },
         { headers: { Authorization: `Bearer ${token}` } },
       )
@@ -54,7 +55,7 @@ export class Questions implements OnInit {
   deleteQuestion(id: number) {
     const token = localStorage.getItem('token');
     this.http
-      .delete<any>(`http://localhost:3001/questions/${id}`, {
+      .delete<any>(`${environment.apiUrl}/questions/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .subscribe(() => {

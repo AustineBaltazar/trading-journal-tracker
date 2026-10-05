@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [FormsModule, RouterLink],
@@ -22,7 +23,7 @@ export class Login {
     this.errorMessage = '';
 
     this.http
-      .post<any>('http://localhost:3001/login', {
+      .post<any>(`${environment.apiUrl}/login`, {
         email: this.email,
         password: this.password,
       })

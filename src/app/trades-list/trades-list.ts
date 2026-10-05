@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
+import { environment } from '../../environments/environment';
 
 @Component({
   imports: [SlicePipe, FormsModule, NewTrade],
@@ -84,7 +85,7 @@ export class TradesList implements OnInit {
 
   loadTrades() {
     this.http
-      .get<any>('http://localhost:3001/trades', this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades`, this.authHeaders())
       .subscribe((response) => this.trades.set(response.trades));
   }
 
