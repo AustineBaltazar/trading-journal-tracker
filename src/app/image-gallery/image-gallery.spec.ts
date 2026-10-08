@@ -10,6 +10,13 @@ const journalTarget: ImageTarget = {
   params: { mode: 'backtest' },
 };
 
+// Node 22 (CI) cannot make object URLs for jsdom Files; previews only need a string
+beforeEach(() => {
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+});
+afterEach(() => vi.restoreAllMocks());
+
 describe('imageFileError', () => {
   it('allows PNG, JPG and WebP up to 5 MB', () => {
     expect(imageFileError({ type: 'image/png', size: 1000 })).toBeNull();

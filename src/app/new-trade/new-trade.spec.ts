@@ -4,6 +4,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { NewTrade } from './new-trade';
 import { TradeModeService } from '../trade-mode';
 
+// Node 22 (CI) cannot make object URLs for jsdom Files; previews only need a string
+beforeEach(() => {
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+});
+afterEach(() => vi.restoreAllMocks());
+
 describe('NewTrade', () => {
   let component: NewTrade;
   let fixture: ComponentFixture<NewTrade>;
