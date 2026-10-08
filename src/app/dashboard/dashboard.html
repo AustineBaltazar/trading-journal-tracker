@@ -555,93 +555,174 @@
     </section>
 
     <!-- Calendar heatmap -->
+    @let cal = calendar();
     <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
-      <div class="flex items-center justify-between pb-5 border-b border-slate-800/80">
+      <div
+        class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-800/80"
+      >
         <h3 class="text-sm font-semibold text-white tracking-wide">Monthly trading heatmap</h3>
-        <div
-          class="flex items-center gap-4 bg-space-900 px-3 py-1.5 rounded-lg border border-slate-800"
-        >
-          <button (click)="previousMonth()" class="text-slate-400 hover:text-white transition">
-            ‹
-          </button>
-          <span class="font-semibold text-xs text-white font-mono">{{ monthLabel() }}</span>
-          <button (click)="nextMonth()" class="text-slate-400 hover:text-white transition">
-            ›
-          </button>
-        </div>
-        <div class="flex items-center gap-2 text-xs">
-          <span class="text-slate-400">Month net:</span>
-          <span
-            class="font-mono font-bold px-2 py-0.5 rounded border"
-            [class.text-emerald-400]="monthlyTotal() > 0"
-            [class.bg-emerald-500]="monthlyTotal() > 0"
-            [class.border-emerald-500]="monthlyTotal() > 0"
-            [class.text-rose-400]="monthlyTotal() < 0"
-            [class.bg-rose-500]="monthlyTotal() < 0"
-            [class.border-rose-500]="monthlyTotal() < 0"
-            style="background-opacity: 0.1"
-          >
-            {{ monthlyTotal() > 0 ? '+' : '' }}{{ monthlyTotal() }}
+        <app-month-picker
+          [value]="calendarMonth()"
+          [marked]="tradeMonths()"
+          (valueChange)="calendarMonth.set($event)"
+        />
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono text-slate-400">
+          <span>
+            Green days
+            <span class="font-semibold text-emerald-400">{{ cal.summary.greenDays }}</span> · Red
+            days <span class="font-semibold text-rose-400">{{ cal.summary.redDays }}</span>
+          </span>
+          @if (cal.summary.best; as best) {
+            <span>
+              Best
+              <span class="font-semibold text-emerald-400">+${{ best.pnl | number: '1.2-2' }}</span>
+              {{ monthLabel().slice(0, 3) }} {{ best.day }}
+            </span>
+          }
+          @if (cal.summary.worst; as worst) {
+            <span>
+              Worst
+              <span class="font-semibold text-rose-400"
+                >-${{ absValue(worst.pnl) | number: '1.2-2' }}</span
+              >
+              {{ monthLabel().slice(0, 3) }} {{ worst.day }}
+            </span>
+          }
+          <span class="flex items-center gap-2">
+            Month net
+            <span
+              class="font-bold px-2 py-0.5 rounded-md border"
+              [class]="
+                cal.summary.net > 0
+                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                  : cal.summary.net < 0
+                    ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+                    : 'text-slate-300 bg-slate-800/60 border-slate-700'
+              "
+            >
+              {{ cal.summary.net > 0 ? '+' : cal.summary.net < 0 ? '-' : '' }}${{
+                absValue(cal.summary.net) | number: '1.2-2'
+              }}
+            </span>
           </span>
         </div>
       </div>
 
       <div
-        class="grid grid-cols-5 gap-2.5 mt-5 text-center text-[11px] font-medium text-slate-400 font-mono uppercase tracking-wider"
+        class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-5 text-center text-[11px] font-medium text-slate-400 font-mono uppercase tracking-wider"
       >
         @for (d of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; track d) {
           <div class="py-1">{{ d }}</div>
         }
+        <div class="py-1 text-slate-300 hidden md:block">Week</div>
       </div>
 
-      @for (week of calendarDays(); track $index) {
-        <div class="grid grid-cols-5 gap-2.5 mt-2.5">
-          @for (cell of week; track $index) {
-            @if (cell.day === null) {
+      @for (week of cal.weeks; track $index) {
+        <div
+          class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-2.5 font-mono"
+        >
+          @for (cell of week.days; track $index) {
+            @if (!cell) {
               <div class="h-20"></div>
-            } @else {
+            } @else if (cell.count === 0) {
               <div
-                class="h-20 rounded-xl p-2.5 flex flex-col justify-between border transition"
-                [class.cursor-pointer]="dailyCount().get(cell.date!)"
-                [class.hover:border-slate-600]="dailyCount().get(cell.date!)"
-                (click)="onDayClick(cell.date)"
-                [class.border-emerald-500]="(dailyPnl().get(cell.date!) || 0) > 0"
-                [class.bg-emerald-950]="(dailyPnl().get(cell.date!) || 0) > 0"
-                [class.border-rose-500]="(dailyPnl().get(cell.date!) || 0) < 0"
-                [class.bg-rose-950]="(dailyPnl().get(cell.date!) || 0) < 0"
-                [class.border-slate-800]="!dailyPnl().get(cell.date!)"
-                [class.bg-space-900]="!dailyPnl().get(cell.date!)"
+                class="h-20 rounded-xl p-2.5 border border-slate-800/60"
+                [class.outline]="cell.isToday"
+                [class.outline-2]="cell.isToday"
+                [class.outline-offset-2]="cell.isToday"
+                [class.outline-blue-400]="cell.isToday"
               >
-                <div class="flex justify-between items-start">
-                  <span class="text-xs font-mono font-semibold text-slate-300">{{ cell.day }}</span>
-                  @if (dailyCount().get(cell.date!)) {
-                    <span
-                      class="text-[9px] font-mono px-1 rounded"
-                      [class.text-emerald-400]="(dailyPnl().get(cell.date!) || 0) > 0"
-                      [class.text-rose-400]="(dailyPnl().get(cell.date!) || 0) < 0"
-                    >
-                      {{ dailyCount().get(cell.date!) }}
-                      {{ dailyCount().get(cell.date!) === 1 ? 'trade' : 'trades' }}
-                    </span>
-                  }
-                </div>
-                @if (dailyPnl().get(cell.date!)) {
-                  <div
-                    class="text-sm font-bold font-mono tracking-tight"
-                    [class.text-emerald-400]="dailyPnl().get(cell.date!)! > 0"
-                    [class.text-rose-400]="dailyPnl().get(cell.date!)! < 0"
-                  >
-                    {{ dailyPnl().get(cell.date!)! > 0 ? '+$' : '-$'
-                    }}{{ absValue(dailyPnl().get(cell.date!)!) }}
-                  </div>
-                } @else {
-                  <div class="text-[11px] text-slate-600 font-mono italic">No trades</div>
-                }
+                <span class="text-xs font-semibold text-slate-600">{{ cell.day }}</span>
               </div>
+            } @else {
+              <button
+                type="button"
+                (click)="onDayClick(cell.date)"
+                class="h-20 rounded-xl p-2.5 flex flex-col justify-between border text-left transition hover:brightness-125"
+                [class.border-slate-800]="cell.pnl === 0"
+                [class.bg-space-900]="cell.pnl === 0"
+                [style]="dayStyle(cell)"
+                [class.outline]="cell.isToday"
+                [class.outline-2]="cell.isToday"
+                [class.outline-offset-2]="cell.isToday"
+                [class.outline-blue-400]="cell.isToday"
+              >
+                <div class="flex justify-between items-center w-full">
+                  <span class="text-xs font-semibold text-slate-100">{{ cell.day }}</span>
+                  <span class="flex items-center gap-1.5 text-[10px] text-slate-200">
+                    @if (cell.wins) {
+                      {{ cell.wins }}W
+                    }
+                    @if (cell.wins && cell.losses) {
+                      ·
+                    }
+                    @if (cell.losses) {
+                      {{ cell.losses }}L
+                    }
+                    @if (cell.ruleBroken) {
+                      <span
+                        class="w-1.5 h-1.5 rounded-full bg-rose-500 ring-2 ring-black/40"
+                        title="Broke a rule this day"
+                      ></span>
+                    }
+                  </span>
+                </div>
+                <div
+                  class="text-sm font-bold tracking-tight whitespace-nowrap"
+                  [class.text-emerald-300]="cell.pnl > 0"
+                  [class.text-rose-300]="cell.pnl < 0"
+                  [class.text-slate-300]="cell.pnl === 0"
+                >
+                  {{ cell.pnl > 0 ? '+' : cell.pnl < 0 ? '-' : '' }}${{
+                    absValue(cell.pnl) | number: '1.2-2'
+                  }}
+                </div>
+              </button>
             }
           }
+          <div
+            class="hidden md:flex h-20 rounded-xl border border-slate-800 bg-space-900 px-3 flex-col items-end justify-center gap-0.5"
+          >
+            @if (week.count === 0) {
+              <span class="text-slate-700">—</span>
+            } @else {
+              <span
+                class="text-sm font-bold whitespace-nowrap"
+                [class.text-emerald-400]="week.pnl > 0"
+                [class.text-rose-400]="week.pnl < 0"
+                [class.text-slate-300]="week.pnl === 0"
+              >
+                {{ week.pnl > 0 ? '+' : week.pnl < 0 ? '-' : '' }}${{
+                  absValue(week.pnl) | number: '1.2-2'
+                }}
+              </span>
+              <span class="text-[11px] text-slate-500">
+                {{ week.count }} {{ week.count === 1 ? 'trade' : 'trades' }}
+              </span>
+            }
+          </div>
         </div>
       }
+
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-4 text-[11px] text-slate-500">
+        <span class="flex items-center gap-1.5">
+          Big loss
+          <span class="flex gap-0.5">
+            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/55"></span>
+            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/25"></span>
+            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/10"></span>
+            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/10"></span>
+            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/25"></span>
+            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/55"></span>
+          </span>
+          Big win
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+          Broke a rule that day
+        </span>
+        <span>Click a day to see its trades</span>
+      </div>
     </section>
 
     <!-- Performance by day of week -->
@@ -688,31 +769,40 @@
             {{ e.taggedCount }} tagged trades · {{ e.untaggedCount }} untagged not counted
           </span>
         </div>
-        <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
-          <button
-            type="button"
-            (click)="edgeRange.set('month')"
-            class="px-2.5 py-1 rounded-md transition-colors"
-            [class]="
-              edgeRange() === 'month'
-                ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
-            "
-          >
-            This month
-          </button>
-          <button
-            type="button"
-            (click)="edgeRange.set('all')"
-            class="px-2.5 py-1 rounded-md transition-colors"
-            [class]="
-              edgeRange() === 'all'
-                ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
-                : 'text-slate-400 hover:text-slate-200 border border-transparent'
-            "
-          >
-            All time
-          </button>
+        <div class="flex flex-wrap items-center gap-2">
+          @if (edgeRange() === 'month') {
+            <app-month-picker
+              [value]="edgeMonth()"
+              [marked]="tradeMonths()"
+              (valueChange)="edgeMonth.set($event)"
+            />
+          }
+          <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
+            <button
+              type="button"
+              (click)="edgeRange.set('month')"
+              class="px-2.5 py-1 rounded-md transition-colors"
+              [class]="
+                edgeRange() === 'month'
+                  ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              "
+            >
+              Month
+            </button>
+            <button
+              type="button"
+              (click)="edgeRange.set('all')"
+              class="px-2.5 py-1 rounded-md transition-colors"
+              [class]="
+                edgeRange() === 'all'
+                  ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              "
+            >
+              All time
+            </button>
+          </div>
         </div>
       </div>
 

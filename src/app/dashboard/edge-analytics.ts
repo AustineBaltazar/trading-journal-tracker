@@ -1,4 +1,4 @@
-import { EMOTIONS, GRADES, SESSIONS } from '../trade-journal';
+import { EMOTIONS, GRADES, holdMinutes, SESSIONS } from '../trade-journal';
 
 // Groups with fewer trades than this are faded and never picked as a highlight.
 export const MIN_SAMPLE = 3;
@@ -30,15 +30,6 @@ export interface EdgeAnalytics {
 
 function isTagged(trade: any): boolean {
   return Boolean(trade.session || trade.emotion || trade.grade || trade.entry_time);
-}
-
-function holdMinutes(trade: any): number | null {
-  if (!trade.entry_time || !trade.exit_time) return null;
-  const [eh, em] = trade.entry_time.split(':').map(Number);
-  const [xh, xm] = trade.exit_time.split(':').map(Number);
-  let minutes = xh * 60 + xm - (eh * 60 + em);
-  if (minutes < 0) minutes += 24 * 60;
-  return minutes;
 }
 
 // Stats per key, in the given order; keys with no trades are left out.
@@ -115,7 +106,7 @@ export function buildEdgeAnalytics(trades: any[]): EdgeAnalytics {
   const winnerHolds: number[] = [];
   const loserHolds: number[] = [];
   for (const trade of tagged) {
-    const minutes = holdMinutes(trade);
+    const minutes = holdMinutes(trade.entry_time, trade.exit_time);
     if (minutes === null) continue;
     if (trade.netPnl > 0) winnerHolds.push(minutes);
     else if (trade.netPnl < 0) loserHolds.push(minutes);
