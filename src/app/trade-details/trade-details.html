@@ -327,6 +327,22 @@
           </div>
         </div>
 
+        <div class="pt-5 border-t border-white/10">
+          <span class="block text-xs font-medium text-slate-400 mb-2">Mistakes</span>
+          @if (mistakeNames().length === 0) {
+            <span class="text-xs font-medium text-emerald-400">✓ Clean trade, no mistakes</span>
+          } @else {
+            <div class="flex flex-wrap gap-1.5">
+              @for (name of mistakeNames(); track name) {
+                <span
+                  class="text-xs px-2.5 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
+                  >{{ name }}</span
+                >
+              }
+            </div>
+          }
+        </div>
+
         @if (trade().notes) {
           <div class="pt-2 border-t border-white/10">
             <span class="block text-xs font-medium text-slate-400 mb-1.5">Trade notes</span>

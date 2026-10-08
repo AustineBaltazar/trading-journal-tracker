@@ -64,6 +64,20 @@ describe('filterTrades', () => {
     expect(ids(filterTrades(trades, { ...NO_FILTERS, outcome: 'losses' }))).toEqual([2, 4]);
   });
 
+  it('filters by mistakes', () => {
+    const tagged = [
+      t(1, { mistakeIds: [] }),
+      t(2, { mistakeIds: [5] }),
+      t(3, { mistakeIds: [5, 7] }),
+      t(4, {}),
+    ];
+    const by = (mistake: string) => ids(filterTrades(tagged, { ...NO_FILTERS, mistake }));
+    expect(by('')).toEqual([1, 2, 3, 4]);
+    expect(by('clean')).toEqual([1, 4]);
+    expect(by('any')).toEqual([2, 3]);
+    expect(by('7')).toEqual([3]);
+  });
+
   it('rules broken only excludes trades with no rules linked', () => {
     expect(ids(filterTrades(trades, { ...NO_FILTERS, rulesBrokenOnly: true }))).toEqual([2]);
   });

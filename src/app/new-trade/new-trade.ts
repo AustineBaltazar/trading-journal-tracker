@@ -5,9 +5,10 @@ import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { EMOTIONS, GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
 import { TradeMode, TradeModeService } from '../trade-mode';
+import { Mistake, MistakePicker } from '../mistakes/mistakes';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, MistakePicker],
   selector: 'app-new-trade',
   styleUrl: './new-trade.css',
   templateUrl: './new-trade.html',
@@ -51,10 +52,12 @@ export class NewTrade implements OnInit {
     return tradeDuration(this.entry_time, this.exit_time);
   }
 
-  errorMessage = '';
+  errorMessage = signal('');
 
   allRules = signal<any[]>([]);
   checkedRuleIds = signal<Set<number>>(new Set());
+  mistakes = signal<Mistake[]>([]);
+  selectedMistakeIds = signal<Set<number>>(new Set());
 
   private authHeaders() {
     const token = localStorage.getItem('token');
@@ -65,6 +68,18 @@ export class NewTrade implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
       this.allRules.set(response.rules);
       this.checkedRuleIds.set(new Set(response.rules.map((r: any) => r.id)));
+    });
+    this.http
+      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .subscribe((response) => this.mistakes.set(response.mistakes));
+  }
+
+  toggleMistake(id: number) {
+    this.selectedMistakeIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   }
 
@@ -91,11 +106,11 @@ export class NewTrade implements OnInit {
   }
 
   onSubmit(addAnother = false) {
-    this.errorMessage = '';
+    this.errorMessage.set('');
     if (this.saving()) return;
 
     if (!this.trade_date) {
-      this.errorMessage = 'Please select a date.';
+      this.errorMessage.set('Please select a date.');
       return;
     }
 
@@ -125,12 +140,38 @@ export class NewTrade implements OnInit {
         this.authHeaders(),
       )
       .subscribe({
-        next: (newTrade) => this.linkRules(newTrade.id, () => this.finish(addAnother)),
+        next: (newTrade) => this.linkExtras(newTrade.id, () => this.finish(addAnother)),
         error: (err) => {
           this.saving.set(false);
-          this.errorMessage = err.error?.error || 'Something went wrong saving the trade.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong saving the trade.');
         },
       });
+  }
+
+  // Rules and mistakes are saved in parallel; done() runs once both finish
+  private linkExtras(tradeId: number, done: () => void) {
+    let pending = 2;
+    const oneDone = () => {
+      pending -= 1;
+      if (pending === 0) done();
+    };
+    this.linkRules(tradeId, oneDone);
+    this.saveMistakes(tradeId, oneDone);
+  }
+
+  private saveMistakes(tradeId: number, done: () => void) {
+    const ids = [...this.selectedMistakeIds()];
+    if (ids.length === 0) {
+      done();
+      return;
+    }
+    this.http
+      .put(
+        `${environment.apiUrl}/trades/${tradeId}/mistakes`,
+        { mistake_ids: ids },
+        this.authHeaders(),
+      )
+      .subscribe({ next: done, error: done });
   }
 
   private linkRules(tradeId: number, done: () => void) {
@@ -186,6 +227,7 @@ export class NewTrade implements OnInit {
     this.notes = '';
     this.screenshot_link = '';
     this.checkedRuleIds.set(new Set(this.allRules().map((r: any) => r.id)));
+    this.selectedMistakeIds.set(new Set());
     // Focus the first cleared field with its 0 selected, so typing replaces it
     setTimeout(() => {
       const entry = this.host.nativeElement.querySelector<HTMLInputElement>('[name="entry_price"]');

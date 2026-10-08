@@ -203,6 +203,23 @@
           }
         </select>
 
+        <select
+          [ngModel]="f.mistake"
+          (ngModelChange)="setFilter('mistake', $event)"
+          aria-label="Filter by mistake"
+          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          [class]="
+            f.mistake ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+          "
+        >
+          <option value="">Mistake: All</option>
+          <option value="clean">Clean trades only</option>
+          <option value="any">Any mistake</option>
+          @for (m of mistakes(); track m.id) {
+            <option [value]="'' + m.id">{{ m.name }}</option>
+          }
+        </select>
+
         <button
           type="button"
           role="switch"

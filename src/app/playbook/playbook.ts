@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
+import { Mistake } from '../mistakes/mistakes';
 
 @Component({
   imports: [FormsModule, ModeBadge],
@@ -16,14 +17,19 @@ export class Playbook implements OnInit {
 
   rules = signal<any[]>([]);
   questions = signal<any[]>([]);
+  mistakes = signal<Mistake[]>([]);
   overallCompliance = signal<number | null>(null);
 
   newRuleName = '';
   newQuestionText = '';
-  errorMessage = '';
+  errorMessage = signal('');
 
   editingRuleId = signal<number | null>(null);
   editRuleName = '';
+
+  newMistakeName = '';
+  editingMistakeId = signal<number | null>(null);
+  editMistakeName = '';
 
   editingQuestionId = signal<number | null>(null);
   editQuestionText = '';
@@ -40,7 +46,11 @@ export class Playbook implements OnInit {
 
   // Rules and questions are shared; compliance follows the live/backtest switch
   constructor() {
-    effect(() => this.loadCompliance(this.tradeMode.mode()));
+    effect(() => {
+      const mode = this.tradeMode.mode();
+      this.loadCompliance(mode);
+      this.loadMistakes(mode);
+    });
   }
 
   loadRules() {
@@ -69,7 +79,7 @@ export class Playbook implements OnInit {
   }
 
   addRule() {
-    this.errorMessage = '';
+    this.errorMessage.set('');
     if (!this.newRuleName.trim()) return;
 
     this.http
@@ -80,7 +90,7 @@ export class Playbook implements OnInit {
           this.newRuleName = '';
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong adding the rule.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong adding the rule.');
         },
       });
   }
@@ -117,13 +127,85 @@ export class Playbook implements OnInit {
           this.editingRuleId.set(null);
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong updating the rule.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong updating the rule.');
+        },
+      });
+  }
+
+  // Counts are trades in the current live/backtest mode
+  loadMistakes(mode: TradeMode) {
+    this.http
+      .get<any>(`${environment.apiUrl}/mistakes`, { ...this.authHeaders(), params: { mode } })
+      .subscribe((response) => {
+        if (this.tradeMode.mode() === mode) this.mistakes.set(response.mistakes);
+      });
+  }
+
+  addMistake() {
+    this.errorMessage.set('');
+    if (!this.newMistakeName.trim()) return;
+    this.http
+      .post<Mistake>(
+        `${environment.apiUrl}/mistakes`,
+        { name: this.newMistakeName },
+        this.authHeaders(),
+      )
+      .subscribe({
+        next: (created) => {
+          this.mistakes.update((current) => [...current, created]);
+          this.newMistakeName = '';
+        },
+        error: (err) => {
+          this.errorMessage.set(err.error?.error || 'Something went wrong adding the mistake.');
+        },
+      });
+  }
+
+  deleteMistake(mistake: Mistake) {
+    const used = mistake.count
+      ? ` It will be removed from ${mistake.count} ${mistake.count === 1 ? 'trade' : 'trades'}.`
+      : '';
+    if (!confirm(`Delete "${mistake.name}"?${used}`)) return;
+    this.http
+      .delete(`${environment.apiUrl}/mistakes/${mistake.id}`, this.authHeaders())
+      .subscribe(() =>
+        this.mistakes.update((current) => current.filter((m) => m.id !== mistake.id)),
+      );
+  }
+
+  startEditMistake(mistake: Mistake) {
+    this.editingMistakeId.set(mistake.id);
+    this.editMistakeName = mistake.name;
+  }
+
+  cancelEditMistake() {
+    this.editingMistakeId.set(null);
+  }
+
+  saveEditMistake(id: number) {
+    this.errorMessage.set('');
+    if (!this.editMistakeName.trim()) return;
+    this.http
+      .put<Mistake>(
+        `${environment.apiUrl}/mistakes/${id}`,
+        { name: this.editMistakeName },
+        this.authHeaders(),
+      )
+      .subscribe({
+        next: (updated) => {
+          this.mistakes.update((current) =>
+            current.map((m) => (m.id === id ? { ...m, name: updated.name } : m)),
+          );
+          this.editingMistakeId.set(null);
+        },
+        error: (err) => {
+          this.errorMessage.set(err.error?.error || 'Something went wrong updating the mistake.');
         },
       });
   }
 
   addQuestion() {
-    this.errorMessage = '';
+    this.errorMessage.set('');
     if (!this.newQuestionText.trim()) return;
 
     this.http
@@ -138,7 +220,7 @@ export class Playbook implements OnInit {
           this.newQuestionText = '';
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong adding the question.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong adding the question.');
         },
       });
   }
@@ -180,7 +262,7 @@ export class Playbook implements OnInit {
           this.editingQuestionId.set(null);
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong updating the question.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong updating the question.');
         },
       });
   }

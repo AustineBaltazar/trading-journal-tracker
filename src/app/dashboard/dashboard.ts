@@ -9,6 +9,7 @@ import { buildEquityChart, CHART, CHART_HEIGHT } from './equity-chart';
 import { buildCalendarMonth, dayStyle } from './calendar';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
+import { buildMistakeCost, Mistake } from '../mistakes/mistakes';
 import {
   currentMonth,
   monthLabel as formatMonth,
@@ -45,6 +46,9 @@ export class Dashboard {
   // Loads on start and again whenever the live/backtest switch changes
   constructor() {
     effect(() => this.load(this.tradeMode.mode()));
+    this.http
+      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .subscribe((response) => this.mistakes.set(response.mistakes));
   }
 
   private load(mode: TradeMode) {
@@ -159,6 +163,22 @@ export class Dashboard {
     const steps = chart.points.length - 1;
     const index = Math.round(((x - CHART.left) / plotWidth) * steps);
     this.hoverIndex.set(Math.min(steps, Math.max(1, index)));
+  }
+
+  mistakes = signal<Mistake[]>([]);
+  costRange = signal<'month' | 'all'>('all');
+  costMonth = signal<YearMonth>(currentMonth());
+
+  mistakeCost = computed(() => {
+    const trades =
+      this.costRange() === 'all' ? this.trades() : tradesInMonth(this.trades(), this.costMonth());
+    return buildMistakeCost(trades, this.mistakes());
+  });
+
+  // Bar width for a row: share of the most expensive mistake's loss
+  costBarWidth(net: number): number {
+    const worst = Math.min(0, ...this.mistakeCost().rows.map((r) => r.net));
+    return net < 0 && worst < 0 ? Math.round((net / worst) * 100) : 0;
   }
 
   edgeRange = signal<'month' | 'all'>('all');

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -17,11 +17,11 @@ export class Register {
   name = '';
   email = '';
   password = '';
-  errorMessage = '';
+  errorMessage = signal('');
   successMessage = '';
 
   onSubmit() {
-    this.errorMessage = '';
+    this.errorMessage.set('');
     this.successMessage = '';
 
     this.http
@@ -36,7 +36,7 @@ export class Register {
           setTimeout(() => this.router.navigate(['/login']), 1500);
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong creating your account.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong creating your account.');
         },
       });
   }

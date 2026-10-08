@@ -19,6 +19,14 @@ describe('NewTrade', () => {
     component = fixture.componentInstance;
     await fixture.whenStable();
     http.expectOne((r) => r.url.endsWith('/rules')).flush({ rules });
+    http
+      .expectOne((r) => r.url.endsWith('/mistakes'))
+      .flush({
+        mistakes: [
+          { id: 7, name: 'Moved my stop' },
+          { id: 8, name: 'Oversized the position' },
+        ],
+      });
   }
 
   // Answers the trade POST and the two rule links
@@ -27,6 +35,7 @@ describe('NewTrade', () => {
     const body = post.request.body;
     post.flush({ id: 99, ...body });
     http.match((r) => r.url.endsWith('/trade-rules')).forEach((r) => r.flush({}));
+    http.match((r) => r.url.endsWith('/trades/99/mistakes')).forEach((r) => r.flush({}));
     return body;
   }
 
@@ -106,6 +115,34 @@ describe('NewTrade', () => {
       screenshot_link: '',
     });
     expect([...component.checkedRuleIds()]).toEqual([1, 2]);
+  });
+
+  it('saves the tagged mistakes and clears them for the next trade', async () => {
+    await create();
+    component.toggleMistake(7);
+    component.toggleMistake(8);
+    component.toggleMistake(8);
+    const added = vi.fn();
+    component.added.subscribe(added);
+
+    component.onSubmit(true);
+    const post = http.expectOne((r) => r.method === 'POST' && r.url.endsWith('/trades'));
+    post.flush({ id: 99, ...post.request.body });
+    http.match((r) => r.url.endsWith('/trade-rules')).forEach((r) => r.flush({}));
+    const put = http.expectOne((r) => r.method === 'PUT' && r.url.endsWith('/trades/99/mistakes'));
+    expect(put.request.body).toEqual({ mistake_ids: [7] });
+    expect(added).not.toHaveBeenCalled(); // waits for the mistakes save too
+    put.flush({});
+
+    expect(added).toHaveBeenCalledTimes(1);
+    expect(component.selectedMistakeIds().size).toBe(0);
+  });
+
+  it('skips the mistakes request for a clean trade', async () => {
+    await create();
+    component.onSubmit();
+    completeSave();
+    http.expectNone((r) => r.url.endsWith('/mistakes') && r.method === 'PUT');
   });
 
   it('ignores a second submit while the first is still saving', async () => {

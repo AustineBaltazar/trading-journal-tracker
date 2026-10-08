@@ -28,7 +28,7 @@ describe('Dashboard', () => {
     const http = TestBed.inject(HttpTestingController);
     const requests = () =>
       http
-        .match(() => true)
+        .match((r) => !r.url.endsWith('/mistakes'))
         .map(
           (r) => `${r.request.url.split('/').slice(3).join('/')}?${r.request.params.get('mode')}`,
         )
