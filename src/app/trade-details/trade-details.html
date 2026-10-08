@@ -67,6 +67,12 @@
           <h2 class="text-base font-bold text-white tracking-tight">
             {{ trade().symbol }} {{ trade().direction }} · {{ trade().trade_date | slice: 0 : 10 }}
           </h2>
+          @if (trade().mode === 'backtest') {
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
+              >BACKTEST</span
+            >
+          }
           <span
             class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-white/5 border border-white/10 uppercase"
             [class.text-emerald-400]="trade().direction === 'long'"

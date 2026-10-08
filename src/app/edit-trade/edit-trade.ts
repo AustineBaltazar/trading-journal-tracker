@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
+import { TradeMode } from '../trade-mode';
 
 @Component({
   imports: [FormsModule],
@@ -35,6 +36,7 @@ export class EditTrade implements OnChanges {
   session = '';
   emotion = '';
   grade = '';
+  mode: TradeMode = 'live';
 
   readonly sessions = SESSIONS;
   readonly emotions = EMOTIONS;
@@ -79,6 +81,7 @@ export class EditTrade implements OnChanges {
         this.session = trade.session || '';
         this.emotion = trade.emotion || '';
         this.grade = trade.grade || '';
+        this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
         this.loaded.set(true);
       });
   }
@@ -115,6 +118,10 @@ export class EditTrade implements OnChanges {
     this.direction = value;
   }
 
+  setMode(value: TradeMode) {
+    this.mode = value;
+  }
+
   onSubmit() {
     this.errorMessage = '';
 
@@ -142,6 +149,7 @@ export class EditTrade implements OnChanges {
           session: this.session || null,
           emotion: this.emotion || null,
           grade: this.grade || null,
+          mode: this.mode,
         },
         this.authHeaders(),
       )

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, effect, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, UpperCasePipe } from '@angular/common';
@@ -8,6 +8,7 @@ import { buildEdgeAnalytics, formatMinutes, MIN_SAMPLE, winRateTier } from './ed
 import { buildEquityChart, CHART, CHART_HEIGHT } from './equity-chart';
 import { buildCalendarMonth, dayStyle } from './calendar';
 import { MonthPicker } from '../month-picker/month-picker';
+import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import {
   currentMonth,
   monthLabel as formatMonth,
@@ -18,14 +19,15 @@ import {
 } from '../trade-journal';
 
 @Component({
-  imports: [RouterLink, DecimalPipe, UpperCasePipe, MonthPicker],
+  imports: [RouterLink, DecimalPipe, UpperCasePipe, MonthPicker, ModeBadge],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
 })
-export class Dashboard implements OnInit {
+export class Dashboard {
   private http = inject(HttpClient);
   private router = inject(Router);
+  readonly tradeMode = inject(TradeModeService);
   summary = signal<any>(null);
   trades = signal<any[]>([]);
   ruleAdherence = signal<any[]>([]);
@@ -40,18 +42,29 @@ export class Dashboard implements OnInit {
     return { headers: { Authorization: `Bearer ${token}` } };
   }
 
-  ngOnInit() {
-    this.http
-      .get<any>(`${environment.apiUrl}/trades/summary`, this.authHeaders())
-      .subscribe((response) => this.summary.set(response));
+  // Loads on start and again whenever the live/backtest switch changes
+  constructor() {
+    effect(() => this.load(this.tradeMode.mode()));
+  }
+
+  private load(mode: TradeMode) {
+    // Ignore responses that arrive after the user has already switched modes
+    const current = () => this.tradeMode.mode() === mode;
+    const params = { mode };
+    this.summary.set(null);
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, this.authHeaders())
-      .subscribe((response) => this.trades.set(response.trades));
+      .get<any>(`${environment.apiUrl}/trades/summary`, { ...this.authHeaders(), params })
+      .subscribe((response) => current() && this.summary.set(response));
 
     this.http
-      .get<any>(`${environment.apiUrl}/rule-adherence`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params })
+      .subscribe((response) => current() && this.trades.set(response.trades));
+
+    this.http
+      .get<any>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params })
       .subscribe((response) => {
+        if (!current()) return;
         this.ruleAdherence.set(response.adherence);
         this.ruleStats.set(response);
       });

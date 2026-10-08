@@ -1,16 +1,18 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, ModeBadge],
   selector: 'app-playbook',
   styleUrl: './playbook.css',
   templateUrl: './playbook.html',
 })
 export class Playbook implements OnInit {
   private http = inject(HttpClient);
+  private tradeMode = inject(TradeModeService);
 
   rules = signal<any[]>([]);
   questions = signal<any[]>([]);
@@ -34,7 +36,11 @@ export class Playbook implements OnInit {
   ngOnInit() {
     this.loadRules();
     this.loadQuestions();
-    this.loadCompliance();
+  }
+
+  // Rules and questions are shared; compliance follows the live/backtest switch
+  constructor() {
+    effect(() => this.loadCompliance(this.tradeMode.mode()));
   }
 
   loadRules() {
@@ -49,10 +55,11 @@ export class Playbook implements OnInit {
       .subscribe((response) => this.questions.set(response.questions));
   }
 
-  loadCompliance() {
+  loadCompliance(mode: TradeMode) {
     this.http
-      .get<any>(`${environment.apiUrl}/rule-adherence`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params: { mode } })
       .subscribe((response) => {
+        if (this.tradeMode.mode() !== mode) return;
         this.overallCompliance.set(
           typeof response.followedAllPercentage === 'number'
             ? response.followedAllPercentage
