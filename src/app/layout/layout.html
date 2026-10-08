@@ -118,7 +118,8 @@
     </div>
   </nav>
 
-  <div class="flex-1 overflow-y-auto">
+  <!-- Reserve the scrollbar's space so content doesn't shift when a page starts scrolling -->
+  <div class="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
     <router-outlet />
   </div>
 </div>

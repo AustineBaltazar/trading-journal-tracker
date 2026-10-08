@@ -557,8 +557,9 @@
     <!-- Calendar heatmap -->
     @let cal = calendar();
     <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+      <!-- Three columns so the picker stays centered whatever the summary says -->
       <div
-        class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-800/80"
+        class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-4 pb-5 border-b border-slate-800/80"
       >
         <h3 class="text-sm font-semibold text-white tracking-wide">Monthly trading heatmap</h3>
         <app-month-picker
@@ -566,7 +567,9 @@
           [marked]="tradeMonths()"
           (valueChange)="calendarMonth.set($event)"
         />
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-mono text-slate-400">
+        <div
+          class="flex flex-wrap items-center lg:justify-end gap-x-4 gap-y-1.5 text-xs font-mono text-slate-400"
+        >
           <span>
             Green days
             <span class="font-semibold text-emerald-400">{{ cal.summary.greenDays }}</span> · Red
