@@ -20,6 +20,10 @@ export const routes: Routes = [
       { path: 'trades', component: TradesList },
       { path: 'trades/new', component: NewTrade },
       { path: 'trades/:id', component: TradeDetails },
+      {
+        path: 'journal',
+        loadComponent: () => import('./journal/journal').then((m) => m.Journal),
+      },
       { path: 'playbook', component: Playbook },
     ],
   },

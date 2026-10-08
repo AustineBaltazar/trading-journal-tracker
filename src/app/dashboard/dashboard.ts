@@ -232,6 +232,25 @@ export class Dashboard {
 
     this.selectedDayTrades.set(trades);
     this.selectedDayDate.set(date);
+    this.selectedDayJournal.set(null);
+    const mode = this.tradeMode.mode();
+    this.http
+      .get<any>(`${environment.apiUrl}/journal/${date}`, {
+        ...this.authHeaders(),
+        params: { mode },
+      })
+      .subscribe((r) => {
+        if (this.selectedDayDate() === date) {
+          this.selectedDayJournal.set(r.entry ? { ...r.entry, imageCount: r.images.length } : null);
+        }
+      });
+  }
+
+  // Journal summary shown in the day popover (null = no entry for that day)
+  selectedDayJournal = signal<any | null>(null);
+
+  openJournal(date: string) {
+    this.router.navigate(['/journal'], { queryParams: { date } });
   }
 
   closeDayPopover() {

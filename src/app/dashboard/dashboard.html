@@ -153,6 +153,61 @@
             </div>
           </div>
 
+          <div class="rounded-xl border border-[#1e293b] bg-[#0f1522] px-4 py-3 text-xs">
+            @if (selectedDayJournal(); as j) {
+              <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-400">
+                <span>Bias</span>
+                <span
+                  class="text-right font-semibold capitalize"
+                  [class.text-emerald-400]="j.bias === 'bullish'"
+                  [class.text-rose-400]="j.bias === 'bearish'"
+                  [class.text-slate-200]="!j.bias || j.bias === 'neutral'"
+                  >{{ j.bias || '—' }}</span
+                >
+                <span>Plan followed</span>
+                <span
+                  class="text-right font-semibold capitalize"
+                  [class.text-emerald-400]="j.followed_plan === 'yes'"
+                  [class.text-amber-300]="j.followed_plan === 'partly'"
+                  [class.text-rose-400]="j.followed_plan === 'no'"
+                  [class.text-slate-200]="!j.followed_plan"
+                  >{{ j.followed_plan || '—' }}</span
+                >
+                <span>Mood · day grade</span>
+                <span class="text-right font-semibold text-slate-200"
+                  >{{ j.mood || '—' }} · {{ j.day_grade || '—' }}</span
+                >
+                @if (j.imageCount) {
+                  <span>Charts</span>
+                  <span class="text-right font-semibold text-slate-200">{{ j.imageCount }}</span>
+                }
+              </div>
+              @if (j.lesson) {
+                <p class="mt-2.5 border-l-2 border-[#26354f] pl-2.5 text-slate-300">
+                  Lesson: {{ j.lesson }}
+                </p>
+              }
+              <button
+                type="button"
+                (click)="openJournal(selectedDayDate())"
+                class="mt-2.5 text-blue-300 hover:text-blue-200"
+              >
+                Open journal entry ›
+              </button>
+            } @else {
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-slate-500">No journal entry for this day.</span>
+                <button
+                  type="button"
+                  (click)="openJournal(selectedDayDate())"
+                  class="text-blue-300 hover:text-blue-200"
+                >
+                  Write one ›
+                </button>
+              </div>
+            }
+          </div>
+
           <div class="flex items-center justify-between pt-1">
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-500"
               >Executed trades ({{ selectedDayTrades()!.length }})</span
