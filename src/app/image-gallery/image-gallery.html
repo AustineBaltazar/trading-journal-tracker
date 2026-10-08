@@ -1,0 +1,160 @@
+<div class="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2.5">
+  @for (image of shown(); track image.id; let i = $index) {
+    <figure
+      class="m-0 rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden group relative"
+    >
+      <button
+        type="button"
+        (click)="open(i)"
+        class="block w-full aspect-video bg-[#0f172a]"
+        [attr.aria-label]="'View ' + (image.caption || 'image') + ' full size'"
+      >
+        <img
+          [src]="image.url"
+          [alt]="image.caption || 'Chart'"
+          class="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </button>
+      <button
+        type="button"
+        (click)="remove(image)"
+        aria-label="Delete image"
+        class="absolute top-1.5 right-1.5 w-6 h-6 rounded-md bg-black/60 text-slate-300 hover:text-rose-300 text-sm leading-none opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+      >
+        ×
+      </button>
+      @if (image.id < 0) {
+        <span
+          class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-slate-300"
+          >Uploads on save</span
+        >
+      }
+      <figcaption class="px-2.5 py-1.5 border-t border-[#1e293b] text-[11px]">
+        @if (editingCaptionId() === image.id) {
+          <input
+            #captionInput
+            type="text"
+            maxlength="120"
+            [value]="image.caption || ''"
+            (keydown.enter)="saveCaption(image, captionInput.value)"
+            (keydown.escape)="editingCaptionId.set(null)"
+            (blur)="saveCaption(image, captionInput.value)"
+            class="w-full bg-[#161e30] border border-blue-500 rounded px-1.5 py-0.5 text-slate-200 focus:outline-none"
+            aria-label="Caption"
+          />
+        } @else {
+          <button
+            type="button"
+            (click)="editingCaptionId.set(image.id)"
+            class="w-full text-left truncate"
+            [class.text-slate-200]="image.caption"
+            [class.text-slate-500]="!image.caption"
+          >
+            {{ image.caption || 'Add caption' }}
+          </button>
+        }
+      </figcaption>
+    </figure>
+  }
+
+  @for (upload of uploads(); track upload.id) {
+    <div class="rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden">
+      <div class="aspect-video bg-[#0f172a] relative flex items-center justify-center">
+        <span class="text-[11px] text-slate-500 px-2 truncate">{{ upload.name }}</span>
+        <div
+          class="absolute left-0 bottom-0 h-[3px] bg-blue-400 transition-all"
+          [style.width.%]="upload.progress"
+        ></div>
+      </div>
+      <div class="px-2.5 py-1.5 border-t border-[#1e293b] text-[11px] text-blue-300">
+        Uploading {{ upload.progress }}%
+      </div>
+    </div>
+  }
+
+  @if (canAdd()) {
+    <div
+      tabindex="0"
+      role="button"
+      [attr.aria-label]="addLabel() + ': paste an image or drop a file here'"
+      (paste)="onPaste($event)"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="dragging.set(false)"
+      class="min-h-[120px] rounded-xl border border-dashed flex flex-col items-center justify-center gap-1 text-center px-3 py-3 text-[11px] transition-colors focus:outline-none focus:border-blue-500 focus:bg-blue-500/5"
+      [class]="
+        dragging()
+          ? 'border-blue-400 bg-blue-500/10 text-blue-200'
+          : 'border-slate-700 text-slate-500 hover:border-slate-500'
+      "
+    >
+      <span class="text-xs font-semibold text-slate-300">{{ addLabel() }}</span>
+      <span
+        >Click here, then paste
+        <kbd class="font-mono text-[10px] border border-slate-600 rounded px-1">Ctrl</kbd>+<kbd
+          class="font-mono text-[10px] border border-slate-600 rounded px-1"
+          >V</kbd
+        >, drop a file, or
+        <label class="text-blue-300 hover:text-blue-200 underline underline-offset-2 cursor-pointer"
+          >browse<input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            multiple
+            class="sr-only"
+            (change)="onPick($event)" /></label
+      ></span>
+      <span>PNG, JPG, WebP · up to 5 MB</span>
+    </div>
+  }
+</div>
+
+@if (error()) {
+  <p class="text-xs text-rose-400 mt-2" role="alert">{{ error() }}</p>
+}
+
+@if (viewed(); as image) {
+  <div
+    class="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6"
+    (click)="close()"
+    role="dialog"
+    aria-label="Image viewer"
+  >
+    <img
+      [src]="image.url"
+      [alt]="image.caption || 'Chart'"
+      class="max-w-full max-h-[80vh] rounded-lg border border-white/10"
+      (click)="$event.stopPropagation()"
+    />
+    <div
+      class="mt-3 flex items-center gap-4 text-sm text-slate-300"
+      (click)="$event.stopPropagation()"
+    >
+      @if (shown().length > 1) {
+        <button
+          type="button"
+          (click)="step(-1)"
+          class="px-2 text-slate-400 hover:text-white"
+          aria-label="Previous image"
+        >
+          ←
+        </button>
+      }
+      <span>{{ image.caption || 'No caption' }}</span>
+      <span class="text-slate-500 text-xs">{{ (viewing() ?? 0) + 1 }} / {{ shown().length }}</span>
+      @if (shown().length > 1) {
+        <button
+          type="button"
+          (click)="step(1)"
+          class="px-2 text-slate-400 hover:text-white"
+          aria-label="Next image"
+        >
+          →
+        </button>
+      }
+      <button type="button" (click)="close()" class="px-2 text-slate-400 hover:text-white">
+        Close
+      </button>
+    </div>
+  </div>
+}

@@ -88,6 +88,13 @@
           <span class="text-lg font-bold text-rose-400">{{ s.losses }}</span>
         </div>
         <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >BE</span
+          >
+          <span class="text-lg font-bold text-slate-300">{{ s.breakEvens }}</span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2.5">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Net P/L</span
@@ -256,18 +263,18 @@
 
         <div class="flex items-center gap-1.5 text-xs ml-auto">
           <span class="text-slate-400 font-medium">Outcome:</span>
-          @for (o of ['all', 'wins', 'losses']; track o) {
+          @for (o of outcomeFilters; track o.value) {
             <button
               type="button"
-              (click)="setOutcomeFilter($any(o))"
-              class="px-2.5 py-1 rounded-lg font-medium transition-colors capitalize"
+              (click)="setOutcomeFilter(o.value)"
+              class="px-2.5 py-1 rounded-lg font-medium transition-colors"
               [class]="
-                f.outcome === o
+                f.outcome === o.value
                   ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
                   : 'text-slate-400 border border-transparent'
               "
             >
-              {{ o }}
+              {{ o.label }}
             </button>
           }
         </div>
@@ -372,12 +379,15 @@
                   >
                     {{ trade.grade || '—' }}
                   </td>
-                  <td
-                    class="py-3.5 px-3 text-xs font-sans"
-                    [class.text-rose-400]="isBadEmotion(trade.emotion)"
-                    [class.text-slate-300]="!isBadEmotion(trade.emotion)"
-                  >
-                    {{ trade.emotion || '—' }}
+                  <td class="py-3.5 px-3 text-xs font-sans text-slate-300">
+                    @for (emotion of emotionsOf(trade); track emotion; let last = $last) {
+                      <span [class.text-rose-400]="isBadEmotion(emotion)">{{ emotion }}</span>
+                      @if (!last) {
+                        <span class="text-slate-600"> · </span>
+                      }
+                    } @empty {
+                      —
+                    }
                   </td>
                   <td class="py-3.5 px-3 text-center whitespace-nowrap font-sans">
                     @if (trade.rulesFollowed === true) {
@@ -394,12 +404,19 @@
                       <span class="text-slate-600 text-xs">—</span>
                     }
                   </td>
+                  @let be = isBreakEven(trade);
                   <td
                     class="py-3.5 px-3 text-right font-semibold whitespace-nowrap"
-                    [class.text-emerald-400]="trade.netPnl > 0"
-                    [class.text-rose-400]="trade.netPnl < 0"
-                    [class.text-slate-300]="trade.netPnl === 0"
+                    [class.text-emerald-400]="!be && trade.netPnl > 0"
+                    [class.text-rose-400]="!be && trade.netPnl < 0"
+                    [class.text-slate-300]="be || trade.netPnl === 0"
                   >
+                    @if (be) {
+                      <span
+                        class="mr-1.5 px-1.5 py-px rounded-full text-[10px] font-bold font-sans text-slate-300 bg-slate-400/10 border border-slate-400/45"
+                        >BE</span
+                      >
+                    }
                     {{ trade.netPnl > 0 ? '+' : trade.netPnl < 0 ? '-' : ''
                     }}{{ abs(trade.netPnl) | number: '1.2-2' }}
                   </td>

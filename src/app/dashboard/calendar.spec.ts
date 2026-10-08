@@ -78,4 +78,18 @@ describe('buildCalendarMonth stats', () => {
     expect(dayStyle(cal.weeks[0].days[3]!)!['background-color']).toContain('244,63,94');
     expect(dayStyle(cal.weeks[0].days[4]!)).toBeNull();
   });
+
+  it('counts break-evens and shows a BE-only day in gray', () => {
+    const beTrades = [
+      { ...trade('2026-09-08', 132.52), outcome: 'win' },
+      { ...trade('2026-09-08', -1.24), outcome: 'be' },
+      { ...trade('2026-09-09', -1.24), outcome: 'be' },
+    ];
+    const month = buildCalendarMonth(beTrades, { year: 2026, month: 8 }, '');
+    const [mixed, beOnly] = [month.weeks[1].days[1]!, month.weeks[1].days[2]!];
+    expect(mixed).toMatchObject({ wins: 1, losses: 0, breakEvens: 1 });
+    expect(dayStyle(mixed)!['background-color']).toContain('16,185,129');
+    expect(beOnly).toMatchObject({ wins: 0, losses: 0, breakEvens: 1 });
+    expect(dayStyle(beOnly)!['background-color']).toBe('rgba(148,163,184,0.12)');
+  });
 });

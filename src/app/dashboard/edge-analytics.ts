@@ -1,3 +1,4 @@
+import { emotionsOf, outcomeOf, winRate } from '../outcome';
 import { EMOTIONS, GRADES, holdMinutes, SESSIONS } from '../trade-journal';
 
 // Groups with fewer trades than this are faded and never picked as a highlight.
@@ -8,6 +9,7 @@ export interface GroupStats {
   total: number;
   wins: number;
   losses: number;
+  breakEvens: number;
   winRate: number;
   net: number;
 }
@@ -29,26 +31,38 @@ export interface EdgeAnalytics {
 }
 
 function isTagged(trade: any): boolean {
-  return Boolean(trade.session || trade.emotion || trade.grade || trade.entry_time);
+  return Boolean(trade.session || emotionsOf(trade).length || trade.grade || trade.entry_time);
 }
 
 // Stats per key, in the given order; keys with no trades are left out.
-// Win rate matches /trades/summary: wins / all trades in the group.
+// A trade with several keys (emotions) counts in each of them.
+// Win rate matches /trades/summary: wins / (wins + losses).
 function groupBy(
   trades: any[],
-  keyOf: (trade: any) => string | null,
+  keysOf: (trade: any) => string | null | string[],
   order: string[],
 ): GroupStats[] {
   const groups = new Map<string, GroupStats>();
   for (const trade of trades) {
-    const key = keyOf(trade);
-    if (!key) continue;
-    const stats = groups.get(key) ?? { key, total: 0, wins: 0, losses: 0, winRate: 0, net: 0 };
-    stats.total += 1;
-    stats.net += trade.netPnl;
-    if (trade.netPnl > 0) stats.wins += 1;
-    else if (trade.netPnl < 0) stats.losses += 1;
-    groups.set(key, stats);
+    const keys = keysOf(trade);
+    const outcome = outcomeOf(trade);
+    for (const key of Array.isArray(keys) ? keys : keys ? [keys] : []) {
+      const stats = groups.get(key) ?? {
+        key,
+        total: 0,
+        wins: 0,
+        losses: 0,
+        breakEvens: 0,
+        winRate: 0,
+        net: 0,
+      };
+      stats.total += 1;
+      stats.net += trade.netPnl;
+      if (outcome === 'win') stats.wins += 1;
+      else if (outcome === 'loss') stats.losses += 1;
+      else stats.breakEvens += 1;
+      groups.set(key, stats);
+    }
   }
   return order
     .filter((key) => groups.has(key))
@@ -57,7 +71,7 @@ function groupBy(
       return {
         ...stats,
         net: Math.round(stats.net * 100) / 100,
-        winRate: Math.round((stats.wins / stats.total) * 100),
+        winRate: winRate(stats.wins, stats.losses),
       };
     });
 }
@@ -87,7 +101,7 @@ export function buildEdgeAnalytics(trades: any[]): EdgeAnalytics {
   const hourOrder = [...new Set(tagged.map(hourOf).filter((h): h is string => !!h))].sort();
 
   const sessions = groupBy(tagged, (t) => t.session, SESSIONS);
-  const emotions = groupBy(tagged, (t) => t.emotion, EMOTIONS);
+  const emotions = groupBy(tagged, emotionsOf, EMOTIONS);
   const grades = groupBy(tagged, (t) => t.grade, GRADES);
   const hours = groupBy(tagged, hourOf, hourOrder);
 
@@ -108,8 +122,9 @@ export function buildEdgeAnalytics(trades: any[]): EdgeAnalytics {
   for (const trade of tagged) {
     const minutes = holdMinutes(trade.entry_time, trade.exit_time);
     if (minutes === null) continue;
-    if (trade.netPnl > 0) winnerHolds.push(minutes);
-    else if (trade.netPnl < 0) loserHolds.push(minutes);
+    const outcome = outcomeOf(trade);
+    if (outcome === 'win') winnerHolds.push(minutes);
+    else if (outcome === 'loss') loserHolds.push(minutes);
   }
 
   return {

@@ -1,0 +1,488 @@
+<div class="bg-[#080c14] min-h-screen text-slate-300">
+  <div class="px-6 lg:px-8 py-6 grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6">
+    <!-- Day list -->
+    <section>
+      <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+        Journal <app-mode-badge />
+      </h1>
+      <p class="text-xs text-slate-400 mt-0.5 mb-4">One entry per trading day</p>
+
+      <button
+        type="button"
+        (click)="selectDate(today)"
+        class="w-full rounded-xl py-2 text-sm font-semibold text-white transition-colors mb-4"
+        [class]="
+          tradeMode.isBacktest()
+            ? 'bg-violet-600 hover:bg-violet-500'
+            : 'bg-blue-600 hover:bg-blue-500'
+        "
+      >
+        + Today's plan
+      </button>
+
+      <app-month-picker
+        [value]="listMonth()"
+        [marked]="tradeMonths()"
+        (valueChange)="listMonth.set($event)"
+      />
+
+      @let cal = calendar();
+      <div
+        class="mt-3 grid grid-cols-5 gap-1.5 text-center text-[10px] font-semibold text-slate-500 font-mono"
+      >
+        @for (d of ['M', 'T', 'W', 'T', 'F']; track $index) {
+          <span>{{ d }}</span>
+        }
+      </div>
+      @for (week of cal.weeks; track $index) {
+        <div class="mt-1.5 grid grid-cols-5 gap-1.5 font-mono">
+          @for (cell of week.days; track $index) {
+            @if (!cell) {
+              <span></span>
+            } @else {
+              @let j = entryByDate().get(cell.date);
+              <button
+                type="button"
+                (click)="selectDate(cell.date)"
+                [attr.aria-label]="
+                  cell.date +
+                  (cell.count ? ', ' + shortPnl(cell.pnl) : ', no trades') +
+                  (j?.hasPlan ? ', plan written' : '') +
+                  (j?.hasReview ? ', review written' : '')
+                "
+                [attr.aria-current]="cell.date === date() ? 'date' : null"
+                class="relative h-[52px] rounded-lg border px-1.5 py-1 flex flex-col justify-between text-left transition hover:brightness-125"
+                [class.border-slate-800]="!cell.count"
+                [style]="dayStyle(cell)"
+                [class.outline]="cell.date === date()"
+                [class.outline-2]="cell.date === date()"
+                [class.outline-offset-1]="cell.date === date()"
+                [class.outline-blue-400]="cell.date === date()"
+              >
+                <span
+                  class="text-[11px] font-semibold"
+                  [class.text-slate-100]="cell.count"
+                  [class.text-slate-600]="!cell.count"
+                  >{{ cell.day }}</span
+                >
+                @if (cell.count) {
+                  <span class="text-[10px] font-bold text-slate-100">{{ shortPnl(cell.pnl) }}</span>
+                }
+                <span class="absolute top-1.5 right-1.5 flex gap-0.5">
+                  <i
+                    class="w-[5px] h-[5px] rounded-full"
+                    [class.bg-blue-300]="j?.hasPlan"
+                    [class.bg-slate-700]="!j?.hasPlan"
+                  ></i>
+                  <i
+                    class="w-[5px] h-[5px] rounded-full"
+                    [class.bg-blue-300]="j?.hasReview"
+                    [class.bg-slate-700]="!j?.hasReview"
+                  ></i>
+                </span>
+              </button>
+            }
+          }
+        </div>
+      }
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-500">
+        <span class="flex items-center gap-1"
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i
+          ><i class="w-[5px] h-[5px] rounded-full bg-slate-700"></i> plan</span
+        >
+        <span class="flex items-center gap-1"
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i> plan + review</span
+        >
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400 font-mono">
+        {{ tradingDays() }} trading {{ tradingDays() === 1 ? 'day' : 'days' }}
+        @if (tradingDays()) {
+          ·
+          <span
+            [class.text-emerald-400]="cal.summary.net > 0"
+            [class.text-rose-400]="cal.summary.net < 0"
+            >{{ cal.summary.net > 0 ? '+' : cal.summary.net < 0 ? '-' : ''
+            }}{{ abs(cal.summary.net) | number: '1.2-2' }}</span
+          >
+        }
+        · {{ counts().plans }} {{ counts().plans === 1 ? 'plan' : 'plans' }} ·
+        {{ counts().reviews }} {{ counts().reviews === 1 ? 'review' : 'reviews' }}
+      </p>
+    </section>
+
+    <!-- Selected day -->
+    <section class="min-w-0">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-white">{{ title() }}</h2>
+          <p class="text-xs text-slate-400">
+            {{ tradeMode.isBacktest() ? 'Backtest' : 'Live account' }}
+            @if (saveState() === 'saving') {
+              · <span class="text-slate-500">Saving…</span>
+            } @else if (saveState() === 'saved') {
+              · <span class="text-slate-500">Saved {{ savedAt() }}</span>
+            } @else if (saveState() === 'error') {
+              · <span class="text-rose-400">Couldn't save. Check your connection.</span>
+            }
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-2 font-mono text-xs">
+          <span class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b]"
+            >{{ dayTrades().length }} {{ dayTrades().length === 1 ? 'trade' : 'trades' }}</span
+          >
+          @if (dayTrades().length) {
+            <span
+              class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b]"
+              [class.text-emerald-400]="dayPnl() > 0"
+              [class.text-rose-400]="dayPnl() < 0"
+              >{{ dayPnl() > 0 ? '+' : dayPnl() < 0 ? '-' : '' }}${{
+                abs(dayPnl()) | number: '1.2-2'
+              }}</span
+            >
+          }
+          @if (entry().followed_plan) {
+            <span class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b] font-sans"
+              >Plan followed:
+              <span
+                class="capitalize"
+                [class.text-emerald-400]="entry().followed_plan === 'yes'"
+                [class.text-amber-300]="entry().followed_plan === 'partly'"
+                [class.text-rose-400]="entry().followed_plan === 'no'"
+                >{{ entry().followed_plan }}</span
+              ></span
+            >
+          }
+        </div>
+      </div>
+
+      @if (loadingDay()) {
+        <p class="text-slate-500 text-sm">Loading…</p>
+      } @else {
+        @let e = entry();
+
+        <!-- 1. Before the session -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5 mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+            <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400">1</span>
+            Before the session
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Bias</span>
+              <div
+                class="grid grid-cols-3 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+              >
+                @for (b of biases; track b) {
+                  <button
+                    type="button"
+                    (click)="toggle('bias', b)"
+                    [attr.aria-pressed]="e.bias === b"
+                    class="py-1.5 rounded-lg border capitalize transition-colors"
+                    [class]="
+                      e.bias !== b
+                        ? 'border-transparent text-slate-400 hover:text-slate-200'
+                        : b === 'bullish'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                          : b === 'bearish'
+                            ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                            : 'bg-slate-700/40 text-slate-200 border-slate-600'
+                    "
+                  >
+                    {{ b }}
+                  </button>
+                }
+              </div>
+            </div>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Why</span>
+              <input
+                type="text"
+                [value]="e.bias_reason || ''"
+                (input)="set('bias_reason', value($event))"
+                placeholder="Swept Asia low, holding above VWAP"
+                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
+              />
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Key levels</span>
+              <div class="space-y-1.5">
+                @for (level of e.key_levels; track $index; let i = $index) {
+                  <div class="grid grid-cols-[100px_minmax(0,1fr)_24px] gap-2 items-center">
+                    <input
+                      type="number"
+                      step="0.25"
+                      [value]="level.price || ''"
+                      (input)="updateLevel(i, { price: +value($event) })"
+                      placeholder="Price"
+                      aria-label="Level price"
+                      class="bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm font-mono text-slate-100 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      maxlength="80"
+                      [value]="level.label"
+                      (input)="updateLevel(i, { label: value($event) })"
+                      placeholder="Previous day high"
+                      aria-label="Level label"
+                      class="bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      (click)="removeLevel(i)"
+                      aria-label="Remove level"
+                      class="text-slate-500 hover:text-rose-400"
+                    >
+                      ×
+                    </button>
+                  </div>
+                }
+              </div>
+              @if (e.key_levels.length < 10) {
+                <button
+                  type="button"
+                  (click)="addLevel()"
+                  class="text-xs text-blue-300 hover:text-blue-200 mt-2"
+                >
+                  + Add level
+                </button>
+              }
+            </div>
+            <div class="space-y-3">
+              <label class="block">
+                <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Plan</span>
+                <textarea
+                  rows="3"
+                  [value]="e.plan || ''"
+                  (input)="set('plan', value($event))"
+                  placeholder="Longs only. IFVG reclaim in New York AM. Max 2 trades."
+                  class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none resize-y"
+                ></textarea>
+              </label>
+              <label class="block">
+                <span class="block text-[11px] font-medium text-slate-300 mb-1.5">News</span>
+                <input
+                  type="text"
+                  [value]="e.news || ''"
+                  (input)="set('news', value($event))"
+                  placeholder="10:00 ET CPI"
+                  class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
+                />
+              </label>
+            </div>
+          </div>
+
+          <label class="block mb-4">
+            <span class="block text-[11px] font-medium text-slate-300 mb-1.5"
+              >One focus for today</span
+            >
+            <input
+              type="text"
+              [value]="e.focus || ''"
+              (input)="set('focus', value($event))"
+              placeholder="No trades outside New York AM"
+              class="w-full bg-blue-500/5 border border-blue-500/35 focus:border-blue-400 rounded-xl px-3 py-2 text-sm text-blue-50 placeholder-slate-600 focus:outline-none"
+            />
+          </label>
+
+          <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Pre-market charts</span>
+          <app-image-gallery
+            [target]="preTarget()"
+            [images]="preImages()"
+            (added)="onImageAdded($event)"
+            (removed)="onImageRemoved($event)"
+            (captioned)="onCaptioned($event)"
+          />
+        </div>
+
+        <!-- 2. What happened -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5 mb-4">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+              <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400"
+                >2</span
+              >
+              What actually happened
+            </h3>
+            <span class="text-[11px] text-slate-500">From your trades</span>
+          </div>
+          @if (dayTrades().length === 0) {
+            <p class="text-sm text-slate-500">No trades this day.</p>
+          } @else {
+            <div class="divide-y divide-[#1e293b]/60">
+              @for (t of dayTrades(); track t.id) {
+                <a
+                  [routerLink]="['/trades', t.id]"
+                  class="grid grid-cols-[52px_100px_70px_minmax(0,1fr)_96px] gap-2.5 items-center py-2.5 text-sm hover:bg-white/[0.02] rounded"
+                >
+                  <span class="font-mono text-slate-200">{{ t.entry_time || '—' }}</span>
+                  <span class="text-slate-400 truncate">{{ t.session || '—' }}</span>
+                  <span class="text-slate-300 capitalize"
+                    ><span class="text-slate-500">{{ t.direction === 'long' ? '↑' : '↓' }}</span>
+                    {{ t.direction }}</span
+                  >
+                  <span class="min-w-0 truncate text-slate-300"
+                    >{{ t.strategy || '—' }}
+                    @for (name of mistakeNames(t.mistakeIds); track name) {
+                      <span
+                        class="ml-1 text-[11px] px-2 py-px rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
+                        >{{ name }}</span
+                      >
+                    }
+                  </span>
+                  <span
+                    class="font-mono font-bold text-right"
+                    [class.text-emerald-400]="t.netPnl > 0"
+                    [class.text-rose-400]="t.netPnl < 0"
+                    >{{ t.netPnl > 0 ? '+' : t.netPnl < 0 ? '-' : ''
+                    }}{{ abs(t.netPnl) | number: '1.2-2' }}</span
+                  >
+                </a>
+              }
+            </div>
+          }
+          @if (warning(); as w) {
+            <p
+              class="mt-3 text-xs text-rose-300 bg-rose-500/5 border border-rose-500/30 rounded-lg px-3 py-2"
+            >
+              {{ w }}
+            </p>
+          }
+        </div>
+
+        <!-- 3. After the session -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5">
+          <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+            <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400">3</span>
+            After the session
+          </h3>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+            <div>
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5"
+                >Did I follow my plan?</span
+              >
+              <div
+                class="grid grid-cols-3 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+              >
+                @for (f of followed; track f) {
+                  <button
+                    type="button"
+                    (click)="toggle('followed_plan', f)"
+                    [attr.aria-pressed]="e.followed_plan === f"
+                    class="py-1.5 rounded-lg border capitalize transition-colors"
+                    [class]="
+                      e.followed_plan !== f
+                        ? 'border-transparent text-slate-400 hover:text-slate-200'
+                        : f === 'yes'
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                          : f === 'no'
+                            ? 'bg-rose-500/15 text-rose-200 border-rose-500/50'
+                            : 'bg-amber-500/10 text-amber-200 border-amber-500/40'
+                    "
+                  >
+                    {{ f }}
+                  </button>
+                }
+              </div>
+            </div>
+            <div>
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Mood</span>
+              <div class="flex flex-wrap gap-1.5">
+                @for (m of moods; track m) {
+                  <button
+                    type="button"
+                    (click)="toggle('mood', m)"
+                    [attr.aria-pressed]="e.mood === m"
+                    class="text-xs px-3 py-1 rounded-full border transition-colors"
+                    [class]="
+                      e.mood === m
+                        ? 'border-blue-500/55 bg-blue-600/15 text-blue-100'
+                        : 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+                    "
+                  >
+                    {{ m }}
+                  </button>
+                }
+              </div>
+            </div>
+            <div>
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Grade the day</span>
+              <div class="flex gap-1">
+                @for (g of grades; track g) {
+                  <button
+                    type="button"
+                    (click)="toggle('day_grade', g)"
+                    [attr.aria-pressed]="e.day_grade === g"
+                    class="w-8 py-1.5 rounded-lg border font-mono text-xs font-bold transition-colors"
+                    [class]="
+                      e.day_grade !== g
+                        ? 'border-[#26354f] text-slate-400 hover:text-slate-200'
+                        : g === 'A' || g === 'B'
+                          ? 'border-emerald-500/50 bg-emerald-500/12 text-emerald-200'
+                          : g === 'C'
+                            ? 'border-slate-500 bg-slate-700/40 text-slate-100'
+                            : 'border-rose-500/55 bg-rose-500/12 text-rose-100'
+                    "
+                  >
+                    {{ g }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <label class="block">
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5"
+                >What went well</span
+              >
+              <textarea
+                rows="3"
+                [value]="e.went_well || ''"
+                (input)="set('went_well', value($event))"
+                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
+              ></textarea>
+            </label>
+            <label class="block">
+              <span class="block text-[11px] font-medium text-slate-300 mb-1.5">What to fix</span>
+              <textarea
+                rows="3"
+                [value]="e.to_fix || ''"
+                (input)="set('to_fix', value($event))"
+                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
+              ></textarea>
+            </label>
+          </div>
+
+          <label class="block mb-4">
+            <span class="block text-[11px] font-medium text-slate-300 mb-1.5"
+              >Lesson for tomorrow</span
+            >
+            <input
+              type="text"
+              [value]="e.lesson || ''"
+              (input)="set('lesson', value($event))"
+              placeholder="If NY AM gives nothing, the day is done."
+              class="w-full bg-emerald-500/5 border border-emerald-500/30 focus:border-emerald-400 rounded-xl px-3 py-2 text-sm text-emerald-50 placeholder-slate-600 focus:outline-none"
+            />
+          </label>
+
+          <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Session charts</span>
+          <app-image-gallery
+            [target]="postTarget()"
+            [images]="postImages()"
+            (added)="onImageAdded($event)"
+            (removed)="onImageRemoved($event)"
+            (captioned)="onCaptioned($event)"
+          />
+        </div>
+      }
+    </section>
+  </div>
+</div>
