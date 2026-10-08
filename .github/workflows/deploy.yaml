@@ -8,6 +8,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # Angular 22 requires Node >= 22.22 (ng exits on Node 20); matches the node:22 Dockerfile
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
       - name: SSH and deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -15,6 +30,6 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/trading-journal-backend && git pull origin main
+            cd ~/trading-journal && git pull origin main
             cd ~/trading-journal-frontend && git pull origin main
             cd ~/trading-journal && docker compose down && docker compose up -d --build

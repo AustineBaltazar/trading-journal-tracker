@@ -2,6 +2,7 @@ import { Component, inject, Input, Output, EventEmitter, OnChanges, signal } fro
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
 
 @Component({
   imports: [FormsModule],
@@ -29,6 +30,19 @@ export class EditTrade implements OnChanges {
   strategy = '';
   screenshot_link = '';
   notes = '';
+  entry_time = '';
+  exit_time = '';
+  session = '';
+  emotion = '';
+  grade = '';
+
+  readonly sessions = SESSIONS;
+  readonly emotions = EMOTIONS;
+  readonly grades = GRADES;
+
+  get duration(): string | null {
+    return tradeDuration(this.entry_time, this.exit_time);
+  }
 
   allRules = signal<any[]>([]);
   checkedRuleIds = signal<Set<number>>(new Set());
@@ -60,6 +74,11 @@ export class EditTrade implements OnChanges {
         this.strategy = trade.strategy || '';
         this.screenshot_link = trade.screenshot_link || '';
         this.notes = trade.notes || '';
+        this.entry_time = trade.entry_time || '';
+        this.exit_time = trade.exit_time || '';
+        this.session = trade.session || '';
+        this.emotion = trade.emotion || '';
+        this.grade = trade.grade || '';
         this.loaded.set(true);
       });
   }
@@ -118,6 +137,11 @@ export class EditTrade implements OnChanges {
           strategy: this.strategy,
           screenshot_link: this.screenshot_link || null,
           notes: this.notes || null,
+          entry_time: this.entry_time || null,
+          exit_time: this.exit_time || null,
+          session: this.session || null,
+          emotion: this.emotion || null,
+          grade: this.grade || null,
         },
         this.authHeaders(),
       )

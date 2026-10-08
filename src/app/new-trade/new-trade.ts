@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
 
 @Component({
   imports: [FormsModule],
@@ -26,6 +27,19 @@ export class NewTrade implements OnInit {
   strategy = '';
   screenshot_link = '';
   notes = '';
+  entry_time = '';
+  exit_time = '';
+  session = '';
+  emotion = '';
+  grade = '';
+
+  readonly sessions = SESSIONS;
+  readonly emotions = EMOTIONS;
+  readonly grades = GRADES;
+
+  get duration(): string | null {
+    return tradeDuration(this.entry_time, this.exit_time);
+  }
 
   errorMessage = '';
 
@@ -84,6 +98,11 @@ export class NewTrade implements OnInit {
           strategy: this.strategy,
           screenshot_link: this.screenshot_link || null,
           notes: this.notes || null,
+          entry_time: this.entry_time || null,
+          exit_time: this.exit_time || null,
+          session: this.session || null,
+          emotion: this.emotion || null,
+          grade: this.grade || null,
         },
         this.authHeaders(),
       )

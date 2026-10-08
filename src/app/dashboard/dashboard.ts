@@ -118,6 +118,37 @@ export class Dashboard implements OnInit {
     return { profitFactor, tradingDays, avgPerTrade, avgPerDay };
   });
 
+  // Mon-Fri stats. Win rate matches /trades/summary: wins / all trades that day,
+  // so breakevens count toward the total. Weekend-dated trades aren't shown.
+  performanceByDay = computed(() => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((name) => ({
+      name,
+      wins: 0,
+      losses: 0,
+      total: 0,
+      winRate: 0,
+    }));
+
+    for (const trade of this.trades()) {
+      const [year, month, day] = trade.trade_date.substring(0, 10).split('-').map(Number);
+      // setUTCFullYear, not Date.UTC: Date.UTC maps years 0-99 to 1900-1999
+      const date = new Date(0);
+      date.setUTCFullYear(year, month - 1, day);
+      const weekday = date.getUTCDay();
+      if (weekday === 0 || weekday === 6) continue;
+
+      const stats = days[weekday - 1];
+      stats.total += 1;
+      if (trade.netPnl > 0) stats.wins += 1;
+      else if (trade.netPnl < 0) stats.losses += 1;
+    }
+
+    for (const stats of days) {
+      stats.winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
+    }
+    return days;
+  });
+
   calendarDays = computed(() => {
     const year = this.viewedYear();
     const month = this.viewedMonth();

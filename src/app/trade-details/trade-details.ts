@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EditTrade } from '../edit-trade/edit-trade';
 import { environment } from '../../environments/environment';
+import { tradeDuration } from '../trade-journal';
 
 interface DraftAnswer {
   choice: string;
@@ -24,6 +25,7 @@ export class TradeDetails implements OnInit {
 
   tradeId = '';
   trade = signal<any>(null);
+  duration = computed(() => tradeDuration(this.trade()?.entry_time, this.trade()?.exit_time));
   allRules = signal<any[]>([]);
   linkedRules = signal<any[]>([]);
   allQuestions = signal<any[]>([]);
