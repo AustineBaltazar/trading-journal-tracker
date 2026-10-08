@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, effect, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
 import { MonthPicker } from '../month-picker/month-picker';
+import { ModeBadge, TradeModeService } from '../trade-mode';
 import { environment } from '../../environments/environment';
 import {
   currentMonth,
@@ -32,14 +33,15 @@ const BAD_EMOTIONS = new Set(['FOMO', 'Revenge']);
 const LOW_GRADES = new Set(['C+', 'C', 'D', 'F']);
 
 @Component({
-  imports: [SlicePipe, DecimalPipe, FormsModule, NewTrade, MonthPicker],
+  imports: [SlicePipe, DecimalPipe, FormsModule, NewTrade, MonthPicker, ModeBadge],
   selector: 'app-trades-list',
   styleUrl: './trades-list.css',
   templateUrl: './trades-list.html',
 })
-export class TradesList implements OnInit {
+export class TradesList {
   private http = inject(HttpClient);
   private router = inject(Router);
+  readonly tradeMode = inject(TradeModeService);
 
   trades = signal<any[]>([]);
   showNewTradeModal = signal(false);
@@ -77,8 +79,9 @@ export class TradesList implements OnInit {
     ].filter(Boolean).length;
   });
 
-  ngOnInit() {
-    this.loadTrades();
+  // Loads on start and again whenever the live/backtest switch changes
+  constructor() {
+    effect(() => this.loadTrades(this.tradeMode.mode()));
   }
 
   private authHeaders() {
@@ -86,10 +89,13 @@ export class TradesList implements OnInit {
     return { headers: { Authorization: `Bearer ${token}` } };
   }
 
-  loadTrades() {
+  loadTrades(mode = this.tradeMode.mode()) {
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, this.authHeaders())
-      .subscribe((response) => this.trades.set(response.trades));
+      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params: { mode } })
+      .subscribe((response) => {
+        // ignore a response for a mode the user has already switched away from
+        if (this.tradeMode.mode() === mode) this.trades.set(response.trades);
+      });
   }
 
   setFilter<K extends keyof TradeFilters>(key: K, value: TradeFilters[K]) {
@@ -148,6 +154,11 @@ export class TradesList implements OnInit {
   }
   onTradeCreated() {
     this.showNewTradeModal.set(false);
+    this.loadTrades();
+  }
+
+  // "Save and add another": refresh the list behind the still-open form
+  onTradeAdded() {
     this.loadTrades();
   }
 }

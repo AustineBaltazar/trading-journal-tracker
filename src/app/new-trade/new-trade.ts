@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { EMOTIONS, GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
+import { TradeMode, TradeModeService } from '../trade-mode';
 
 @Component({
   imports: [FormsModule],
@@ -13,9 +14,18 @@ import { EMOTIONS, GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-
 })
 export class NewTrade implements OnInit {
   private http = inject(HttpClient);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
+  // saved: trade saved and the form should close
+  // added: trade saved via "Save and add another"; the form stays open
   @Output() saved = new EventEmitter<void>();
+  @Output() added = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
+
+  // Starts on the app's current live/backtest mode
+  mode: TradeMode = inject(TradeModeService).mode();
+  saving = signal(false);
+  loggedCount = signal(0);
 
   trade_date = todayLocal();
   symbol = 'MNQ';
@@ -76,13 +86,20 @@ export class NewTrade implements OnInit {
     this.direction = value;
   }
 
-  onSubmit() {
+  setMode(value: TradeMode) {
+    this.mode = value;
+  }
+
+  onSubmit(addAnother = false) {
     this.errorMessage = '';
+    if (this.saving()) return;
 
     if (!this.trade_date) {
       this.errorMessage = 'Please select a date.';
       return;
     }
+
+    this.saving.set(true);
 
     this.http
       .post<any>(
@@ -103,22 +120,24 @@ export class NewTrade implements OnInit {
           session: this.session || null,
           emotion: this.emotion || null,
           grade: this.grade || null,
+          mode: this.mode,
         },
         this.authHeaders(),
       )
       .subscribe({
-        next: (newTrade) => this.linkRules(newTrade.id),
+        next: (newTrade) => this.linkRules(newTrade.id, () => this.finish(addAnother)),
         error: (err) => {
+          this.saving.set(false);
           this.errorMessage = err.error?.error || 'Something went wrong saving the trade.';
         },
       });
   }
 
-  private linkRules(tradeId: number) {
+  private linkRules(tradeId: number, done: () => void) {
     const allRules = this.allRules();
 
     if (allRules.length === 0) {
-      this.saved.emit();
+      done();
       return;
     }
 
@@ -134,14 +153,45 @@ export class NewTrade implements OnInit {
         .subscribe({
           next: () => {
             remaining -= 1;
-            if (remaining === 0) this.saved.emit();
+            if (remaining === 0) done();
           },
           error: () => {
             remaining -= 1;
-            if (remaining === 0) this.saved.emit();
+            if (remaining === 0) done();
           },
         });
     }
+  }
+
+  private finish(addAnother: boolean) {
+    this.saving.set(false);
+    if (!addAnother) {
+      this.saved.emit();
+      return;
+    }
+    this.loggedCount.update((n) => n + 1);
+    this.resetForNextTrade();
+    this.added.emit();
+  }
+
+  // Keeps the setup that repeats across a session (date, symbol, strategy,
+  // session, direction, contracts, fees, mode) and clears the per-trade fields.
+  resetForNextTrade() {
+    this.entry_price = 0;
+    this.exit_price = 0;
+    this.entry_time = '';
+    this.exit_time = '';
+    this.emotion = '';
+    this.grade = '';
+    this.notes = '';
+    this.screenshot_link = '';
+    this.checkedRuleIds.set(new Set(this.allRules().map((r: any) => r.id)));
+    // Focus the first cleared field with its 0 selected, so typing replaces it
+    setTimeout(() => {
+      const entry = this.host.nativeElement.querySelector<HTMLInputElement>('[name="entry_price"]');
+      entry?.focus();
+      entry?.select();
+    });
   }
 
   cancel() {

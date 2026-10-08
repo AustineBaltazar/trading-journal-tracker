@@ -4,7 +4,9 @@
   >
     <div>
       <div class="flex items-center gap-2">
-        <h1 class="text-xl font-semibold text-white tracking-tight">Dashboard</h1>
+        <h1 class="text-xl font-semibold text-white tracking-tight flex items-center gap-2.5">
+          Dashboard <app-mode-badge />
+        </h1>
       </div>
       <p class="text-xs text-slate-400 mt-0.5">{{ monthLabel() }} overview</p>
     </div>
@@ -25,7 +27,12 @@
       }
       <a
         routerLink="/trades"
-        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-semibold shadow-sm transition"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-sm transition"
+        [class]="
+          tradeMode.isBacktest()
+            ? 'bg-violet-600 hover:bg-violet-500 text-white'
+            : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950'
+        "
       >
         <svg
           class="w-3.5 h-3.5"
@@ -36,7 +43,7 @@
         >
           <path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        New trade
+        {{ tradeMode.isBacktest() ? 'New backtest trade' : 'New trade' }}
       </a>
     </div>
   </header>

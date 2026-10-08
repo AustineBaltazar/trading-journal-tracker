@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { TradeModeService } from '../trade-mode';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -9,6 +10,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 })
 export class Layout {
   private router = inject(Router);
+  readonly tradeMode = inject(TradeModeService);
 
   userName = signal(localStorage.getItem('userName') || 'Account');
 

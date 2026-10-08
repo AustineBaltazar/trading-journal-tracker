@@ -29,6 +29,44 @@
       </div>
     </div>
 
+    <!-- Live / backtest switch: decides which trades every page shows -->
+    <div class="px-3 pt-3">
+      <div
+        role="radiogroup"
+        aria-label="Trade mode"
+        class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-[#0e1626] border border-[#1c2840] text-xs font-semibold"
+      >
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="!tradeMode.isBacktest()"
+          (click)="tradeMode.set('live')"
+          class="py-1.5 rounded-lg border transition-colors"
+          [class]="
+            tradeMode.isBacktest()
+              ? 'border-transparent text-slate-400 hover:text-slate-200'
+              : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+          "
+        >
+          Live
+        </button>
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="tradeMode.isBacktest()"
+          (click)="tradeMode.set('backtest')"
+          class="py-1.5 rounded-lg border transition-colors"
+          [class]="
+            tradeMode.isBacktest()
+              ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          "
+        >
+          Backtest
+        </button>
+      </div>
+    </div>
+
     <!-- Nav links -->
     <div class="p-3 flex flex-col gap-1">
       <a
@@ -119,7 +157,10 @@
   </nav>
 
   <!-- Reserve the scrollbar's space so content doesn't shift when a page starts scrolling -->
-  <div class="flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+  <div
+    class="flex-1 overflow-y-auto [scrollbar-gutter:stable]"
+    [class.shadow-[inset_0_3px_0_#8b5cf6]]="tradeMode.isBacktest()"
+  >
     <router-outlet />
   </div>
 </div>

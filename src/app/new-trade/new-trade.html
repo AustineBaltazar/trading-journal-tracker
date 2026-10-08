@@ -6,11 +6,24 @@
       0 0 0 1px rgba(255, 255, 255, 0.08);
   "
 >
-  <div class="h-1 w-full bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600"></div>
+  <div
+    class="h-1 w-full"
+    [class]="
+      mode === 'backtest'
+        ? 'bg-violet-600'
+        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600'
+    "
+  ></div>
 
   <div class="flex items-center justify-between px-6 pt-5 pb-3">
     <div class="flex items-center gap-2">
       <h2 class="text-lg font-semibold text-white tracking-tight">New trade</h2>
+      @if (mode === 'backtest') {
+        <span
+          class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
+          >BACKTEST</span
+        >
+      }
       <span
         class="px-2 py-0.5 text-[10px] font-mono font-medium rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20"
         >MNQ execution</span
@@ -32,13 +45,55 @@
       <p class="text-rose-400 text-xs">{{ errorMessage }}</p>
     }
 
+    <div>
+      <label class="block text-xs font-medium text-slate-300 mb-1.5">Mode</label>
+      <div
+        role="radiogroup"
+        aria-label="Trade mode"
+        class="grid grid-cols-2 gap-2 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+      >
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="mode === 'live'"
+          (click)="setMode('live')"
+          class="py-1.5 rounded-lg border transition-colors"
+          [class]="
+            mode === 'live'
+              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          "
+        >
+          Live
+        </button>
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="mode === 'backtest'"
+          (click)="setMode('backtest')"
+          class="py-1.5 rounded-lg border transition-colors"
+          [class]="
+            mode === 'backtest'
+              ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          "
+        >
+          Backtest
+        </button>
+      </div>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <label class="block text-xs font-medium text-slate-300 mb-1.5">Date</label>
+        <label class="block text-xs font-medium text-slate-300 mb-1.5">{{
+          mode === 'backtest' ? 'Date (chart date)' : 'Date'
+        }}</label>
         <input
           type="date"
           [(ngModel)]="trade_date"
           name="trade_date"
+          [class.ring-1]="mode === 'backtest'"
+          [class.ring-violet-500/50]="mode === 'backtest'"
           class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-mono transition"
         />
       </div>
@@ -47,6 +102,8 @@
         <select
           [(ngModel)]="symbol"
           name="symbol"
+          [class.ring-1]="mode === 'backtest'"
+          [class.ring-violet-500/50]="mode === 'backtest'"
           class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-medium transition cursor-pointer"
         >
           <option value="MNQ">MNQ (Micro E-mini NQ)</option>
@@ -156,6 +213,8 @@
           type="text"
           [(ngModel)]="strategy"
           name="strategy"
+          [class.ring-1]="mode === 'backtest'"
+          [class.ring-violet-500/50]="mode === 'backtest'"
           placeholder="Opening range breakout"
           class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-xs rounded-xl px-3.5 py-2.5 transition"
         />
@@ -197,6 +256,8 @@
         <select
           [(ngModel)]="session"
           name="session"
+          [class.ring-1]="mode === 'backtest'"
+          [class.ring-violet-500/50]="mode === 'backtest'"
           class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-xs rounded-xl px-3.5 py-2.5 font-medium transition cursor-pointer"
         >
           <option value="">—</option>
@@ -285,23 +346,58 @@
       ></textarea>
     </div>
 
-    <div class="pt-4 pb-1 grid grid-cols-2 gap-3">
+    @if (loggedCount() > 0) {
+      <div
+        class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-[#0f1a14] border border-emerald-500/35 text-xs text-emerald-200"
+        role="status"
+      >
+        <span
+          >✓ Trade saved · <span class="font-semibold text-white">{{ loggedCount() }}</span> logged
+          this sitting</span
+        >
+        <span class="text-slate-500">ready for the next one</span>
+      </div>
+    }
+
+    <div class="pt-2 pb-1 grid grid-cols-[1fr_1.3fr_0.8fr] gap-2.5">
       <button
         type="submit"
-        class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 border border-blue-400/20"
+        [disabled]="saving()"
+        class="w-full text-white font-semibold text-xs py-2.5 px-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 border disabled:opacity-60"
+        [class]="
+          mode === 'backtest'
+            ? 'bg-violet-600 hover:bg-violet-500 border-violet-400/20'
+            : 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 border-blue-400/20'
+        "
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        Save trade
+        Save
+      </button>
+      <button
+        type="button"
+        (click)="onSubmit(true)"
+        [disabled]="saving()"
+        class="w-full font-semibold text-xs py-2.5 px-3 rounded-xl border transition-all disabled:opacity-60"
+        [class]="
+          mode === 'backtest'
+            ? 'bg-violet-500/15 hover:bg-violet-500/25 border-violet-500/45 text-violet-100'
+            : 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/40 text-blue-100'
+        "
+      >
+        Save and add another
       </button>
       <button
         type="button"
         (click)="cancel()"
-        class="w-full bg-[#182133] hover:bg-[#202c42] active:bg-[#141b2b] text-slate-300 hover:text-white font-medium text-xs py-2.5 px-4 rounded-xl border border-[#2b3a55] transition-all"
+        class="w-full bg-[#182133] hover:bg-[#202c42] active:bg-[#141b2b] text-slate-300 hover:text-white font-medium text-xs py-2.5 px-3 rounded-xl border border-[#2b3a55] transition-all"
       >
         Cancel
       </button>
     </div>
+    <p class="text-[11px] text-slate-500 pb-1">
+      Save and add another keeps the date, symbol, strategy, session, direction and size.
+    </p>
   </form>
 </div>
