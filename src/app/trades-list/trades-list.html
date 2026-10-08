@@ -27,39 +27,11 @@
     </div>
 
     <div class="flex items-center flex-wrap gap-2.5">
-      <div class="flex items-center bg-[#0d1320] border border-[#1b2538] rounded-xl p-1">
-        <button
-          (click)="previousMonth()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#162033] transition-all"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-        <div class="px-3 py-1">
-          <span class="text-xs font-semibold text-slate-200">{{ monthLabel() }}</span>
-        </div>
-        <button
-          (click)="nextMonth()"
-          class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#162033] transition-all"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
-      </div>
+      <app-month-picker
+        [value]="viewedMonth()"
+        [marked]="tradeMonths()"
+        (valueChange)="viewedMonth.set($event)"
+      />
 
       <button
         (click)="openNewTradeModal()"
@@ -80,190 +52,307 @@
   </header>
 
   <div class="px-6 lg:px-10 py-6 space-y-6">
+    @let s = summary();
     <section
       class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#0d1322] border border-[#182337] shadow-lg shadow-black/20"
     >
-      <div class="flex items-center flex-wrap gap-6 lg:gap-8">
+      <div class="flex items-baseline flex-wrap gap-x-6 gap-y-3 lg:gap-x-7 font-mono">
         <div class="flex items-baseline gap-2">
-          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Trades</span>
-          <span class="text-lg font-bold text-slate-100 font-mono">{{ monthSummary().total }}</span>
-        </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block"></div>
-        <div class="flex items-baseline gap-2">
-          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Wins</span>
-          <span class="text-lg font-bold text-emerald-400 font-mono">{{
-            monthSummary().wins
-          }}</span>
-        </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block"></div>
-        <div class="flex items-baseline gap-2">
-          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Losses</span>
-          <span class="text-lg font-bold text-rose-400 font-mono">{{ monthSummary().losses }}</span>
-        </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block"></div>
-        <div class="flex items-baseline gap-2.5">
-          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Net P/L</span>
-          <span
-            class="text-xl font-extrabold font-mono tracking-tight"
-            [class.text-emerald-400]="monthSummary().netPnl > 0"
-            [class.text-rose-400]="monthSummary().netPnl < 0"
-            [class.text-white]="monthSummary().netPnl === 0"
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Trades</span
           >
-            {{ monthSummary().netPnl > 0 ? '+' : '' }}{{ monthSummary().netPnl }}
+          <span class="text-lg font-bold text-slate-100">{{ s.total }}</span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Wins</span
+          >
+          <span class="text-lg font-bold text-emerald-400">{{ s.wins }}</span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Losses</span
+          >
+          <span class="text-lg font-bold text-rose-400">{{ s.losses }}</span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2.5">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Net P/L</span
+          >
+          <span
+            class="text-xl font-extrabold tracking-tight"
+            [class.text-emerald-400]="s.netPnl > 0"
+            [class.text-rose-400]="s.netPnl < 0"
+            [class.text-white]="s.netPnl === 0"
+          >
+            {{ s.netPnl > 0 ? '+' : s.netPnl < 0 ? '-' : '' }}{{ abs(s.netPnl) | number: '1.2-2' }}
+          </span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Avg win</span
+          >
+          <span class="text-lg font-bold text-emerald-400">
+            {{ s.avgWin === null ? '—' : '+' + (s.avgWin | number: '1.2-2') }}
+          </span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Avg loss</span
+          >
+          <span class="text-lg font-bold text-rose-400">
+            {{ s.avgLoss === null ? '—' : '-' + (abs(s.avgLoss) | number: '1.2-2') }}
+          </span>
+        </div>
+        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
+            >Profit factor</span
+          >
+          <span class="text-lg font-bold text-slate-100">
+            {{ s.profitFactor === null ? '—' : (s.profitFactor | number: '1.2-2') }}
           </span>
         </div>
       </div>
 
-      @if (monthSummary().total > 0) {
+      @if (s.total > 0) {
         <div
           class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium"
         >
-          {{ monthSummary().winRate }}% win rate
+          {{ s.winRate }}% win rate
         </div>
       }
     </section>
 
     <section class="bg-[#0c121e] border border-[#19243a] rounded-2xl shadow-xl overflow-hidden">
-      <div
-        class="p-4 border-b border-[#162035] flex flex-wrap items-center justify-between gap-3 bg-[#0a0f19]"
-      >
-        <div class="flex items-center gap-2.5 flex-1 min-w-[200px] max-w-sm">
-          <div class="relative w-full">
-            <svg
-              class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              [ngModel]="searchText()"
-              (ngModelChange)="searchText.set($event)"
-              placeholder="Filter strategy (ORB, Retest...)"
-              class="w-full bg-[#111826] border border-[#1d293f] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
-            />
-          </div>
+      @let f = filters();
+      <div class="p-4 border-b border-[#162035] flex flex-wrap items-center gap-2.5 bg-[#0a0f19]">
+        <div class="relative flex-1 min-w-[200px] max-w-xs">
+          <svg
+            class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            [ngModel]="f.search"
+            (ngModelChange)="setFilter('search', $event)"
+            placeholder="Filter strategy (IFVG, SMT...)"
+            class="w-full bg-[#111826] border border-[#1d293f] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+          />
         </div>
-        <div class="flex items-center gap-2 text-xs">
+
+        <select
+          [ngModel]="f.session"
+          (ngModelChange)="setFilter('session', $event)"
+          aria-label="Filter by session"
+          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          [class]="
+            f.session ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+          "
+        >
+          <option value="">Session: All</option>
+          @for (o of sessions; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+        <select
+          [ngModel]="f.emotion"
+          (ngModelChange)="setFilter('emotion', $event)"
+          aria-label="Filter by emotion"
+          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          [class]="
+            f.emotion ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+          "
+        >
+          <option value="">Emotion: All</option>
+          @for (o of emotions; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+        <select
+          [ngModel]="f.grade"
+          (ngModelChange)="setFilter('grade', $event)"
+          aria-label="Filter by grade"
+          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          [class]="f.grade ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'"
+        >
+          <option value="">Grade: All</option>
+          @for (o of grades; track o) {
+            <option [value]="o">{{ o }}</option>
+          }
+        </select>
+
+        <button
+          type="button"
+          role="switch"
+          [attr.aria-checked]="f.rulesBrokenOnly"
+          (click)="setFilter('rulesBrokenOnly', !f.rulesBrokenOnly)"
+          class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs transition-colors"
+          [class]="
+            f.rulesBrokenOnly
+              ? 'border-rose-500/50 bg-rose-500/10 text-rose-300'
+              : 'border-[#1d293f] bg-[#111826] text-slate-300'
+          "
+        >
+          <span
+            class="relative w-6 h-3.5 rounded-full transition-colors"
+            [class]="f.rulesBrokenOnly ? 'bg-rose-500/70' : 'bg-slate-700'"
+          >
+            <span
+              class="absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all"
+              [class]="f.rulesBrokenOnly ? 'left-3' : 'left-0.5'"
+            ></span>
+          </span>
+          Rules broken only
+        </button>
+
+        @if (activeFilterCount() > 0) {
+          <button
+            type="button"
+            (click)="clearFilters()"
+            class="text-xs text-slate-400 hover:text-white underline-offset-2 hover:underline"
+          >
+            Clear
+          </button>
+        }
+
+        <div class="flex items-center gap-1.5 text-xs ml-auto">
           <span class="text-slate-400 font-medium">Outcome:</span>
-          <button
-            (click)="setOutcomeFilter('all')"
-            [class]="
-              'px-2.5 py-1 rounded-lg font-medium transition-colors ' +
-              (outcomeFilter() === 'all'
-                ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
-                : 'text-slate-400')
-            "
-          >
-            All
-          </button>
-          <button
-            (click)="setOutcomeFilter('wins')"
-            [class]="
-              'px-2.5 py-1 rounded-lg font-medium transition-colors ' +
-              (outcomeFilter() === 'wins'
-                ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
-                : 'text-slate-400')
-            "
-          >
-            Wins
-          </button>
-          <button
-            (click)="setOutcomeFilter('losses')"
-            [class]="
-              'px-2.5 py-1 rounded-lg font-medium transition-colors ' +
-              (outcomeFilter() === 'losses'
-                ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
-                : 'text-slate-400')
-            "
-          >
-            Losses
-          </button>
+          @for (o of ['all', 'wins', 'losses']; track o) {
+            <button
+              type="button"
+              (click)="setOutcomeFilter($any(o))"
+              class="px-2.5 py-1 rounded-lg font-medium transition-colors capitalize"
+              [class]="
+                f.outcome === o
+                  ? 'bg-blue-600/20 text-cyan-300 border border-blue-500/30'
+                  : 'text-slate-400 border border-transparent'
+              "
+            >
+              {{ o }}
+            </button>
+          }
         </div>
       </div>
 
       @if (filteredTrades().length === 0) {
-        <p class="text-slate-500 text-sm p-6">No trades match this view.</p>
+        <p class="text-slate-500 text-sm p-6">
+          @if (monthTrades().length === 0) {
+            No trades in {{ monthLabel() }}.
+          } @else {
+            No trades match these filters.
+          }
+        </p>
       } @else {
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
+          <table class="w-full min-w-[980px] text-left border-collapse text-sm">
             <thead>
               <tr
                 class="border-b border-[#162136] text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-[#0a0f19]/60"
               >
-                <th class="py-3.5 px-5">Date</th>
-                <th class="py-3.5 px-4">Direction</th>
-                <th class="py-3.5 px-4">Qty</th>
-                <th class="py-3.5 px-4">Entry</th>
-                <th class="py-3.5 px-4">Exit</th>
-                <th class="py-3.5 px-4 text-center">Rules followed?</th>
-                <th class="py-3.5 px-4 text-right">Net P/L</th>
+                <th class="py-3.5 px-5">
+                  <button
+                    type="button"
+                    (click)="sortBy('date')"
+                    class="uppercase tracking-wider hover:text-white"
+                    [class.text-slate-200]="sortKey() === 'date'"
+                  >
+                    Date
+                    <span [class.text-sky-400]="sortKey() === 'date'">{{
+                      sortIndicator('date')
+                    }}</span>
+                  </button>
+                </th>
+                <th class="py-3.5 px-3">Time</th>
+                <th class="py-3.5 px-3">Symbol</th>
+                <th class="py-3.5 px-3">Side</th>
+                <th class="py-3.5 px-3">Hold</th>
+                <th class="py-3.5 px-3 text-center">
+                  <button
+                    type="button"
+                    (click)="sortBy('grade')"
+                    class="uppercase tracking-wider hover:text-white"
+                    [class.text-slate-200]="sortKey() === 'grade'"
+                  >
+                    Grade
+                    <span [class.text-sky-400]="sortKey() === 'grade'">{{
+                      sortIndicator('grade')
+                    }}</span>
+                  </button>
+                </th>
+                <th class="py-3.5 px-3">Emotion</th>
+                <th class="py-3.5 px-3 text-center">Rules</th>
+                <th class="py-3.5 px-3 text-right">
+                  <button
+                    type="button"
+                    (click)="sortBy('pnl')"
+                    class="uppercase tracking-wider hover:text-white"
+                    [class.text-slate-200]="sortKey() === 'pnl'"
+                  >
+                    Net P/L
+                    <span [class.text-sky-400]="sortKey() === 'pnl'">{{
+                      sortIndicator('pnl')
+                    }}</span>
+                  </button>
+                </th>
                 <th class="py-3.5 px-5">Strategy</th>
                 <th class="py-3.5 px-3"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#131d2e]">
+            <tbody class="divide-y divide-[#131d2e] font-mono">
               @for (trade of filteredTrades(); track trade.id) {
                 <tr
                   (click)="viewTrade(trade.id)"
                   class="hover:bg-[#11192b]/80 transition-colors group cursor-pointer"
+                  [class.shadow-[inset_3px_0_0_#f43f5e]]="trade.rulesFollowed === false"
                 >
-                  <td
-                    class="py-4 px-5 text-slate-300 font-mono text-xs font-semibold whitespace-nowrap"
-                  >
+                  <td class="py-3.5 px-5 text-slate-300 text-xs font-semibold whitespace-nowrap">
                     {{ trade.trade_date | slice: 0 : 10 }}
                   </td>
-                  <td class="py-4 px-4 whitespace-nowrap">
-                    @if (trade.direction === 'long') {
-                      <span
-                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                      >
-                        <svg
-                          class="w-3 h-3"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2.5"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M5 10l7-7m0 0l7 7m-7-7v18"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        Long
-                      </span>
-                    } @else {
-                      <span
-                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                      >
-                        <svg
-                          class="w-3 h-3 rotate-180"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2.5"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            d="M5 10l7-7m0 0l7 7m-7-7v18"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        Short
-                      </span>
+                  <td class="py-3.5 px-3 whitespace-nowrap">
+                    <div class="text-xs text-slate-200">{{ trade.entry_time || '—' }}</div>
+                    @if (trade.session) {
+                      <div class="text-[11px] text-slate-500 font-sans">{{ trade.session }}</div>
                     }
                   </td>
-                  <td class="py-4 px-4 font-mono text-xs text-slate-300">{{ trade.contracts }}</td>
-                  <td class="py-4 px-4 font-mono text-xs text-slate-200">
-                    {{ trade.entry_price }}
+                  <td class="py-3.5 px-3 text-xs font-semibold text-slate-300">
+                    {{ trade.symbol }}
                   </td>
-                  <td class="py-4 px-4 font-mono text-xs text-slate-300">{{ trade.exit_price }}</td>
-                  <td class="py-4 px-4 text-center whitespace-nowrap">
+                  <td class="py-3.5 px-3 text-xs text-slate-300 whitespace-nowrap capitalize">
+                    <span class="text-slate-500 mr-1">{{
+                      trade.direction === 'long' ? '↑' : '↓'
+                    }}</span
+                    >{{ trade.direction }}
+                  </td>
+                  <td class="py-3.5 px-3 text-xs text-slate-300 whitespace-nowrap">
+                    {{ hold(trade) }}
+                  </td>
+                  <td
+                    class="py-3.5 px-3 text-center text-[13px] font-bold"
+                    [class.text-rose-400]="isLowGrade(trade.grade)"
+                    [class.text-slate-100]="!isLowGrade(trade.grade)"
+                  >
+                    {{ trade.grade || '—' }}
+                  </td>
+                  <td
+                    class="py-3.5 px-3 text-xs font-sans"
+                    [class.text-rose-400]="isBadEmotion(trade.emotion)"
+                    [class.text-slate-300]="!isBadEmotion(trade.emotion)"
+                  >
+                    {{ trade.emotion || '—' }}
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap font-sans">
                     @if (trade.rulesFollowed === true) {
                       <span
                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0e2a22] text-emerald-400 border border-emerald-700/40"
@@ -279,19 +368,18 @@
                     }
                   </td>
                   <td
-                    class="py-4 px-4 text-right font-mono font-semibold whitespace-nowrap"
+                    class="py-3.5 px-3 text-right font-semibold whitespace-nowrap"
                     [class.text-emerald-400]="trade.netPnl > 0"
                     [class.text-rose-400]="trade.netPnl < 0"
+                    [class.text-slate-300]="trade.netPnl === 0"
                   >
-                    {{ trade.netPnl > 0 ? '+' : '' }}{{ trade.netPnl }}
+                    {{ trade.netPnl > 0 ? '+' : trade.netPnl < 0 ? '-' : ''
+                    }}{{ abs(trade.netPnl) | number: '1.2-2' }}
                   </td>
-                  <td class="py-4 px-5 whitespace-nowrap">
-                    <span
-                      class="text-xs text-cyan-300 font-medium px-2 py-0.5 rounded bg-cyan-950/40 border border-cyan-800/40"
-                      >{{ trade.strategy || '—' }}</span
-                    >
+                  <td class="py-3.5 px-5 text-xs text-slate-400 font-sans whitespace-nowrap">
+                    {{ trade.strategy || '—' }}
                   </td>
-                  <td class="py-4 px-3 text-right">
+                  <td class="py-3.5 px-3 text-right">
                     <svg
                       class="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition-colors inline-block"
                       fill="none"
@@ -308,26 +396,25 @@
           </table>
         </div>
 
-        <div class="p-4 border-t border-[#162136] bg-[#0a0f1a] text-xs text-slate-400 font-medium">
-          Showing <span class="text-slate-200 font-semibold">{{ filteredTrades().length }}</span> of
-          <span class="text-slate-200 font-semibold">{{ monthSummary().total }}</span> trades this
-          month
+        <div
+          class="p-4 border-t border-[#162136] bg-[#0a0f1a] flex flex-wrap justify-between gap-2 text-xs text-slate-400 font-medium"
+        >
+          <span>
+            Showing
+            <span class="text-slate-200 font-semibold">{{ filteredTrades().length }}</span> of
+            <span class="text-slate-200 font-semibold">{{ monthTrades().length }}</span> trades in
+            {{ monthLabel() }}
+          </span>
+          <span class="text-slate-500">Click Date, Grade or Net P/L to sort</span>
         </div>
       }
     </section>
 
-    <div class="flex items-center gap-2 text-xs text-slate-500 pt-1">
-      <svg
-        class="w-3.5 h-3.5 text-slate-600"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" x2="12" y1="16" y2="12" />
-        <line x1="12" x2="12.01" y1="8" y2="8" />
-      </svg>
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-slate-500 pt-1">
+      <span class="flex items-center gap-2">
+        <span class="inline-block w-[3px] h-3 bg-rose-500"></span>
+        Red edge = broke a rule
+      </span>
       <span>Click a row to open its full details.</span>
     </div>
   </div>

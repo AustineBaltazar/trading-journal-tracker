@@ -1,13 +1,38 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { SlicePipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
+import { MonthPicker } from '../month-picker/month-picker';
 import { environment } from '../../environments/environment';
+import {
+  currentMonth,
+  EMOTIONS,
+  GRADES,
+  monthLabel as formatMonth,
+  monthsWithTrades,
+  SESSIONS,
+  tradeDuration,
+  tradesInMonth,
+  YearMonth,
+} from '../trade-journal';
+import {
+  filterTrades,
+  NO_FILTERS,
+  Outcome,
+  SortDir,
+  SortKey,
+  sortTrades,
+  summarizeTrades,
+  TradeFilters,
+} from './trade-filters';
+
+const BAD_EMOTIONS = new Set(['FOMO', 'Revenge']);
+const LOW_GRADES = new Set(['C+', 'C', 'D', 'F']);
 
 @Component({
-  imports: [SlicePipe, FormsModule, NewTrade],
+  imports: [SlicePipe, DecimalPipe, FormsModule, NewTrade, MonthPicker],
   selector: 'app-trades-list',
   styleUrl: './trades-list.css',
   templateUrl: './trades-list.html',
@@ -19,59 +44,37 @@ export class TradesList implements OnInit {
   trades = signal<any[]>([]);
   showNewTradeModal = signal(false);
 
-  viewedYear = signal(new Date().getFullYear());
-  viewedMonth = signal(new Date().getMonth());
+  viewedMonth = signal<YearMonth>(currentMonth());
+  monthLabel = computed(() => formatMonth(this.viewedMonth()));
+  tradeMonths = computed(() => monthsWithTrades(this.trades()));
 
-  searchText = signal('');
-  outcomeFilter = signal<'all' | 'wins' | 'losses'>('all');
+  filters = signal<TradeFilters>({ ...NO_FILTERS });
+  sortKey = signal<SortKey>('date');
+  sortDir = signal<SortDir>('desc');
 
-  monthLabel = computed(() => {
-    const names = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return `${names[this.viewedMonth()]} ${this.viewedYear()}`;
-  });
+  readonly sessions = SESSIONS;
+  readonly emotions = EMOTIONS;
+  readonly grades = GRADES;
 
-  monthTrades = computed(() => {
-    const year = this.viewedYear();
-    const month = this.viewedMonth();
-    return this.trades().filter((trade) => {
-      const date = new Date(trade.trade_date);
-      return date.getUTCFullYear() === year && date.getUTCMonth() === month;
-    });
-  });
+  monthTrades = computed(() => tradesInMonth(this.trades(), this.viewedMonth()));
 
-  monthSummary = computed(() => {
-    const trades = this.monthTrades();
-    const wins = trades.filter((t) => t.netPnl > 0).length;
-    const losses = trades.filter((t) => t.netPnl < 0).length;
-    const netPnl = trades.reduce((sum, t) => sum + t.netPnl, 0);
-    const winRate = trades.length > 0 ? Math.round((wins / trades.length) * 1000) / 10 : 0;
-    return { total: trades.length, wins, losses, netPnl: Math.round(netPnl * 100) / 100, winRate };
-  });
+  filteredTrades = computed(() =>
+    sortTrades(filterTrades(this.monthTrades(), this.filters()), this.sortKey(), this.sortDir()),
+  );
 
-  filteredTrades = computed(() => {
-    const search = this.searchText().toLowerCase().trim();
-    const outcome = this.outcomeFilter();
-    return this.monthTrades().filter((trade) => {
-      const matchesSearch = !search || (trade.strategy || '').toLowerCase().includes(search);
-      const matchesOutcome =
-        outcome === 'all' ||
-        (outcome === 'wins' && trade.netPnl > 0) ||
-        (outcome === 'losses' && trade.netPnl < 0);
-      return matchesSearch && matchesOutcome;
-    });
+  // Summary bar follows the filters, so filtering to a session shows that session's stats
+  summary = computed(() => summarizeTrades(this.filteredTrades()));
+
+  activeFilterCount = computed(() => {
+    const f = this.filters();
+    return [
+      f.search.trim(),
+      f.session,
+      f.emotion,
+      f.grade,
+      f.rulesBrokenOnly,
+      f.outcome !== 'all',
+    ].filter(Boolean).length;
   });
 
   ngOnInit() {
@@ -89,22 +92,48 @@ export class TradesList implements OnInit {
       .subscribe((response) => this.trades.set(response.trades));
   }
 
-  previousMonth() {
-    if (this.viewedMonth() === 0) {
-      this.viewedMonth.set(11);
-      this.viewedYear.update((y) => y - 1);
-    } else this.viewedMonth.update((m) => m - 1);
+  setFilter<K extends keyof TradeFilters>(key: K, value: TradeFilters[K]) {
+    this.filters.update((f) => ({ ...f, [key]: value }));
   }
 
-  nextMonth() {
-    if (this.viewedMonth() === 11) {
-      this.viewedMonth.set(0);
-      this.viewedYear.update((y) => y + 1);
-    } else this.viewedMonth.update((m) => m + 1);
+  setOutcomeFilter(value: Outcome) {
+    this.setFilter('outcome', value);
   }
 
-  setOutcomeFilter(value: 'all' | 'wins' | 'losses') {
-    this.outcomeFilter.set(value);
+  clearFilters() {
+    this.filters.set({ ...NO_FILTERS });
+  }
+
+  // First click on a column: date and P/L sort high-to-low, grade sorts best first
+  sortBy(key: SortKey) {
+    if (this.sortKey() === key) {
+      this.sortDir.update((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      this.sortKey.set(key);
+      this.sortDir.set(key === 'grade' ? 'asc' : 'desc');
+    }
+  }
+
+  sortIndicator(key: SortKey): string {
+    if (this.sortKey() !== key) return '↕';
+    if (key === 'grade') return this.sortDir() === 'asc' ? '↓' : '↑';
+    return this.sortDir() === 'desc' ? '↓' : '↑';
+  }
+
+  hold(trade: any): string {
+    return tradeDuration(trade.entry_time, trade.exit_time) ?? '—';
+  }
+
+  isBadEmotion(emotion: string | null): boolean {
+    return !!emotion && BAD_EMOTIONS.has(emotion);
+  }
+
+  isLowGrade(grade: string | null): boolean {
+    return !!grade && LOW_GRADES.has(grade);
+  }
+
+  abs(n: number): number {
+    return Math.abs(n);
   }
 
   viewTrade(id: number) {

@@ -1,0 +1,111 @@
+<div class="relative inline-block">
+  <div
+    class="flex items-center gap-2 bg-space-900 px-2 py-1 rounded-lg border transition-colors"
+    [class.border-slate-800]="!open()"
+    [class.border-blue-500]="open()"
+  >
+    <button
+      type="button"
+      (click)="step(-1)"
+      [disabled]="!canGoBack()"
+      aria-label="Previous month"
+      class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition"
+    >
+      ‹
+    </button>
+    <button
+      type="button"
+      data-month-label
+      (click)="toggle()"
+      [attr.aria-expanded]="open()"
+      aria-haspopup="dialog"
+      class="flex items-center gap-1.5 px-2 py-0.5 rounded-md font-semibold text-xs font-mono transition-colors"
+      [class.text-white]="!open()"
+      [class.hover:bg-slate-800]="!open()"
+      [class.bg-blue-600/25]="open()"
+      [class.text-blue-200]="open()"
+    >
+      {{ label() }}
+      <span class="text-[9px] text-slate-500">{{ open() ? '▴' : '▾' }}</span>
+    </button>
+    <button
+      type="button"
+      (click)="step(1)"
+      [disabled]="!canGoForward()"
+      aria-label="Next month"
+      class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition"
+    >
+      ›
+    </button>
+  </div>
+
+  @if (open()) {
+    <div
+      role="dialog"
+      aria-label="Choose month"
+      class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-[#0f1522] border border-[#26354f] rounded-xl p-3 shadow-2xl shadow-black/60 font-mono"
+    >
+      <div class="flex items-center justify-between px-1 pb-2.5">
+        <button
+          type="button"
+          (click)="changeYear(-1)"
+          [disabled]="panelYear() <= 2000"
+          aria-label="Previous year"
+          class="px-2 py-0.5 rounded text-slate-400 hover:text-white disabled:opacity-30 transition"
+        >
+          ‹
+        </button>
+        <span class="text-sm font-bold text-white">{{ panelYear() }}</span>
+        <button
+          type="button"
+          (click)="changeYear(1)"
+          [disabled]="panelYear() >= max.year"
+          aria-label="Next year"
+          class="px-2 py-0.5 rounded text-slate-400 hover:text-white disabled:opacity-30 transition"
+        >
+          ›
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-1.5">
+        @for (m of months(); track m.month) {
+          <button
+            type="button"
+            [attr.data-month]="m.month"
+            (click)="pick(m.month)"
+            (keydown)="onGridKey($event, m.month)"
+            [disabled]="m.disabled"
+            [attr.aria-current]="m.selected ? 'date' : null"
+            class="relative text-xs py-2 pb-2.5 rounded-lg border transition-colors"
+            [class]="
+              m.selected
+                ? 'bg-blue-600/25 border-blue-500/60 text-blue-100 font-bold'
+                : m.disabled
+                  ? 'border-transparent text-slate-700 cursor-default'
+                  : 'border-transparent text-slate-300 hover:bg-[#162033]'
+            "
+          >
+            {{ m.name }}
+            @if (m.hasTrades) {
+              <span
+                class="absolute left-1/2 -translate-x-1/2 bottom-1 w-1 h-1 rounded-full bg-emerald-400"
+              ></span>
+            }
+          </button>
+        }
+      </div>
+
+      <div
+        class="flex items-center justify-between mt-2.5 pt-2.5 border-t border-slate-800 text-[11px]"
+      >
+        <span class="flex items-center gap-1.5 text-slate-500">
+          <span class="w-1 h-1 rounded-full bg-emerald-400"></span>
+          has trades
+        </span>
+        <button type="button" (click)="thisMonth()" class="text-blue-300 hover:text-blue-200">
+          This month
+        </button>
+      </div>
+    </div>
+  }
+</div>
