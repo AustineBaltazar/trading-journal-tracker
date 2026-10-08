@@ -10,14 +10,16 @@ import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
 import { monthKey, monthsWithTrades, todayLocal, YearMonth } from '../trade-journal';
 import { JournalImages } from './journal-images';
+import { buildCalendarMonth, dayStyle } from '../dashboard/calendar';
 import {
   BIASES,
-  buildDayList,
   DAY_GRADES,
   EMPTY_ENTRY,
   EntrySummary,
   focusSessionWarning,
   FOLLOWED,
+  journalCounts,
+  shortPnl,
   formatLongDate,
   JournalEntry,
   JournalImage,
@@ -68,9 +70,22 @@ export class Journal implements OnDestroy {
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly tradeMonths = computed(() => monthsWithTrades(this.trades()));
-  readonly days = computed(() =>
-    buildDayList(monthKey(this.listMonth()), this.monthEntries(), this.trades()),
+  // Mini calendar: same layout and P/L colours as the dashboard calendar
+  readonly calendar = computed(() =>
+    buildCalendarMonth(this.trades(), this.listMonth(), this.today),
   );
+  readonly entryByDate = computed(
+    () => new Map(this.monthEntries().map((e) => [e.date, e] as const)),
+  );
+  readonly counts = computed(() => journalCounts(this.monthEntries(), monthKey(this.listMonth())));
+  readonly tradingDays = computed(
+    () =>
+      this.calendar()
+        .weeks.flatMap((w) => w.days)
+        .filter((d) => d && d.count > 0).length,
+  );
+  readonly dayStyle = dayStyle;
+  readonly shortPnl = shortPnl;
   readonly dayTrades = computed(() =>
     this.trades()
       .filter((t) => t.trade_date.startsWith(this.date()))

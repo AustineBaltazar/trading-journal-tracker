@@ -26,67 +26,90 @@
         (valueChange)="listMonth.set($event)"
       />
 
-      <div class="mt-3 space-y-1">
-        @for (d of days(); track d.date) {
-          <button
-            type="button"
-            (click)="selectDate(d.date)"
-            class="w-full grid grid-cols-[42px_minmax(0,1fr)_auto] gap-2.5 items-center px-2.5 py-2 rounded-xl border text-left transition-colors"
-            [class]="
-              d.date === date()
-                ? 'bg-[#111726] border-blue-500/50'
-                : 'border-transparent hover:bg-[#0f1522]'
-            "
-          >
-            <span class="font-mono text-[11px] text-slate-400 leading-tight"
-              >{{ d.weekday }}<b class="block text-base text-slate-100">{{ d.day }}</b></span
-            >
-            <span class="min-w-0">
-              <span class="block text-[11px] text-slate-500">
-                @if (d.tradeCount === 0) {
-                  No trades
-                } @else {
-                  {{ d.tradeCount }} {{ d.tradeCount === 1 ? 'trade' : 'trades' }}
-                }
-              </span>
-              <span class="flex gap-1 mt-1">
-                <span
-                  class="text-[9px] px-1.5 rounded border"
-                  [class]="
-                    d.hasPlan
-                      ? 'text-blue-200 border-blue-500/45 bg-blue-600/15'
-                      : 'text-slate-600 border-slate-700'
-                  "
-                  >Plan</span
-                >
-                <span
-                  class="text-[9px] px-1.5 rounded border"
-                  [class]="
-                    d.hasReview
-                      ? 'text-blue-200 border-blue-500/45 bg-blue-600/15'
-                      : 'text-slate-600 border-slate-700'
-                  "
-                  >Review</span
-                >
-              </span>
-            </span>
-            <span
-              class="font-mono text-xs font-bold"
-              [class.text-emerald-400]="d.pnl > 0"
-              [class.text-rose-400]="d.pnl < 0"
-              [class.text-slate-600]="d.pnl === 0"
-            >
-              @if (d.tradeCount === 0) {
-                —
-              } @else {
-                {{ d.pnl > 0 ? '+' : d.pnl < 0 ? '-' : '' }}{{ abs(d.pnl) | number: '1.2-2' }}
-              }
-            </span>
-          </button>
-        } @empty {
-          <p class="text-xs text-slate-500 px-1 py-3">No trades or entries this month.</p>
+      @let cal = calendar();
+      <div
+        class="mt-3 grid grid-cols-5 gap-1.5 text-center text-[10px] font-semibold text-slate-500 font-mono"
+      >
+        @for (d of ['M', 'T', 'W', 'T', 'F']; track $index) {
+          <span>{{ d }}</span>
         }
       </div>
+      @for (week of cal.weeks; track $index) {
+        <div class="mt-1.5 grid grid-cols-5 gap-1.5 font-mono">
+          @for (cell of week.days; track $index) {
+            @if (!cell) {
+              <span></span>
+            } @else {
+              @let j = entryByDate().get(cell.date);
+              <button
+                type="button"
+                (click)="selectDate(cell.date)"
+                [attr.aria-label]="
+                  cell.date +
+                  (cell.count ? ', ' + shortPnl(cell.pnl) : ', no trades') +
+                  (j?.hasPlan ? ', plan written' : '') +
+                  (j?.hasReview ? ', review written' : '')
+                "
+                [attr.aria-current]="cell.date === date() ? 'date' : null"
+                class="relative h-[52px] rounded-lg border px-1.5 py-1 flex flex-col justify-between text-left transition hover:brightness-125"
+                [class.border-slate-800]="!cell.count"
+                [style]="dayStyle(cell)"
+                [class.outline]="cell.date === date()"
+                [class.outline-2]="cell.date === date()"
+                [class.outline-offset-1]="cell.date === date()"
+                [class.outline-blue-400]="cell.date === date()"
+              >
+                <span
+                  class="text-[11px] font-semibold"
+                  [class.text-slate-100]="cell.count"
+                  [class.text-slate-600]="!cell.count"
+                  >{{ cell.day }}</span
+                >
+                @if (cell.count) {
+                  <span class="text-[10px] font-bold text-slate-100">{{ shortPnl(cell.pnl) }}</span>
+                }
+                <span class="absolute top-1.5 right-1.5 flex gap-0.5">
+                  <i
+                    class="w-[5px] h-[5px] rounded-full"
+                    [class.bg-blue-300]="j?.hasPlan"
+                    [class.bg-slate-700]="!j?.hasPlan"
+                  ></i>
+                  <i
+                    class="w-[5px] h-[5px] rounded-full"
+                    [class.bg-blue-300]="j?.hasReview"
+                    [class.bg-slate-700]="!j?.hasReview"
+                  ></i>
+                </span>
+              </button>
+            }
+          }
+        </div>
+      }
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-500">
+        <span class="flex items-center gap-1"
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i
+          ><i class="w-[5px] h-[5px] rounded-full bg-slate-700"></i> plan</span
+        >
+        <span class="flex items-center gap-1"
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i
+          ><i class="w-[5px] h-[5px] rounded-full bg-blue-300"></i> plan + review</span
+        >
+      </div>
+      <p class="mt-2 text-[11px] text-slate-400 font-mono">
+        {{ tradingDays() }} trading {{ tradingDays() === 1 ? 'day' : 'days' }}
+        @if (tradingDays()) {
+          ·
+          <span
+            [class.text-emerald-400]="cal.summary.net > 0"
+            [class.text-rose-400]="cal.summary.net < 0"
+            >{{ cal.summary.net > 0 ? '+' : cal.summary.net < 0 ? '-' : ''
+            }}{{ abs(cal.summary.net) | number: '1.2-2' }}</span
+          >
+        }
+        · {{ counts().plans }} {{ counts().plans === 1 ? 'plan' : 'plans' }} ·
+        {{ counts().reviews }} {{ counts().reviews === 1 ? 'review' : 'reviews' }}
+      </p>
     </section>
 
     <!-- Selected day -->

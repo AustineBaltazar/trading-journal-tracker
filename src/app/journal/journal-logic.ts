@@ -59,56 +59,20 @@ export interface EntrySummary {
   imageCount: number;
 }
 
-export interface DayRow {
-  date: string;
-  weekday: string;
-  day: number;
-  tradeCount: number;
-  pnl: number;
-  hasPlan: boolean;
-  hasReview: boolean;
+// Compact P/L for a mini-calendar cell: +415, −32, +1.2k
+export function shortPnl(pnl: number): string {
+  const sign = pnl > 0 ? '+' : pnl < 0 ? '−' : '';
+  const abs = Math.abs(pnl);
+  return sign + (abs >= 1000 ? `${(abs / 1000).toFixed(1)}k` : `${Math.round(abs)}`);
 }
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-// Every day in the month that has trades or a journal entry, newest first
-export function buildDayList(
-  monthKey: string,
-  entries: EntrySummary[],
-  trades: { trade_date: string; netPnl: number }[],
-): DayRow[] {
-  const days = new Map<string, DayRow>();
-  const row = (date: string): DayRow => {
-    let r = days.get(date);
-    if (!r) {
-      const d = new Date(`${date}T00:00:00Z`);
-      r = {
-        date,
-        weekday: WEEKDAYS[d.getUTCDay()],
-        day: d.getUTCDate(),
-        tradeCount: 0,
-        pnl: 0,
-        hasPlan: false,
-        hasReview: false,
-      };
-      days.set(date, r);
-    }
-    return r;
+// How many days in the month have a plan / a review written
+export function journalCounts(entries: EntrySummary[], monthKey: string) {
+  const inMonth = entries.filter((e) => e.date.startsWith(monthKey));
+  return {
+    plans: inMonth.filter((e) => e.hasPlan).length,
+    reviews: inMonth.filter((e) => e.hasReview).length,
   };
-  for (const t of trades) {
-    const date = t.trade_date.substring(0, 10);
-    if (!date.startsWith(monthKey)) continue;
-    const r = row(date);
-    r.tradeCount += 1;
-    r.pnl = Math.round((r.pnl + t.netPnl) * 100) / 100;
-  }
-  for (const e of entries) {
-    if (!e.date.startsWith(monthKey)) continue;
-    const r = row(e.date);
-    r.hasPlan = e.hasPlan;
-    r.hasReview = e.hasReview;
-  }
-  return [...days.values()].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 // If today's focus names a session, flags trades taken in a different one

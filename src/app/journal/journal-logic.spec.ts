@@ -1,28 +1,34 @@
-import { buildDayList, focusSessionWarning, formatLongDate, imageFileError } from './journal-logic';
+import {
+  focusSessionWarning,
+  formatLongDate,
+  imageFileError,
+  journalCounts,
+  shortPnl,
+} from './journal-logic';
 
-describe('buildDayList', () => {
-  it('merges trading days and journal days, newest first', () => {
-    const rows = buildDayList(
-      '2026-09',
-      [
-        { date: '2026-09-23', hasPlan: true, hasReview: true, imageCount: 2 },
-        { date: '2026-09-15', hasPlan: true, hasReview: false, imageCount: 0 },
-        { date: '2026-08-31', hasPlan: true, hasReview: true, imageCount: 0 },
-      ],
-      [
-        { trade_date: '2026-09-23', netPnl: -289.5 },
-        { trade_date: '2026-09-22', netPnl: 40 },
-        { trade_date: '2026-09-22', netPnl: 5.26 },
-        { trade_date: '2026-10-01', netPnl: 100 },
-      ],
-    );
+describe('shortPnl', () => {
+  it('keeps calendar cells short', () => {
+    expect(shortPnl(414.78)).toBe('+415');
+    expect(shortPnl(-31.74)).toBe('−32');
+    expect(shortPnl(1195)).toBe('+1.2k');
+    expect(shortPnl(-2430)).toBe('−2.4k');
+    expect(shortPnl(0)).toBe('0');
+  });
+});
+
+describe('journalCounts', () => {
+  it('counts plans and reviews in the month only', () => {
     expect(
-      rows.map((r) => [r.date, r.weekday, r.tradeCount, r.pnl, r.hasPlan, r.hasReview]),
-    ).toEqual([
-      ['2026-09-23', 'Wed', 1, -289.5, true, true],
-      ['2026-09-22', 'Tue', 2, 45.26, false, false],
-      ['2026-09-15', 'Tue', 0, 0, true, false],
-    ]);
+      journalCounts(
+        [
+          { date: '2026-09-23', hasPlan: true, hasReview: true, imageCount: 0 },
+          { date: '2026-09-25', hasPlan: true, hasReview: false, imageCount: 0 },
+          { date: '2026-09-15', hasPlan: false, hasReview: true, imageCount: 0 },
+          { date: '2026-08-31', hasPlan: true, hasReview: true, imageCount: 0 },
+        ],
+        '2026-09',
+      ),
+    ).toEqual({ plans: 2, reviews: 2 });
   });
 });
 
