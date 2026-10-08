@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { DecimalPipe, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { buildEdgeAnalytics, formatMinutes, MIN_SAMPLE, winRateTier } from './edge-analytics';
+import { buildEquityChart, CHART, CHART_HEIGHT } from './equity-chart';
 
 @Component({
   imports: [RouterLink, DecimalPipe, UpperCasePipe],
@@ -187,48 +189,65 @@ export class Dashboard implements OnInit {
     return Math.abs(n);
   }
 
-  chartData = computed(() => {
-    const sorted = [...this.trades()].sort((a, b) => a.trade_date.localeCompare(b.trade_date));
-    let runningTotal = 0;
-    const points: { value: number; date: string }[] = [];
-    for (const trade of sorted) {
-      runningTotal += trade.netPnl;
-      points.push({ value: runningTotal, date: trade.trade_date.substring(0, 10) });
-    }
-    if (points.length === 0) {
-      return {
-        linePoints: '',
-        areaPoints: '',
-        maxValue: 0,
-        firstDate: '',
-        lastDate: '',
-        lastX: 0,
-        lastY: 0,
-      };
-    }
-    const width = 600,
-      height = 150;
-    const values = points.map((p) => p.value);
-    const maxValue = Math.max(...values, 0);
-    const minValue = Math.min(...values, 0);
-    const range = maxValue - minValue || 1;
-    const coords = points.map((point, index) => {
-      const x = points.length === 1 ? 0 : (index / (points.length - 1)) * width;
-      const y = height - ((point.value - minValue) / range) * height;
-      return { x, y };
-    });
-    const linePoints = coords.map((c) => `${c.x},${c.y}`).join(' ');
-    const areaPoints = `0,${height} ${linePoints} ${width},${height}`;
-    return {
-      linePoints,
-      areaPoints,
-      maxValue,
-      firstDate: points[0].date,
-      lastDate: points[points.length - 1].date,
-      lastX: coords[coords.length - 1].x,
-      lastY: coords[coords.length - 1].y,
-    };
+  equityChart = computed(() => buildEquityChart(this.trades()));
+  readonly chartViewBox = `0 0 ${CHART.width} ${CHART_HEIGHT}`;
+  readonly layout = CHART;
+  hoverIndex = signal<number | null>(null);
+
+  hoveredPoint = computed(() => {
+    const chart = this.equityChart();
+    const index = this.hoverIndex();
+    return chart && index !== null ? chart.points[index] : null;
   });
+
+  // Keeps the tooltip inside the chart near the left and right edges
+  tooltipLeft = computed(() => {
+    const point = this.hoveredPoint();
+    return point ? Math.min(88, Math.max(12, (point.x / CHART.width) * 100)) : 0;
+  });
+
+  onChartHover(event: MouseEvent) {
+    const chart = this.equityChart();
+    if (!chart) return;
+    const svg = event.currentTarget as SVGSVGElement;
+    const rect = svg.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * CHART.width;
+    const plotWidth = CHART.width - CHART.left - CHART.right;
+    const steps = chart.points.length - 1;
+    const index = Math.round(((x - CHART.left) / plotWidth) * steps);
+    this.hoverIndex.set(Math.min(steps, Math.max(1, index)));
+  }
+
+  edgeRange = signal<'month' | 'all'>('all');
+
+  edge = computed(() => {
+    const trades = this.trades();
+    if (this.edgeRange() === 'all') return buildEdgeAnalytics(trades);
+    const now = new Date();
+    const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return buildEdgeAnalytics(trades.filter((t) => t.trade_date.startsWith(prefix)));
+  });
+
+  gradeMax = computed(() => Math.max(1, ...this.edge().grades.map((g) => g.total)));
+
+  readonly minSample = MIN_SAMPLE;
+  readonly winRateTier = winRateTier;
+  readonly formatMinutes = formatMinutes;
+  readonly tierBar = {
+    high: 'bg-gradient-to-r from-emerald-500 to-teal-400',
+    mid: 'bg-blue-500',
+    low: 'bg-rose-500',
+  };
+  readonly tierColumn = {
+    high: 'bg-gradient-to-t from-emerald-600 to-teal-400',
+    mid: 'bg-blue-500/80',
+    low: 'bg-rose-500/80',
+  };
+  readonly tierTile = {
+    high: 'bg-emerald-500/15 border-emerald-500/45 text-emerald-400',
+    mid: 'bg-blue-500/15 border-blue-500/45 text-blue-300',
+    low: 'bg-rose-500/15 border-rose-500/45 text-rose-400',
+  };
 
   dailyTrades = computed(() => {
     const map = new Map<string, any[]>();

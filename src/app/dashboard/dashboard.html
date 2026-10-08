@@ -333,83 +333,224 @@
         <span class="text-xs text-slate-400">Cumulative net P/L</span>
       </div>
 
-      @if (trades().length === 0) {
+      @let chart = equityChart();
+      @if (!chart) {
         <p class="text-slate-500 text-sm">No trades yet to chart.</p>
       } @else {
-        <svg viewBox="0 0 660 190" class="w-full h-56">
-          <defs>
-            <linearGradient id="equityFill" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.22" />
-              <stop offset="100%" stop-color="#38BDF8" stop-opacity="0" />
-            </linearGradient>
-            <linearGradient id="equityStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#60A5FA" />
-              <stop offset="50%" stop-color="#38BDF8" />
-              <stop offset="100%" stop-color="#34D399" />
-            </linearGradient>
-          </defs>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-3 py-2.5">
+            <div class="text-[11px] text-slate-400">Net P/L</div>
+            <div
+              class="text-base font-bold font-mono"
+              [class.text-emerald-400]="chart.stats.current >= 0"
+              [class.text-rose-400]="chart.stats.current < 0"
+            >
+              {{ chart.stats.current > 0 ? '+' : '' }}{{ chart.stats.current | number: '1.2-2' }}
+            </div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-3 py-2.5">
+            <div class="text-[11px] text-slate-400">Peak</div>
+            <div class="text-base font-bold font-mono text-white">
+              {{ chart.stats.peak | number: '1.2-2' }}
+            </div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-3 py-2.5">
+            <div class="text-[11px] text-slate-400">Max drawdown</div>
+            <div class="text-base font-bold font-mono text-rose-400">
+              {{ chart.stats.maxDrawdown > 0 ? '-' : ''
+              }}{{ chart.stats.maxDrawdown | number: '1.2-2' }}
+            </div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-3 py-2.5">
+            <div class="text-[11px] text-slate-400">Best trade</div>
+            <div class="text-base font-bold font-mono text-emerald-400">
+              {{ chart.stats.best > 0 ? '+' : '' }}{{ chart.stats.best | number: '1.2-2' }}
+            </div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-3 py-2.5">
+            <div class="text-[11px] text-slate-400">Worst trade</div>
+            <div class="text-base font-bold font-mono text-rose-400">
+              {{ chart.stats.worst > 0 ? '+' : '' }}{{ chart.stats.worst | number: '1.2-2' }}
+            </div>
+          </div>
+        </div>
 
-          <line
-            x1="60"
-            y1="20"
-            x2="660"
-            y2="20"
-            stroke="#1E293B"
-            stroke-dasharray="4 4"
-            stroke-width="1"
-          />
-          <line
-            x1="60"
-            y1="85"
-            x2="660"
-            y2="85"
-            stroke="#1E293B"
-            stroke-dasharray="4 4"
-            stroke-width="1"
-          />
-          <line x1="60" y1="150" x2="660" y2="150" stroke="#334155" stroke-width="1" />
+        <div class="relative">
+          <svg
+            [attr.viewBox]="chartViewBox"
+            class="w-full h-auto select-none cursor-crosshair"
+            (mousemove)="onChartHover($event)"
+            (mouseleave)="hoverIndex.set(null)"
+          >
+            <defs>
+              <clipPath id="equityAbove">
+                <rect x="0" y="0" [attr.width]="layout.width" [attr.height]="chart.zeroY" />
+              </clipPath>
+              <clipPath id="equityBelow">
+                <rect x="0" [attr.y]="chart.zeroY" [attr.width]="layout.width" height="1000" />
+              </clipPath>
+              <linearGradient id="equityGain" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#34D399" stop-opacity="0.3" />
+                <stop offset="100%" stop-color="#34D399" stop-opacity="0" />
+              </linearGradient>
+              <linearGradient id="equityLoss" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FB7185" stop-opacity="0" />
+                <stop offset="100%" stop-color="#FB7185" stop-opacity="0.3" />
+              </linearGradient>
+            </defs>
 
-          <text x="50" y="24" fill="#64748B" font-size="11" text-anchor="end">
-            ${{ chartData().maxValue | number: '1.0-0' }}
-          </text>
-          <text x="50" y="89" fill="#64748B" font-size="11" text-anchor="end">
-            ${{ chartData().maxValue / 2 | number: '1.0-0' }}
-          </text>
-          <text x="50" y="154" fill="#64748B" font-size="11" text-anchor="end">$0</text>
+            @if (chart.drawdown) {
+              <rect
+                [attr.x]="chart.drawdown.x"
+                [attr.y]="layout.top"
+                [attr.width]="chart.drawdown.width"
+                [attr.height]="layout.curveHeight"
+                fill="#F43F5E"
+                fill-opacity="0.07"
+              />
+            }
 
-          <g transform="translate(60, 0)">
-            <polygon [attr.points]="chartData().areaPoints" fill="url(#equityFill)" />
-            <polyline
-              [attr.points]="chartData().linePoints"
+            @for (tick of chart.ticks; track tick.y) {
+              <line
+                [attr.x1]="layout.left"
+                [attr.x2]="layout.width - layout.right"
+                [attr.y1]="tick.y"
+                [attr.y2]="tick.y"
+                stroke="#1E293B"
+                stroke-dasharray="4 4"
+              />
+              <text
+                [attr.x]="layout.left - 8"
+                [attr.y]="tick.y + 4"
+                fill="#64748B"
+                font-size="11"
+                text-anchor="end"
+              >
+                {{ tick.label }}
+              </text>
+            }
+            <line
+              [attr.x1]="layout.left"
+              [attr.x2]="layout.width - layout.right"
+              [attr.y1]="chart.zeroY"
+              [attr.y2]="chart.zeroY"
+              stroke="#475569"
+            />
+
+            <path [attr.d]="chart.areaPath" fill="url(#equityGain)" clip-path="url(#equityAbove)" />
+            <path [attr.d]="chart.areaPath" fill="url(#equityLoss)" clip-path="url(#equityBelow)" />
+            <path
+              [attr.d]="chart.linePath"
               fill="none"
-              stroke="url(#equityStroke)"
+              stroke="#34D399"
               stroke-width="2.5"
-              stroke-linecap="round"
               stroke-linejoin="round"
+              clip-path="url(#equityAbove)"
             />
-            <circle
-              [attr.cx]="chartData().lastX"
-              [attr.cy]="chartData().lastY"
-              r="4.5"
-              fill="#38BDF8"
-              stroke="#0B0F17"
-              stroke-width="2"
+            <path
+              [attr.d]="chart.linePath"
+              fill="none"
+              stroke="#FB7185"
+              stroke-width="2.5"
+              stroke-linejoin="round"
+              clip-path="url(#equityBelow)"
             />
-            <circle
-              [attr.cx]="chartData().lastX"
-              [attr.cy]="chartData().lastY"
-              r="8"
-              fill="#38BDF8"
-              opacity="0.3"
-              class="animate-ping"
-            />
-          </g>
 
-          <text x="60" y="180" fill="#64748B" font-size="11">{{ chartData().firstDate }}</text>
-          <text x="660" y="180" fill="#64748B" font-size="11" text-anchor="end">
-            {{ chartData().lastDate }}
-          </text>
-        </svg>
+            <line
+              [attr.x1]="layout.left"
+              [attr.x2]="layout.width - layout.right"
+              [attr.y1]="chart.barsZeroY"
+              [attr.y2]="chart.barsZeroY"
+              stroke="#334155"
+            />
+            @for (bar of chart.bars; track $index) {
+              <rect
+                [attr.x]="bar.x"
+                [attr.y]="bar.y"
+                [attr.width]="bar.width"
+                [attr.height]="bar.height"
+                rx="1.5"
+                [attr.fill]="bar.positive ? '#34D399' : '#FB7185'"
+                [attr.fill-opacity]="hoverIndex() === $index + 1 ? 1 : 0.7"
+              />
+            }
+
+            @for (label of chart.dateLabels; track label.anchor) {
+              <text
+                [attr.x]="label.x"
+                [attr.y]="chart.labelY"
+                fill="#64748B"
+                font-size="11"
+                [attr.text-anchor]="label.anchor"
+              >
+                {{ label.label }}
+              </text>
+            }
+
+            @let last = chart.points[chart.points.length - 1];
+            @if (hoveredPoint(); as point) {
+              <line
+                [attr.x1]="point.x"
+                [attr.x2]="point.x"
+                [attr.y1]="layout.top"
+                [attr.y2]="chart.barsZeroY + 24"
+                stroke="#94A3B8"
+                stroke-opacity="0.4"
+                stroke-dasharray="3 3"
+              />
+              <circle
+                [attr.cx]="point.x"
+                [attr.cy]="point.y"
+                r="4.5"
+                [attr.fill]="point.total >= 0 ? '#34D399' : '#FB7185'"
+                stroke="#0B0F17"
+                stroke-width="2"
+              />
+            } @else {
+              <circle
+                [attr.cx]="last.x"
+                [attr.cy]="last.y"
+                r="8"
+                [attr.fill]="last.total >= 0 ? '#34D399' : '#FB7185'"
+                opacity="0.3"
+                class="animate-ping"
+              />
+              <circle
+                [attr.cx]="last.x"
+                [attr.cy]="last.y"
+                r="4.5"
+                [attr.fill]="last.total >= 0 ? '#34D399' : '#FB7185'"
+                stroke="#0B0F17"
+                stroke-width="2"
+              />
+            }
+          </svg>
+
+          @if (hoveredPoint(); as point) {
+            <div
+              class="absolute top-0 pointer-events-none -translate-x-1/2 bg-[#0e1423] border border-slate-700 rounded-lg px-3 py-2 text-[11px] font-mono shadow-lg whitespace-nowrap"
+              [style.left.%]="tooltipLeft()"
+            >
+              <div class="text-slate-400">Trade {{ hoverIndex() }} · {{ point.date }}</div>
+              <div [class.text-emerald-400]="point.pnl >= 0" [class.text-rose-400]="point.pnl < 0">
+                This trade {{ point.pnl > 0 ? '+' : '' }}{{ point.pnl | number: '1.2-2' }}
+              </div>
+              <div class="text-white">
+                Total {{ point.total > 0 ? '+' : '' }}{{ point.total | number: '1.2-2' }}
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-4 mt-3 text-[11px] text-slate-500">
+          <span>Bars show P/L per trade</span>
+          @if (chart.drawdown) {
+            <span class="flex items-center gap-1.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-sm bg-rose-500/30"></span>
+              Max drawdown period
+            </span>
+          }
+        </div>
       }
     </section>
 
@@ -535,6 +676,237 @@
           </div>
         }
       </div>
+    </section>
+
+    <!-- Edge analytics -->
+    @let e = edge();
+    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+        <div class="flex flex-wrap items-baseline gap-2">
+          <h3 class="text-sm font-semibold text-white tracking-wide">Edge analytics</h3>
+          <span class="text-xs text-slate-400">
+            {{ e.taggedCount }} tagged trades · {{ e.untaggedCount }} untagged not counted
+          </span>
+        </div>
+        <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
+          <button
+            type="button"
+            (click)="edgeRange.set('month')"
+            class="px-2.5 py-1 rounded-md transition-colors"
+            [class]="
+              edgeRange() === 'month'
+                ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+            "
+          >
+            This month
+          </button>
+          <button
+            type="button"
+            (click)="edgeRange.set('all')"
+            class="px-2.5 py-1 rounded-md transition-colors"
+            [class]="
+              edgeRange() === 'all'
+                ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
+                : 'text-slate-400 hover:text-slate-200 border border-transparent'
+            "
+          >
+            All time
+          </button>
+        </div>
+      </div>
+
+      @if (e.taggedCount === 0) {
+        <p class="text-slate-500 text-sm">
+          Add a session, emotion, grade, or entry time to your trades to see where your edge is.
+        </p>
+      } @else {
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="text-xs text-slate-400 mb-1.5">Most profitable session</div>
+            @if (e.bestSession; as s) {
+              <div class="text-lg font-bold text-white tracking-tight">{{ s.key }}</div>
+              <div
+                class="text-[11px] font-mono"
+                [class.text-emerald-400]="s.net >= 0"
+                [class.text-rose-400]="s.net < 0"
+              >
+                {{ s.net > 0 ? '+' : '' }}{{ s.net | number: '1.2-2' }} · {{ s.winRate }}% win
+              </div>
+            } @else {
+              <div class="text-lg font-bold text-slate-600">—</div>
+              <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
+            }
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="text-xs text-slate-400 mb-1.5">Best entry hour</div>
+            @if (e.bestHour; as h) {
+              <div class="text-lg font-bold font-mono text-white tracking-tight">
+                {{ h.key }}:00
+              </div>
+              <div class="text-[11px] font-mono text-emerald-400">
+                {{ h.winRate }}% win · {{ h.total }} trades
+              </div>
+            } @else {
+              <div class="text-lg font-bold text-slate-600">—</div>
+              <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
+            }
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="text-xs text-slate-400 mb-1.5">Costliest emotion</div>
+            @if (e.costliestEmotion; as c) {
+              <div class="text-lg font-bold text-white tracking-tight">{{ c.key }}</div>
+              <div class="text-[11px] font-mono text-rose-400">
+                {{ c.net | number: '1.2-2' }} · {{ c.total }}
+                {{ c.total === 1 ? 'trade' : 'trades' }}
+              </div>
+            } @else {
+              <div class="text-lg font-bold text-slate-600">—</div>
+              <div class="text-[11px] text-slate-500">No losing emotion yet</div>
+            }
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="text-xs text-slate-400 mb-1.5">A-grade setups</div>
+            @if (e.aGradeShare !== null) {
+              <div class="text-lg font-bold font-mono text-white tracking-tight">
+                {{ e.aGradeShare }}%
+              </div>
+              <div class="text-[11px] text-slate-400">
+                of graded trades · most taken:
+                <span class="font-mono text-slate-200">{{ e.mostTakenGrade }}</span>
+              </div>
+            } @else {
+              <div class="text-lg font-bold text-slate-600">—</div>
+              <div class="text-[11px] text-slate-500">No graded trades yet</div>
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
+          @for (
+            group of [
+              { title: 'Win rate by session', rows: e.sessions },
+              { title: 'Emotion vs result', rows: e.emotions },
+            ];
+            track group.title
+          ) {
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="flex items-baseline justify-between mb-2">
+                <span class="text-xs font-semibold text-white">{{ group.title }}</span>
+                <span class="text-[10px] text-slate-500">win % · net P/L · trades</span>
+              </div>
+              @if (group.rows.length === 0) {
+                <p class="text-xs text-slate-500 py-2">No trades tagged yet.</p>
+              }
+              @for (row of group.rows; track row.key) {
+                <div
+                  class="grid grid-cols-[96px_minmax(0,1fr)_40px_72px_24px] gap-2.5 items-center py-1.5 text-xs border-b border-slate-800/60 last:border-0"
+                  [class.opacity-50]="row.total < minSample"
+                >
+                  <span class="text-slate-300 truncate">{{ row.key }}</span>
+                  <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      [class]="tierBar[winRateTier(row.winRate)]"
+                      [style.width.%]="row.winRate"
+                    ></div>
+                  </div>
+                  <span class="text-right font-mono text-slate-200">{{ row.winRate }}%</span>
+                  <span
+                    class="text-right font-mono"
+                    [class.text-emerald-400]="row.net >= 0"
+                    [class.text-rose-400]="row.net < 0"
+                  >
+                    {{ row.net > 0 ? '+' : '' }}{{ row.net | number: '1.0-0' }}
+                  </span>
+                  <span class="text-right font-mono text-slate-500 text-[11px]">{{
+                    row.total
+                  }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="flex items-baseline justify-between mb-3">
+              <span class="text-xs font-semibold text-white">When you enter</span>
+              <span class="text-[10px] text-slate-500"
+                >color = win rate · faded = under {{ minSample }}</span
+              >
+            </div>
+            @if (e.hours.length === 0) {
+              <p class="text-xs text-slate-500 py-2">No entry times logged yet.</p>
+            } @else {
+              <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 text-center font-mono">
+                @for (hour of e.hours; track hour.key) {
+                  <div>
+                    @if (hour.total < minSample) {
+                      <div
+                        class="h-12 rounded-lg border border-slate-800 bg-[#0e1423] flex items-center justify-center text-xs text-slate-600"
+                      >
+                        —
+                      </div>
+                    } @else {
+                      <div
+                        class="h-12 rounded-lg border flex items-center justify-center text-xs font-semibold"
+                        [class]="tierTile[winRateTier(hour.winRate)]"
+                      >
+                        {{ hour.winRate }}%
+                      </div>
+                    }
+                    <div class="text-[11px] text-slate-300 mt-1">{{ hour.key }}:00</div>
+                    <div class="text-[10px] text-slate-500">{{ hour.total }}</div>
+                  </div>
+                }
+              </div>
+            }
+            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-mono">
+              <span>
+                Avg hold · winners
+                <span class="text-emerald-400">{{ formatMinutes(e.avgHoldWinners) }}</span>
+              </span>
+              <span>
+                losers <span class="text-rose-400">{{ formatMinutes(e.avgHoldLosers) }}</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+            <div class="flex items-baseline justify-between mb-3">
+              <span class="text-xs font-semibold text-white">Grades</span>
+              <span class="text-[10px] text-slate-500">height = how often · color = win rate</span>
+            </div>
+            @if (e.grades.length === 0) {
+              <p class="text-xs text-slate-500 py-2">No graded trades yet.</p>
+            } @else {
+              <div class="flex items-end gap-2 h-24 border-b border-slate-800">
+                @for (grade of e.grades; track grade.key) {
+                  <div class="flex-1 flex flex-col justify-end h-full">
+                    <div
+                      class="rounded-t-md"
+                      [class]="tierColumn[winRateTier(grade.winRate)]"
+                      [class.opacity-50]="grade.total < minSample"
+                      [style.height.%]="(grade.total / gradeMax()) * 100"
+                    ></div>
+                  </div>
+                }
+              </div>
+              <div class="flex gap-2 mt-2 text-center font-mono">
+                @for (grade of e.grades; track grade.key) {
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-white">{{ grade.key }}</div>
+                    <div class="text-[10px] text-slate-500">
+                      {{ grade.total }} · {{ grade.winRate }}%
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
     </section>
 
     <!-- Rule adherence -->
