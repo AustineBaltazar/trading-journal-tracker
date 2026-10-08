@@ -1,4 +1,11 @@
-import { tradeDuration } from './trade-journal';
+import { todayLocal, tradeDuration } from './trade-journal';
+
+describe('todayLocal', () => {
+  it('formats the local calendar date as YYYY-MM-DD', () => {
+    expect(todayLocal(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
+    expect(todayLocal(new Date(2026, 9, 8, 0, 5))).toBe('2026-10-08');
+  });
+});
 
 describe('tradeDuration', () => {
   it('returns null until both times are set', () => {

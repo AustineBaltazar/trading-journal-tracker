@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
+import { EMOTIONS, GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
 
 @Component({
   imports: [FormsModule],
@@ -17,7 +17,7 @@ export class NewTrade implements OnInit {
   @Output() saved = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
-  trade_date = '';
+  trade_date = todayLocal();
   symbol = 'MNQ';
   direction = 'long';
   contracts = 1;

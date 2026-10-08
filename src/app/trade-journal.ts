@@ -2,6 +2,13 @@ export const SESSIONS = ['Asian', 'London', 'New York AM', 'New York PM'];
 export const EMOTIONS = ['Confident', 'Anxious', 'FOMO', 'Revenge', 'Calm', 'Hesitant'];
 export const GRADES = ['A+', 'A', 'B+', 'B', 'C+', 'C', 'D', 'F'];
 
+const pad = (n: number) => String(n).padStart(2, '0');
+
+// Local date as YYYY-MM-DD for <input type="date"> (toISOString would give the UTC day).
+export function todayLocal(now = new Date()): string {
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
