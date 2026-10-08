@@ -4,9 +4,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
 import { TradeMode } from '../trade-mode';
+import { Mistake, MistakePicker } from '../mistakes/mistakes';
 
 @Component({
-  imports: [FormsModule],
+  imports: [FormsModule, MistakePicker],
   selector: 'app-edit-trade',
   styleUrl: './edit-trade.css',
   templateUrl: './edit-trade.html',
@@ -19,7 +20,7 @@ export class EditTrade implements OnChanges {
   @Output() cancelled = new EventEmitter<void>();
 
   loaded = signal(false);
-  errorMessage = '';
+  errorMessage = signal('');
 
   trade_date = '';
   symbol = 'MNQ';
@@ -48,6 +49,8 @@ export class EditTrade implements OnChanges {
 
   allRules = signal<any[]>([]);
   checkedRuleIds = signal<Set<number>>(new Set());
+  mistakes = signal<Mistake[]>([]);
+  selectedMistakeIds = signal<Set<number>>(new Set());
 
   private authHeaders() {
     const token = localStorage.getItem('token');
@@ -59,6 +62,9 @@ export class EditTrade implements OnChanges {
       this.loaded.set(false);
       this.loadTrade();
       this.loadRules();
+      this.http
+        .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+        .subscribe((response) => this.mistakes.set(response.mistakes));
     }
   }
 
@@ -82,8 +88,29 @@ export class EditTrade implements OnChanges {
         this.emotion = trade.emotion || '';
         this.grade = trade.grade || '';
         this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
+        this.selectedMistakeIds.set(new Set(trade.mistakeIds || []));
         this.loaded.set(true);
       });
+  }
+
+  toggleMistake(id: number) {
+    this.selectedMistakeIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Always sent, so clearing every chip turns the trade back into a clean trade
+  private saveMistakes() {
+    this.http
+      .put(
+        `${environment.apiUrl}/trades/${this.tradeId}/mistakes`,
+        { mistake_ids: [...this.selectedMistakeIds()] },
+        this.authHeaders(),
+      )
+      .subscribe({ next: () => this.syncRules(), error: () => this.syncRules() });
   }
 
   loadRules() {
@@ -123,10 +150,10 @@ export class EditTrade implements OnChanges {
   }
 
   onSubmit() {
-    this.errorMessage = '';
+    this.errorMessage.set('');
 
     if (!this.trade_date) {
-      this.errorMessage = 'Please select a date.';
+      this.errorMessage.set('Please select a date.');
       return;
     }
 
@@ -154,9 +181,9 @@ export class EditTrade implements OnChanges {
         this.authHeaders(),
       )
       .subscribe({
-        next: () => this.syncRules(),
+        next: () => this.saveMistakes(),
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong updating the trade.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong updating the trade.');
         },
       });
   }

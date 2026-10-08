@@ -1009,6 +1009,174 @@
       }
     </section>
 
+    <!-- Cost of mistakes -->
+    @let mc = mistakeCost();
+    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="flex flex-wrap items-baseline gap-2">
+          <h3 class="text-sm font-semibold text-white tracking-wide">Cost of mistakes</h3>
+          <span class="text-xs text-slate-400">
+            {{ mc.total.count }} trades · {{ mc.withMistakes.count }} with a mistake
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          @if (costRange() === 'month') {
+            <app-month-picker
+              [value]="costMonth()"
+              [marked]="tradeMonths()"
+              (valueChange)="costMonth.set($event)"
+            />
+          }
+          <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
+            @for (r of ['all', 'month']; track r) {
+              <button
+                type="button"
+                (click)="costRange.set($any(r))"
+                class="px-2.5 py-1 rounded-md transition-colors border"
+                [class]="
+                  costRange() === r
+                    ? 'bg-blue-600/25 text-blue-300 border-blue-500/60'
+                    : 'text-slate-400 hover:text-slate-200 border-transparent'
+                "
+              >
+                {{ r === 'all' ? 'All time' : 'Month' }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      @if (mc.total.count === 0) {
+        <p class="text-slate-500 text-sm">No trades in this period.</p>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 font-mono">
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+            <div class="text-[11px] text-slate-400">Net P/L</div>
+            <div
+              class="text-xl font-bold"
+              [class.text-emerald-400]="mc.total.net >= 0"
+              [class.text-rose-400]="mc.total.net < 0"
+            >
+              {{ mc.total.net > 0 ? '+' : mc.total.net < 0 ? '-' : '' }}${{
+                absValue(mc.total.net) | number: '1.2-2'
+              }}
+            </div>
+            <div class="text-[11px] text-slate-500">all {{ mc.total.count }} trades</div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+            <div class="text-[11px] text-slate-400">Clean trades only</div>
+            <div
+              class="text-xl font-bold"
+              [class.text-emerald-400]="mc.clean.net >= 0"
+              [class.text-rose-400]="mc.clean.net < 0"
+            >
+              {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
+                absValue(mc.clean.net) | number: '1.2-2'
+              }}
+            </div>
+            <div class="text-[11px] text-slate-500">
+              {{ mc.clean.count }} trades · {{ mc.clean.winRate }}% win
+            </div>
+          </div>
+          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+            <div class="text-[11px] text-slate-400">Trades with mistakes</div>
+            <div
+              class="text-xl font-bold"
+              [class.text-emerald-400]="mc.withMistakes.net >= 0"
+              [class.text-rose-400]="mc.withMistakes.net < 0"
+            >
+              {{ mc.withMistakes.net > 0 ? '+' : mc.withMistakes.net < 0 ? '-' : '' }}${{
+                absValue(mc.withMistakes.net) | number: '1.2-2'
+              }}
+            </div>
+            <div class="text-[11px] text-slate-500">
+              {{ mc.withMistakes.count }} trades · {{ mc.withMistakes.winRate }}% win
+            </div>
+          </div>
+        </div>
+
+        @if (mc.rows.length === 0) {
+          <p class="text-sm text-slate-400">
+            No mistakes tagged in this period. Tag them on the trade form to see what they cost.
+          </p>
+        } @else {
+          @if (mc.withMistakes.net < 0 && mc.rows[0].net < 0) {
+            <p
+              class="text-sm text-slate-300 bg-rose-500/5 border border-rose-500/25 rounded-lg px-4 py-2.5 mb-4"
+            >
+              Mistakes cost you
+              <span class="font-semibold text-rose-400"
+                >${{ absValue(mc.withMistakes.net) | number: '1.2-2' }}</span
+              >. Fix <span class="font-semibold text-rose-400">{{ mc.rows[0].name }}</span> first:
+              it's your most expensive mistake.
+            </p>
+          }
+
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr
+                  class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800"
+                >
+                  <th class="text-left py-2 px-2">Mistake</th>
+                  <th class="text-center py-2 px-2">Times</th>
+                  <th class="text-center py-2 px-2">Win rate</th>
+                  <th class="text-left py-2 px-2">Share of cost</th>
+                  <th class="text-right py-2 px-2">Net P/L</th>
+                </tr>
+              </thead>
+              <tbody class="font-mono">
+                @for (row of mc.rows; track row.id) {
+                  <tr class="border-b border-slate-800/60">
+                    <td class="py-2.5 px-2 font-sans text-slate-200">{{ row.name }}</td>
+                    <td class="py-2.5 px-2 text-center text-slate-300">{{ row.count }}</td>
+                    <td class="py-2.5 px-2 text-center text-slate-300">{{ row.winRate }}%</td>
+                    <td class="py-2.5 px-2">
+                      <div class="h-1.5 min-w-[90px] rounded-full bg-slate-800 overflow-hidden">
+                        <div
+                          class="h-full rounded-full bg-rose-500"
+                          [style.width.%]="costBarWidth(row.net)"
+                        ></div>
+                      </div>
+                    </td>
+                    <td
+                      class="py-2.5 px-2 text-right whitespace-nowrap"
+                      [class.text-emerald-400]="row.net >= 0"
+                      [class.text-rose-400]="row.net < 0"
+                    >
+                      {{ row.net > 0 ? '+' : row.net < 0 ? '-' : '' }}${{
+                        absValue(row.net) | number: '1.2-2'
+                      }}
+                    </td>
+                  </tr>
+                }
+                <tr class="bg-emerald-500/5">
+                  <td class="py-2.5 px-2 font-sans font-semibold text-emerald-400">
+                    Clean trades (no mistakes)
+                  </td>
+                  <td class="py-2.5 px-2 text-center text-slate-300">{{ mc.clean.count }}</td>
+                  <td class="py-2.5 px-2 text-center text-slate-300">{{ mc.clean.winRate }}%</td>
+                  <td class="py-2.5 px-2"></td>
+                  <td
+                    class="py-2.5 px-2 text-right whitespace-nowrap"
+                    [class.text-emerald-400]="mc.clean.net >= 0"
+                    [class.text-rose-400]="mc.clean.net < 0"
+                  >
+                    {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
+                      absValue(mc.clean.net) | number: '1.2-2'
+                    }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-3">
+            A trade with more than one mistake counts in each of its rows.
+          </p>
+        }
+      }
+    </section>
+
     <!-- Rule adherence -->
     <section class="surface-card border border-slate-800/80 rounded-xl p-6 space-y-6">
       <h3 class="text-sm font-semibold text-white tracking-wide">

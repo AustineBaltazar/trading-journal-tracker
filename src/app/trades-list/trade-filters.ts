@@ -11,6 +11,8 @@ export interface TradeFilters {
   emotion: string;
   grade: string;
   rulesBrokenOnly: boolean;
+  // '' = any, 'clean' = no mistakes, 'any' = at least one, or a mistake id
+  mistake: string;
 }
 
 export const NO_FILTERS: TradeFilters = {
@@ -20,7 +22,16 @@ export const NO_FILTERS: TradeFilters = {
   emotion: '',
   grade: '',
   rulesBrokenOnly: false,
+  mistake: '',
 };
+
+function matchesMistake(mistakeIds: number[] | undefined, filter: string): boolean {
+  const ids = mistakeIds || [];
+  if (!filter) return true;
+  if (filter === 'clean') return ids.length === 0;
+  if (filter === 'any') return ids.length > 0;
+  return ids.includes(Number(filter));
+}
 
 export function filterTrades<T extends Record<string, any>>(trades: T[], f: TradeFilters): T[] {
   const search = f.search.toLowerCase().trim();
@@ -33,7 +44,8 @@ export function filterTrades<T extends Record<string, any>>(trades: T[], f: Trad
       (!f.session || t['session'] === f.session) &&
       (!f.emotion || t['emotion'] === f.emotion) &&
       (!f.grade || t['grade'] === f.grade) &&
-      (!f.rulesBrokenOnly || t['rulesFollowed'] === false),
+      (!f.rulesBrokenOnly || t['rulesFollowed'] === false) &&
+      matchesMistake(t['mistakeIds'], f.mistake),
   );
 }
 

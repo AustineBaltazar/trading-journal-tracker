@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeModeService } from '../trade-mode';
+import { Mistake } from '../mistakes/mistakes';
 import { environment } from '../../environments/environment';
 import {
   currentMonth,
@@ -54,6 +55,8 @@ export class TradesList {
   sortKey = signal<SortKey>('date');
   sortDir = signal<SortDir>('desc');
 
+  mistakes = signal<Mistake[]>([]);
+
   readonly sessions = SESSIONS;
   readonly emotions = EMOTIONS;
   readonly grades = GRADES;
@@ -75,6 +78,7 @@ export class TradesList {
       f.emotion,
       f.grade,
       f.rulesBrokenOnly,
+      f.mistake,
       f.outcome !== 'all',
     ].filter(Boolean).length;
   });
@@ -82,6 +86,9 @@ export class TradesList {
   // Loads on start and again whenever the live/backtest switch changes
   constructor() {
     effect(() => this.loadTrades(this.tradeMode.mode()));
+    this.http
+      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .subscribe((response) => this.mistakes.set(response.mistakes));
   }
 
   private authHeaders() {

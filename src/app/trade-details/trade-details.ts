@@ -25,6 +25,14 @@ export class TradeDetails implements OnInit {
 
   tradeId = '';
   trade = signal<any>(null);
+  allMistakes = signal<{ id: number; name: string }[]>([]);
+  // Names of this trade's mistakes, in the order of the user's list
+  mistakeNames = computed(() => {
+    const ids = new Set<number>(this.trade()?.mistakeIds || []);
+    return this.allMistakes()
+      .filter((m) => ids.has(m.id))
+      .map((m) => m.name);
+  });
   duration = computed(() => tradeDuration(this.trade()?.entry_time, this.trade()?.exit_time));
   allRules = signal<any[]>([]);
   linkedRules = signal<any[]>([]);
@@ -40,6 +48,9 @@ export class TradeDetails implements OnInit {
   ngOnInit() {
     this.tradeId = this.route.snapshot.paramMap.get('id')!;
     this.loadTrade();
+    this.http
+      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .subscribe((response) => this.allMistakes.set(response.mistakes));
     this.loadRules();
     this.loadQuestions();
   }

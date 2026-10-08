@@ -41,8 +41,8 @@
   </div>
 
   <form (ngSubmit)="onSubmit()" class="px-6 py-2 space-y-4 max-h-[75vh] overflow-y-auto">
-    @if (errorMessage) {
-      <p class="text-rose-400 text-xs">{{ errorMessage }}</p>
+    @if (errorMessage()) {
+      <p class="text-rose-400 text-xs">{{ errorMessage() }}</p>
     }
 
     <div>
@@ -317,6 +317,12 @@
         </div>
       </div>
     }
+
+    <app-mistake-picker
+      [options]="mistakes()"
+      [selected]="selectedMistakeIds()"
+      (toggle)="toggleMistake($event)"
+    />
 
     <div>
       <label class="flex items-center justify-between text-xs font-medium text-slate-300 mb-1.5">

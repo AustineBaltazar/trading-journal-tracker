@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -17,10 +17,10 @@ export class Login {
 
   email = '';
   password = '';
-  errorMessage = '';
+  errorMessage = signal('');
 
   onSubmit() {
-    this.errorMessage = '';
+    this.errorMessage.set('');
 
     this.http
       .post<any>(`${environment.apiUrl}/login`, {
@@ -34,7 +34,7 @@ export class Login {
           this.router.navigate(['/trades']);
         },
         error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong logging in.';
+          this.errorMessage.set(err.error?.error || 'Something went wrong logging in.');
         },
       });
   }
