@@ -5,10 +5,6 @@ export const FOLLOWED = ['yes', 'partly', 'no'] as const;
 export const MOODS = ['Focused', 'Calm', 'Bored', 'Tired', 'Frustrated'] as const;
 export const DAY_GRADES = ['A', 'B', 'C', 'D', 'F'] as const;
 
-export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-export const MAX_IMAGES_PER_SECTION = 6;
-
 export interface KeyLevel {
   price: number;
   label: string;
@@ -93,11 +89,6 @@ export function focusSessionWarning(
 }
 
 // Checked before asking the server for an upload link
-export function imageFileError(file: { type: string; size: number }): string | null {
-  if (!IMAGE_TYPES.includes(file.type)) return 'Images must be PNG, JPG or WebP.';
-  if (file.size > MAX_IMAGE_BYTES) return 'Images must be 5 MB or smaller.';
-  return null;
-}
 
 export function formatLongDate(date: string): string {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {

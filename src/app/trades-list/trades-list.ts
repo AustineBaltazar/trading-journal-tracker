@@ -7,6 +7,7 @@ import { NewTrade } from '../new-trade/new-trade';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
+import { emotionsOf, outcomeOf } from '../outcome';
 import { environment } from '../../environments/environment';
 import {
   currentMonth,
@@ -109,6 +110,13 @@ export class TradesList {
     this.filters.update((f) => ({ ...f, [key]: value }));
   }
 
+  readonly outcomeFilters: { value: Outcome; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'wins', label: 'Wins' },
+    { value: 'losses', label: 'Losses' },
+    { value: 'be', label: 'BE' },
+  ];
+
   setOutcomeFilter(value: Outcome) {
     this.setFilter('outcome', value);
   }
@@ -139,6 +147,12 @@ export class TradesList {
 
   isBadEmotion(emotion: string | null): boolean {
     return !!emotion && BAD_EMOTIONS.has(emotion);
+  }
+
+  readonly emotionsOf = emotionsOf;
+
+  isBreakEven(trade: any): boolean {
+    return outcomeOf(trade) === 'be';
   }
 
   isLowGrade(grade: string | null): boolean {

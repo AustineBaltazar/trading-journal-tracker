@@ -64,6 +64,18 @@ describe('filterTrades', () => {
     expect(ids(filterTrades(trades, { ...NO_FILTERS, outcome: 'losses' }))).toEqual([2, 4]);
   });
 
+  it('filters break-evens, and matches an emotion among several', () => {
+    const list = [
+      t(1, { netPnl: -1.24, outcome: 'be', emotions: ['Anxious', 'Hesitant'] }),
+      t(2, { netPnl: 50, outcome: 'win', emotions: ['FOMO', 'Calm'] }),
+      t(3, { netPnl: -40, outcome: 'loss', emotion: 'FOMO' }),
+    ];
+    expect(ids(filterTrades(list, { ...NO_FILTERS, outcome: 'be' }))).toEqual([1]);
+    expect(ids(filterTrades(list, { ...NO_FILTERS, outcome: 'losses' }))).toEqual([3]);
+    expect(ids(filterTrades(list, { ...NO_FILTERS, emotion: 'FOMO' }))).toEqual([2, 3]);
+    expect(ids(filterTrades(list, { ...NO_FILTERS, emotion: 'Hesitant' }))).toEqual([1]);
+  });
+
   it('filters by mistakes', () => {
     const tagged = [
       t(1, { mistakeIds: [] }),
@@ -106,11 +118,23 @@ describe('sortTrades', () => {
 });
 
 describe('summarizeTrades', () => {
+  it('counts a break-even on its own and leaves it out of the win rate', () => {
+    const withBe = [...trades, { netPnl: -1.24, outcome: 'be' as const }];
+    expect(summarizeTrades(withBe)).toMatchObject({
+      total: 5,
+      wins: 2,
+      losses: 2,
+      breakEvens: 1,
+      winRate: 50,
+    });
+  });
+
   it('computes averages and profit factor', () => {
     expect(summarizeTrades(trades)).toEqual({
       total: 4,
       wins: 2,
       losses: 2,
+      breakEvens: 0,
       netPnl: -150,
       winRate: 50,
       avgWin: 125,

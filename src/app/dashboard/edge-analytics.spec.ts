@@ -67,8 +67,8 @@ describe('buildEdgeAnalytics', () => {
 
   it('groups by session in the defined order with win rate and net', () => {
     expect(result.sessions).toEqual([
-      { key: 'London', total: 3, wins: 1, losses: 2, winRate: 33, net: -270 },
-      { key: 'New York AM', total: 3, wins: 2, losses: 1, winRate: 67, net: 110 },
+      { key: 'London', total: 3, wins: 1, losses: 2, breakEvens: 0, winRate: 33, net: -270 },
+      { key: 'New York AM', total: 3, wins: 2, losses: 1, breakEvens: 0, winRate: 67, net: 110 },
     ]);
   });
 
@@ -83,6 +83,17 @@ describe('buildEdgeAnalytics', () => {
     expect(result.mostTakenGrade).toBe('B');
     expect(result.avgHoldWinners).toBe(13);
     expect(result.avgHoldLosers).toBe(50);
+  });
+
+  it('counts a trade under each of its emotions', () => {
+    const multi = buildEdgeAnalytics([
+      trade({ netPnl: 100, emotions: ['Calm', 'Confident'], session: 'London' }),
+      trade({ netPnl: -50, emotions: ['Calm'], session: 'London' }),
+    ]);
+    expect(multi.emotions.map((e) => [e.key, e.total, e.net])).toEqual([
+      ['Confident', 1, 100],
+      ['Calm', 2, 50],
+    ]);
   });
 
   it('returns empty stats when nothing is tagged', () => {

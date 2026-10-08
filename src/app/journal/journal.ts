@@ -9,7 +9,7 @@ import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
 import { monthKey, monthsWithTrades, todayLocal, YearMonth } from '../trade-journal';
-import { JournalImages } from './journal-images';
+import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-gallery';
 import { buildCalendarMonth, dayStyle } from '../dashboard/calendar';
 import {
   BIASES,
@@ -30,7 +30,7 @@ import {
 const SAVE_DELAY_MS = 700;
 
 @Component({
-  imports: [DecimalPipe, RouterLink, MonthPicker, ModeBadge, JournalImages],
+  imports: [DecimalPipe, RouterLink, MonthPicker, ModeBadge, ImageGallery],
   selector: 'app-journal',
   templateUrl: './journal.html',
 })
@@ -98,6 +98,17 @@ export class Journal implements OnDestroy {
   readonly title = computed(() => formatLongDate(this.date()));
   readonly preImages = computed(() => this.images().filter((i) => i.section === 'pre'));
   readonly postImages = computed(() => this.images().filter((i) => i.section === 'post'));
+  readonly preTarget = computed(() => this.imageTarget('pre'));
+  readonly postTarget = computed(() => this.imageTarget('post'));
+
+  private imageTarget(section: 'pre' | 'post'): ImageTarget {
+    return {
+      base: `${environment.apiUrl}/journal/${this.date()}/images`,
+      item: `${environment.apiUrl}/journal/images`,
+      body: { section },
+      params: { mode: this.tradeMode.mode() },
+    };
+  }
 
   constructor() {
     this.http
@@ -251,8 +262,9 @@ export class Journal implements OnDestroy {
       .map((m) => m.name);
   }
 
-  onImageAdded(image: JournalImage) {
-    this.images.update((list) => [...list, image]);
+  // The journal API returns the section with each image
+  onImageAdded(image: GalleryImage) {
+    this.images.update((list) => [...list, image as JournalImage]);
     this.loadMonth(this.tradeMode.mode(), this.listMonth());
   }
 

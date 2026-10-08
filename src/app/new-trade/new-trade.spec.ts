@@ -67,6 +67,45 @@ describe('NewTrade', () => {
     expect(saved).toHaveBeenCalledTimes(1);
   });
 
+  it('sends the emotions and the picked result (null = auto)', async () => {
+    await create();
+    component.toggleEmotion('FOMO');
+    component.toggleEmotion('Anxious');
+    component.entry_price = 21466.5;
+    component.exit_price = 21466.5;
+    component.fees = 1.24;
+    expect(component.autoResult).toBe('be');
+    component.onSubmit();
+    expect(completeSave()).toMatchObject({ emotions: ['Anxious', 'FOMO'], result: null });
+
+    component.setResult('loss');
+    component.onSubmit();
+    expect(completeSave().result).toBe('loss');
+  });
+
+  it('uploads queued screenshots once the trade exists, then closes', async () => {
+    await create();
+    fixture.detectChanges();
+    const saved = vi.fn();
+    component.saved.subscribe(saved);
+    const gallery = (component as any).gallery();
+    gallery.addFiles([new File([new Uint8Array(8)], 'entry.png', { type: 'image/png' })]);
+    http.expectNone((r) => r.url.includes('/images'));
+
+    component.onSubmit();
+    completeSave();
+    expect(saved).not.toHaveBeenCalled();
+    http
+      .expectOne((r) => r.url.endsWith('/trades/99/images/upload-url'))
+      .flush({ key: 'users/1/trades/99/a.png', uploadUrl: 'https://s3.example.test/a' });
+    http.expectOne('https://s3.example.test/a').flush(null);
+    http
+      .expectOne((r) => r.url.endsWith('/trades/99/images') && r.method === 'POST')
+      .flush({ id: 1, caption: null, url: 'https://view' });
+    await fixture.whenStable();
+    expect(saved).toHaveBeenCalledTimes(1);
+  });
+
   it('"Save and add another" keeps the setup and clears the trade', async () => {
     await create();
     Object.assign(component, {
@@ -80,7 +119,8 @@ describe('NewTrade', () => {
       exit_price: 17950,
       entry_time: '09:35',
       exit_time: '09:58',
-      emotion: 'Calm',
+      emotions: ['Calm', 'Confident'],
+      result: 'win',
       grade: 'A',
       notes: 'clean sweep',
       screenshot_link: 'https://example.com/x',
@@ -109,7 +149,8 @@ describe('NewTrade', () => {
       exit_price: 0,
       entry_time: '',
       exit_time: '',
-      emotion: '',
+      emotions: [],
+      result: null,
       grade: '',
       notes: '',
       screenshot_link: '',
