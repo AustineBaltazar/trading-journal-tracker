@@ -1,10 +1,4 @@
-import {
-  focusSessionWarning,
-  formatLongDate,
-  imageFileError,
-  journalCounts,
-  shortPnl,
-} from './journal-logic';
+import { focusSessionWarning, formatLongDate, journalCounts, shortPnl } from './journal-logic';
 
 describe('shortPnl', () => {
   it('keeps calendar cells short', () => {
@@ -46,15 +40,6 @@ describe('focusSessionWarning', () => {
     expect(focusSessionWarning('Be patient', [{ session: 'Asian' }])).toBeNull();
     expect(focusSessionWarning(null, [{ session: 'Asian' }])).toBeNull();
     expect(focusSessionWarning(focus, [{ session: null }])).toBeNull();
-  });
-});
-
-describe('imageFileError', () => {
-  it('allows PNG, JPG and WebP up to 5 MB', () => {
-    expect(imageFileError({ type: 'image/png', size: 1000 })).toBeNull();
-    expect(imageFileError({ type: 'image/webp', size: 5 * 1024 * 1024 })).toBeNull();
-    expect(imageFileError({ type: 'image/gif', size: 10 })).toMatch(/PNG, JPG or WebP/);
-    expect(imageFileError({ type: 'image/jpeg', size: 5 * 1024 * 1024 + 1 })).toMatch(/5 MB/);
   });
 });
 

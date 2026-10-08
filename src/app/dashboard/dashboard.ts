@@ -10,6 +10,7 @@ import { buildCalendarMonth, dayStyle } from './calendar';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import { buildMistakeCost, Mistake } from '../mistakes/mistakes';
+import { countOutcomes, outcomeOf, winRate } from '../outcome';
 import {
   currentMonth,
   monthLabel as formatMonth,
@@ -98,13 +99,14 @@ export class Dashboard {
     return { profitFactor, tradingDays, avgPerTrade, avgPerDay };
   });
 
-  // Mon-Fri stats. Win rate matches /trades/summary: wins / all trades that day,
-  // so breakevens count toward the total. Weekend-dated trades aren't shown.
+  // Mon-Fri stats. Win rate matches /trades/summary: wins / (wins + losses),
+  // break-evens are counted on their own. Weekend-dated trades aren't shown.
   performanceByDay = computed(() => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((name) => ({
       name,
       wins: 0,
       losses: 0,
+      breakEvens: 0,
       total: 0,
       winRate: 0,
     }));
@@ -119,13 +121,13 @@ export class Dashboard {
 
       const stats = days[weekday - 1];
       stats.total += 1;
-      if (trade.netPnl > 0) stats.wins += 1;
-      else if (trade.netPnl < 0) stats.losses += 1;
+      const outcome = outcomeOf(trade);
+      if (outcome === 'win') stats.wins += 1;
+      else if (outcome === 'loss') stats.losses += 1;
+      else stats.breakEvens += 1;
     }
 
-    for (const stats of days) {
-      stats.winRate = stats.total > 0 ? Math.round((stats.wins / stats.total) * 100) : 0;
-    }
+    for (const stats of days) stats.winRate = winRate(stats.wins, stats.losses);
     return days;
   });
 
@@ -278,18 +280,11 @@ export class Dashboard {
   }
 
   dayWinRate(): number {
-    const trades = this.selectedDayTrades() || [];
-    if (trades.length === 0) return 0;
-    const wins = trades.filter((t) => t.netPnl > 0).length;
-    return Math.round((wins / trades.length) * 100);
+    return countOutcomes(this.selectedDayTrades() || []).winRate;
   }
 
-  dayWinLossCounts(): { wins: number; losses: number } {
-    const trades = this.selectedDayTrades() || [];
-    return {
-      wins: trades.filter((t) => t.netPnl > 0).length,
-      losses: trades.filter((t) => t.netPnl < 0).length,
-    };
+  dayWinLossCounts(): { wins: number; losses: number; breakEvens: number } {
+    return countOutcomes(this.selectedDayTrades() || []);
   }
 
   dayRulesMetPercent(): number | null {

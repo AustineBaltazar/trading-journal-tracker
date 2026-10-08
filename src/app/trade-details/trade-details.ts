@@ -6,6 +6,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EditTrade } from '../edit-trade/edit-trade';
 import { environment } from '../../environments/environment';
 import { tradeDuration } from '../trade-journal';
+import { emotionsOf, outcomeOf } from '../outcome';
+import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-gallery';
 
 interface DraftAnswer {
   choice: string;
@@ -13,7 +15,7 @@ interface DraftAnswer {
 }
 
 @Component({
-  imports: [FormsModule, RouterLink, DecimalPipe, SlicePipe, EditTrade],
+  imports: [FormsModule, RouterLink, DecimalPipe, SlicePipe, EditTrade, ImageGallery],
   selector: 'app-trade-details',
   styleUrl: './trade-details.css',
   templateUrl: './trade-details.html',
@@ -34,6 +36,13 @@ export class TradeDetails implements OnInit {
       .map((m) => m.name);
   });
   duration = computed(() => tradeDuration(this.trade()?.entry_time, this.trade()?.exit_time));
+  outcome = computed(() => (this.trade() ? outcomeOf(this.trade()) : null));
+  emotions = computed(() => (this.trade() ? emotionsOf(this.trade()) : []));
+  readonly outcomeLabel = { win: 'Win', loss: 'Loss', be: 'BE' } as const;
+  imageTarget = computed<ImageTarget>(() => ({
+    base: `${environment.apiUrl}/trades/${this.tradeId}/images`,
+    item: `${environment.apiUrl}/trade-images`,
+  }));
   allRules = signal<any[]>([]);
   linkedRules = signal<any[]>([]);
   allQuestions = signal<any[]>([]);
@@ -58,6 +67,21 @@ export class TradeDetails implements OnInit {
   private authHeaders() {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
+  }
+
+  onImageAdded(image: GalleryImage) {
+    this.trade.update((t) => ({ ...t, images: [...(t.images || []), image] }));
+  }
+
+  onImageRemoved(id: number) {
+    this.trade.update((t) => ({ ...t, images: t.images.filter((i: GalleryImage) => i.id !== id) }));
+  }
+
+  onCaptioned({ id, caption }: { id: number; caption: string | null }) {
+    this.trade.update((t) => ({
+      ...t,
+      images: t.images.map((i: GalleryImage) => (i.id === id ? { ...i, caption } : i)),
+    }));
   }
 
   loadTrade() {

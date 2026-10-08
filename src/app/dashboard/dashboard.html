@@ -135,7 +135,11 @@
               <span class="text-sm font-semibold font-mono text-white">
                 {{ dayWinRate() }}%
                 <span class="text-[10px] text-slate-500 font-normal"
-                  >({{ dayWinLossCounts().wins }}W / {{ dayWinLossCounts().losses }}L)</span
+                  >({{ dayWinLossCounts().wins }}W / {{ dayWinLossCounts().losses }}L{{
+                    dayWinLossCounts().breakEvens
+                      ? ' / ' + dayWinLossCounts().breakEvens + 'BE'
+                      : ''
+                  }})</span
                 >
               </span>
             </div>
@@ -357,6 +361,11 @@
             [style.width.%]="summary().winRate"
           ></div>
         </div>
+        @if (summary().breakEvens) {
+          <div class="text-[11px] text-slate-500 mt-1.5 font-mono">
+            {{ summary().wins }} of {{ summary().wins + summary().losses }} decided · BE left out
+          </div>
+        }
       </div>
 
       <div class="surface-card border border-slate-800/80 rounded-xl p-4">
@@ -374,7 +383,7 @@
 
       <div class="surface-card border border-slate-800/80 rounded-xl p-4">
         <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
-          <span class="font-medium">Wins / losses</span>
+          <span class="font-medium">Wins / losses / BE</span>
           <span
             class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700"
             >{{ kpiStats().profitFactor }} PF</span
@@ -384,6 +393,8 @@
           <span class="text-emerald-400">{{ summary().wins }}</span>
           <span class="text-slate-600 font-normal">/</span>
           <span class="text-rose-400">{{ summary().losses }}</span>
+          <span class="text-slate-600 font-normal">/</span>
+          <span class="text-slate-300">{{ summary().breakEvens ?? 0 }}</span>
         </div>
       </div>
     </section>
@@ -724,6 +735,12 @@
                     @if (cell.losses) {
                       {{ cell.losses }}L
                     }
+                    @if ((cell.wins || cell.losses) && cell.breakEvens) {
+                      ·
+                    }
+                    @if (cell.breakEvens) {
+                      {{ cell.breakEvens }}BE
+                    }
                     @if (cell.ruleBroken) {
                       <span
                         class="w-1.5 h-1.5 rounded-full bg-rose-500 ring-2 ring-black/40"
@@ -734,9 +751,9 @@
                 </div>
                 <div
                   class="text-sm font-bold tracking-tight whitespace-nowrap"
-                  [class.text-emerald-300]="cell.pnl > 0"
-                  [class.text-rose-300]="cell.pnl < 0"
-                  [class.text-slate-300]="cell.pnl === 0"
+                  [class.text-emerald-300]="cell.pnl > 0 && (cell.wins || cell.losses)"
+                  [class.text-rose-300]="cell.pnl < 0 && (cell.wins || cell.losses)"
+                  [class.text-slate-200]="cell.pnl === 0 || (!cell.wins && !cell.losses)"
                 >
                   {{ cell.pnl > 0 ? '+' : cell.pnl < 0 ? '-' : '' }}${{
                     absValue(cell.pnl) | number: '1.2-2'
@@ -811,6 +828,10 @@
                 <span class="text-emerald-400">{{ day.wins }}W</span>
                 <span class="text-slate-600"> / </span>
                 <span class="text-rose-400">{{ day.losses }}L</span>
+                @if (day.breakEvens) {
+                  <span class="text-slate-600"> / </span>
+                  <span class="text-slate-300">{{ day.breakEvens }}BE</span>
+                }
               </div>
               <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
                 <div

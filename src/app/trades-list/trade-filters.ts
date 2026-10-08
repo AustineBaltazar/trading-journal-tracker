@@ -1,6 +1,8 @@
+import { emotionsOf, OutcomeFields, outcomeOf, winRate } from '../outcome';
 import { GRADES } from '../trade-journal';
 
-export type Outcome = 'all' | 'wins' | 'losses';
+export type Outcome = 'all' | 'wins' | 'losses' | 'be';
+const OUTCOME_FILTER = { wins: 'win', losses: 'loss', be: 'be' } as const;
 export type SortKey = 'date' | 'grade' | 'pnl';
 export type SortDir = 'asc' | 'desc';
 
@@ -38,11 +40,9 @@ export function filterTrades<T extends Record<string, any>>(trades: T[], f: Trad
   return trades.filter(
     (t) =>
       (!search || (t['strategy'] || '').toLowerCase().includes(search)) &&
-      (f.outcome === 'all' ||
-        (f.outcome === 'wins' && t['netPnl'] > 0) ||
-        (f.outcome === 'losses' && t['netPnl'] < 0)) &&
+      (f.outcome === 'all' || outcomeOf(t as any) === OUTCOME_FILTER[f.outcome]) &&
       (!f.session || t['session'] === f.session) &&
-      (!f.emotion || t['emotion'] === f.emotion) &&
+      (!f.emotion || emotionsOf(t).includes(f.emotion)) &&
       (!f.grade || t['grade'] === f.grade) &&
       (!f.rulesBrokenOnly || t['rulesFollowed'] === false) &&
       matchesMistake(t['mistakeIds'], f.mistake),
@@ -83,6 +83,7 @@ export interface TradeSummary {
   total: number;
   wins: number;
   losses: number;
+  breakEvens: number;
   netPnl: number;
   winRate: number;
   avgWin: number | null;
@@ -92,19 +93,23 @@ export interface TradeSummary {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export function summarizeTrades(trades: { netPnl: number }[]): TradeSummary {
-  const winners = trades.filter((t) => t.netPnl > 0);
-  const losers = trades.filter((t) => t.netPnl < 0);
-  const grossWin = winners.reduce((s, t) => s + t.netPnl, 0);
-  const grossLoss = Math.abs(losers.reduce((s, t) => s + t.netPnl, 0));
+// Counts and averages use the outcome (so a BE is neither a win nor a loss);
+// profit factor stays about money: all positive P/L over all negative P/L.
+export function summarizeTrades(trades: OutcomeFields[]): TradeSummary {
+  const winners = trades.filter((t) => outcomeOf(t) === 'win');
+  const losers = trades.filter((t) => outcomeOf(t) === 'loss');
+  const sum = (list: OutcomeFields[]) => list.reduce((s, t) => s + t.netPnl, 0);
+  const grossWin = sum(trades.filter((t) => t.netPnl > 0));
+  const grossLoss = Math.abs(sum(trades.filter((t) => t.netPnl < 0)));
   return {
     total: trades.length,
     wins: winners.length,
     losses: losers.length,
-    netPnl: round2(trades.reduce((s, t) => s + t.netPnl, 0)),
-    winRate: trades.length ? Math.round((winners.length / trades.length) * 100) : 0,
-    avgWin: winners.length ? round2(grossWin / winners.length) : null,
-    avgLoss: losers.length ? round2(-grossLoss / losers.length) : null,
+    breakEvens: trades.length - winners.length - losers.length,
+    netPnl: round2(sum(trades)),
+    winRate: winRate(winners.length, losers.length),
+    avgWin: winners.length ? round2(sum(winners) / winners.length) : null,
+    avgLoss: losers.length ? round2(sum(losers) / losers.length) : null,
     profitFactor: grossLoss > 0 ? round2(grossWin / grossLoss) : null,
   };
 }

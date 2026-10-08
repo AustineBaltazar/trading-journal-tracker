@@ -1,14 +1,17 @@
-import { Component, ElementRef, inject, OnInit, signal } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { EMOTIONS, GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
+import { GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
 import { TradeMode, TradeModeService } from '../trade-mode';
 import { Mistake, MistakePicker } from '../mistakes/mistakes';
+import { autoOutcome, TradeOutcome } from '../outcome';
+import { EmotionPicker, estimateNetPnl, ResultPicker, toggleEmotion } from '../trade-form-fields';
+import { ImageGallery } from '../image-gallery/image-gallery';
 
 @Component({
-  imports: [FormsModule, MistakePicker],
+  imports: [FormsModule, MistakePicker, ResultPicker, EmotionPicker, ImageGallery],
   selector: 'app-new-trade',
   styleUrl: './new-trade.css',
   templateUrl: './new-trade.html',
@@ -41,15 +44,38 @@ export class NewTrade implements OnInit {
   entry_time = '';
   exit_time = '';
   session = '';
-  emotion = '';
+  emotions: string[] = [];
   grade = '';
+  result: TradeOutcome | null = null; // null = auto from the prices
 
   readonly sessions = SESSIONS;
-  readonly emotions = EMOTIONS;
   readonly grades = GRADES;
+
+  // Screenshots wait here until the trade exists, then upload
+  private gallery = viewChild(ImageGallery);
 
   get duration(): string | null {
     return tradeDuration(this.entry_time, this.exit_time);
+  }
+
+  get netPnlEstimate(): number {
+    return estimateNetPnl(this);
+  }
+
+  get entryEqualsExit(): boolean {
+    return Number(this.entry_price) === Number(this.exit_price);
+  }
+
+  get autoResult(): TradeOutcome {
+    return autoOutcome(this.entry_price, this.exit_price, this.netPnlEstimate);
+  }
+
+  setResult(value: TradeOutcome | null) {
+    this.result = value;
+  }
+
+  toggleEmotion(emotion: string) {
+    this.emotions = toggleEmotion(this.emotions, emotion);
   }
 
   errorMessage = signal('');
@@ -133,8 +159,9 @@ export class NewTrade implements OnInit {
           entry_time: this.entry_time || null,
           exit_time: this.exit_time || null,
           session: this.session || null,
-          emotion: this.emotion || null,
+          emotions: this.emotions,
           grade: this.grade || null,
+          result: this.result,
           mode: this.mode,
         },
         this.authHeaders(),
@@ -148,15 +175,39 @@ export class NewTrade implements OnInit {
       });
   }
 
-  // Rules and mistakes are saved in parallel; done() runs once both finish
+  // Rules, mistakes and screenshots are saved in parallel; done() runs once all finish
   private linkExtras(tradeId: number, done: () => void) {
-    let pending = 2;
+    let pending = 3;
     const oneDone = () => {
       pending -= 1;
       if (pending === 0) done();
     };
     this.linkRules(tradeId, oneDone);
     this.saveMistakes(tradeId, oneDone);
+    this.uploadScreenshots(tradeId, oneDone);
+  }
+
+  private uploadScreenshots(tradeId: number, done: () => void) {
+    const gallery = this.gallery();
+    if (!gallery || gallery.queued().length === 0) {
+      done();
+      return;
+    }
+    gallery
+      .uploadQueued({
+        base: `${environment.apiUrl}/trades/${tradeId}/images`,
+        item: `${environment.apiUrl}/trade-images`,
+      })
+      .then((failed) => {
+        if (failed > 0) {
+          alert(
+            `The trade was saved, but ${failed} screenshot${failed === 1 ? '' : 's'} didn't upload. ` +
+              "You can add them from the trade's page.",
+          );
+          gallery.clearQueued();
+        }
+        done();
+      });
   }
 
   private saveMistakes(tradeId: number, done: () => void) {
@@ -222,8 +273,10 @@ export class NewTrade implements OnInit {
     this.exit_price = 0;
     this.entry_time = '';
     this.exit_time = '';
-    this.emotion = '';
+    this.emotions = [];
     this.grade = '';
+    this.result = null;
+    this.gallery()?.clearQueued();
     this.notes = '';
     this.screenshot_link = '';
     this.checkedRuleIds.set(new Set(this.allRules().map((r: any) => r.id)));

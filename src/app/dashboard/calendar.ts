@@ -1,3 +1,4 @@
+import { outcomeOf } from '../outcome';
 import { monthKey, tradesInMonth, YearMonth } from '../trade-journal';
 
 export interface CalendarDay {
@@ -6,6 +7,7 @@ export interface CalendarDay {
   pnl: number;
   wins: number;
   losses: number;
+  breakEvens: number;
   count: number;
   ruleBroken: boolean;
   // 0..1: this day's |P/L| relative to the biggest day of the month
@@ -44,6 +46,7 @@ export function buildCalendarMonth(trades: any[], ym: YearMonth, today: string):
       pnl: 0,
       wins: 0,
       losses: 0,
+      breakEvens: 0,
       count: 0,
       ruleBroken: false,
       strength: 0,
@@ -51,8 +54,10 @@ export function buildCalendarMonth(trades: any[], ym: YearMonth, today: string):
     };
     day.pnl += trade.netPnl;
     day.count += 1;
-    if (trade.netPnl > 0) day.wins += 1;
-    else if (trade.netPnl < 0) day.losses += 1;
+    const outcome = outcomeOf(trade);
+    if (outcome === 'win') day.wins += 1;
+    else if (outcome === 'loss') day.losses += 1;
+    else day.breakEvens += 1;
     if (trade.rulesFollowed === false) day.ruleBroken = true;
     byDate.set(date, day);
   }
@@ -84,6 +89,7 @@ export function buildCalendarMonth(trades: any[], ym: YearMonth, today: string):
           pnl: 0,
           wins: 0,
           losses: 0,
+          breakEvens: 0,
           count: 0,
           ruleBroken: false,
           strength: 0,
@@ -119,8 +125,16 @@ export function buildCalendarMonth(trades: any[], ym: YearMonth, today: string):
 }
 
 // Inline background/border for a traded day: stronger color for bigger days.
+// A day of only break-evens is gray, whatever the fees did to its P/L.
 export function dayStyle(day: CalendarDay): Record<string, string> | null {
-  if (day.count === 0 || day.pnl === 0) return null;
+  if (day.count === 0) return null;
+  if (day.wins === 0 && day.losses === 0) {
+    return {
+      'background-color': 'rgba(148,163,184,0.12)',
+      'border-color': 'rgba(148,163,184,0.35)',
+    };
+  }
+  if (day.pnl === 0) return null;
   const rgb = day.pnl > 0 ? '16,185,129' : '244,63,94';
   const alpha = 0.1 + 0.45 * day.strength;
   return {

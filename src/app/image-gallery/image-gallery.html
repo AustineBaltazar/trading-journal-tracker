@@ -1,5 +1,5 @@
 <div class="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2.5">
-  @for (image of images(); track image.id; let i = $index) {
+  @for (image of shown(); track image.id; let i = $index) {
     <figure
       class="m-0 rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden group relative"
     >
@@ -24,6 +24,12 @@
       >
         ×
       </button>
+      @if (image.id < 0) {
+        <span
+          class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-[10px] text-slate-300"
+          >Uploads on save</span
+        >
+      }
       <figcaption class="px-2.5 py-1.5 border-t border-[#1e293b] text-[11px]">
         @if (editingCaptionId() === image.id) {
           <input
@@ -71,7 +77,7 @@
     <div
       tabindex="0"
       role="button"
-      aria-label="Add chart: paste an image or drop a file here"
+      [attr.aria-label]="addLabel() + ': paste an image or drop a file here'"
       (paste)="onPaste($event)"
       (drop)="onDrop($event)"
       (dragover)="onDragOver($event)"
@@ -83,7 +89,7 @@
           : 'border-slate-700 text-slate-500 hover:border-slate-500'
       "
     >
-      <span class="text-xs font-semibold text-slate-300">Add chart</span>
+      <span class="text-xs font-semibold text-slate-300">{{ addLabel() }}</span>
       <span
         >Click here, then paste
         <kbd class="font-mono text-[10px] border border-slate-600 rounded px-1">Ctrl</kbd>+<kbd
@@ -124,7 +130,7 @@
       class="mt-3 flex items-center gap-4 text-sm text-slate-300"
       (click)="$event.stopPropagation()"
     >
-      @if (images().length > 1) {
+      @if (shown().length > 1) {
         <button
           type="button"
           (click)="step(-1)"
@@ -135,8 +141,8 @@
         </button>
       }
       <span>{{ image.caption || 'No caption' }}</span>
-      <span class="text-slate-500 text-xs">{{ (viewing() ?? 0) + 1 }} / {{ images().length }}</span>
-      @if (images().length > 1) {
+      <span class="text-slate-500 text-xs">{{ (viewing() ?? 0) + 1 }} / {{ shown().length }}</span>
+      @if (shown().length > 1) {
         <button
           type="button"
           (click)="step(1)"

@@ -1,4 +1,5 @@
 import { Component, input, output } from '@angular/core';
+import { countOutcomes, OutcomeFields } from '../outcome';
 
 export interface Mistake {
   id: number;
@@ -22,14 +23,13 @@ export interface MistakeCost {
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
-const winRate = (trades: { netPnl: number }[]) =>
-  trades.length ? Math.round((trades.filter((t) => t.netPnl > 0).length / trades.length) * 100) : 0;
+const winRate = (trades: OutcomeFields[]) => countOutcomes(trades).winRate;
 const net = (trades: { netPnl: number }[]) => round2(trades.reduce((s, t) => s + t.netPnl, 0));
 
 // "Cost of mistakes": clean trades vs trades with a mistake, and each mistake's
 // P/L. A trade with two mistakes counts in both rows.
 export function buildMistakeCost(
-  trades: { netPnl: number; mistakeIds?: number[] }[],
+  trades: (OutcomeFields & { mistakeIds?: number[] })[],
   mistakes: Mistake[],
 ): MistakeCost {
   const clean = trades.filter((t) => !t.mistakeIds?.length);
@@ -59,6 +59,7 @@ export function buildMistakeCost(
 // Row of toggleable mistake chips for the trade forms. None selected = clean trade.
 @Component({
   selector: 'app-mistake-picker',
+  host: { class: 'block' },
   template: `
     <div class="flex items-baseline justify-between mb-2">
       <span class="text-xs font-medium text-slate-300">Mistakes</span>

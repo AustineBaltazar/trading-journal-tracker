@@ -2,12 +2,15 @@ import { Component, inject, Input, Output, EventEmitter, OnChanges, signal } fro
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { EMOTIONS, GRADES, SESSIONS, tradeDuration } from '../trade-journal';
+import { GRADES, SESSIONS, tradeDuration } from '../trade-journal';
 import { TradeMode } from '../trade-mode';
 import { Mistake, MistakePicker } from '../mistakes/mistakes';
+import { autoOutcome, emotionsOf, TradeOutcome } from '../outcome';
+import { EmotionPicker, estimateNetPnl, ResultPicker, toggleEmotion } from '../trade-form-fields';
+import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-gallery';
 
 @Component({
-  imports: [FormsModule, MistakePicker],
+  imports: [FormsModule, MistakePicker, ResultPicker, EmotionPicker, ImageGallery],
   selector: 'app-edit-trade',
   styleUrl: './edit-trade.css',
   templateUrl: './edit-trade.html',
@@ -35,16 +38,57 @@ export class EditTrade implements OnChanges {
   entry_time = '';
   exit_time = '';
   session = '';
-  emotion = '';
+  emotions: string[] = [];
   grade = '';
+  result: TradeOutcome | null = null; // null = auto from the prices
   mode: TradeMode = 'live';
 
   readonly sessions = SESSIONS;
-  readonly emotions = EMOTIONS;
   readonly grades = GRADES;
+
+  // Screenshots upload straight away here, since the trade already exists
+  images = signal<GalleryImage[]>([]);
+  get imageTarget(): ImageTarget {
+    return {
+      base: `${environment.apiUrl}/trades/${this.tradeId}/images`,
+      item: `${environment.apiUrl}/trade-images`,
+    };
+  }
+
+  onImageAdded(image: GalleryImage) {
+    this.images.update((list) => [...list, image]);
+  }
+
+  onImageRemoved(id: number) {
+    this.images.update((list) => list.filter((i) => i.id !== id));
+  }
+
+  onCaptioned({ id, caption }: { id: number; caption: string | null }) {
+    this.images.update((list) => list.map((i) => (i.id === id ? { ...i, caption } : i)));
+  }
 
   get duration(): string | null {
     return tradeDuration(this.entry_time, this.exit_time);
+  }
+
+  get netPnlEstimate(): number {
+    return estimateNetPnl(this);
+  }
+
+  get entryEqualsExit(): boolean {
+    return Number(this.entry_price) === Number(this.exit_price);
+  }
+
+  get autoResult(): TradeOutcome {
+    return autoOutcome(this.entry_price, this.exit_price, this.netPnlEstimate);
+  }
+
+  setResult(value: TradeOutcome | null) {
+    this.result = value;
+  }
+
+  toggleEmotion(emotion: string) {
+    this.emotions = toggleEmotion(this.emotions, emotion);
   }
 
   allRules = signal<any[]>([]);
@@ -85,8 +129,10 @@ export class EditTrade implements OnChanges {
         this.entry_time = trade.entry_time || '';
         this.exit_time = trade.exit_time || '';
         this.session = trade.session || '';
-        this.emotion = trade.emotion || '';
+        this.emotions = emotionsOf(trade);
         this.grade = trade.grade || '';
+        this.result = trade.result ?? null;
+        this.images.set(trade.images || []);
         this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
         this.selectedMistakeIds.set(new Set(trade.mistakeIds || []));
         this.loaded.set(true);
@@ -174,8 +220,9 @@ export class EditTrade implements OnChanges {
           entry_time: this.entry_time || null,
           exit_time: this.exit_time || null,
           session: this.session || null,
-          emotion: this.emotion || null,
+          emotions: this.emotions,
           grade: this.grade || null,
+          result: this.result,
           mode: this.mode,
         },
         this.authHeaders(),
