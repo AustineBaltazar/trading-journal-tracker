@@ -1,0 +1,70 @@
+/* Shared by New and Edit trade */
+.tf-in {
+  width: 100%;
+  background: #161e30;
+  border: 1px solid #26354f;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  color: #e2e8f0;
+  transition: border-color 0.15s;
+}
+.tf-in:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+.tf-in::placeholder {
+  color: #64748b;
+}
+.tf-quick {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 6px;
+  border: 1px solid #26354f;
+  background: #121a2a;
+  color: #94a3b8;
+}
+.tf-quick:hover {
+  color: #e2e8f0;
+  border-color: #475569;
+}
+.tf-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #2b3a55;
+  background: #182133;
+  color: #cbd5e1;
+  transition: background 0.15s;
+}
+.tf-btn:hover {
+  background: #202c42;
+  color: #fff;
+}
+.tf-btn:disabled {
+  opacity: 0.6;
+}
+.tf-secondary {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #dbeafe;
+}
+.tf-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.tf-primary:hover {
+  background: #3b82f6;
+}
+.tf-in.text-rose-200 {
+  color: #fecdd3;
+}
+.tf-in.text-emerald-200 {
+  color: #a7f3d0;
+}
+.tf-in.text-blue-400 {
+  color: #60a5fa;
+}

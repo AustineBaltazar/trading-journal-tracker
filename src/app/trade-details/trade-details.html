@@ -1,7 +1,7 @@
 <div class="bg-[#070A10] min-h-screen text-slate-200 font-sans">
   @if (showEditModal() && trade()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="w-full max-w-[530px] max-h-[90vh] overflow-y-auto">
+      <div class="w-full max-w-5xl max-h-[94vh] overflow-y-auto">
         <app-edit-trade [tradeId]="trade().id" (saved)="onEditSaved()" (cancelled)="closeEdit()" />
       </div>
     </div>

@@ -43,6 +43,7 @@
             type="text"
             maxlength="120"
             [value]="image.caption || ''"
+            [attr.list]="captionSuggestions().length ? listId : null"
             (keydown.enter)="saveCaption(image, captionInput.value)"
             (keydown.escape)="editingCaptionId.set(null)"
             (blur)="saveCaption(image, captionInput.value)"
@@ -114,6 +115,14 @@
     </div>
   }
 </div>
+
+@if (captionSuggestions().length) {
+  <datalist [id]="listId">
+    @for (s of captionSuggestions(); track s) {
+      <option [value]="s"></option>
+    }
+  </datalist>
+}
 
 @if (error()) {
   <p class="text-xs text-rose-400 mt-2" role="alert">{{ error() }}</p>
