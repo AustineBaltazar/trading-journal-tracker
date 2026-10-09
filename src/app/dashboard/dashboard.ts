@@ -4,19 +4,19 @@ import { RouterLink } from '@angular/router';
 import { DecimalPipe, UpperCasePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { buildEdgeAnalytics, formatMinutes, MIN_SAMPLE, winRateTier } from './edge-analytics';
+import { buildEdgeAnalytics } from './edge-analytics';
+import { buildHighlights } from './highlights';
 import { buildEquityChart, CHART, CHART_HEIGHT } from './equity-chart';
 import { buildCalendarMonth, dayStyle } from './calendar';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import { buildMistakeCost, Mistake } from '../mistakes/mistakes';
-import { countOutcomes, outcomeOf, winRate } from '../outcome';
+import { countOutcomes } from '../outcome';
 import {
   currentMonth,
   monthLabel as formatMonth,
   monthsWithTrades,
   todayLocal,
-  tradesInMonth,
   YearMonth,
 } from '../trade-journal';
 
@@ -32,7 +32,6 @@ export class Dashboard {
   readonly tradeMode = inject(TradeModeService);
   summary = signal<any>(null);
   trades = signal<any[]>([]);
-  ruleAdherence = signal<any[]>([]);
   ruleStats = signal<any>(null);
 
   calendarMonth = signal<YearMonth>(currentMonth());
@@ -70,7 +69,6 @@ export class Dashboard {
       .get<any>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params })
       .subscribe((response) => {
         if (!current()) return;
-        this.ruleAdherence.set(response.adherence);
         this.ruleStats.set(response);
       });
   }
@@ -97,38 +95,6 @@ export class Dashboard {
       total > 0 ? Math.round((trades.reduce((s, t) => s + t.netPnl, 0) / total) * 100) / 100 : 0;
     const avgPerDay = tradingDays > 0 ? Math.round((total / tradingDays) * 100) / 100 : 0;
     return { profitFactor, tradingDays, avgPerTrade, avgPerDay };
-  });
-
-  // Mon-Fri stats. Win rate matches /trades/summary: wins / (wins + losses),
-  // break-evens are counted on their own. Weekend-dated trades aren't shown.
-  performanceByDay = computed(() => {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((name) => ({
-      name,
-      wins: 0,
-      losses: 0,
-      breakEvens: 0,
-      total: 0,
-      winRate: 0,
-    }));
-
-    for (const trade of this.trades()) {
-      const [year, month, day] = trade.trade_date.substring(0, 10).split('-').map(Number);
-      // setUTCFullYear, not Date.UTC: Date.UTC maps years 0-99 to 1900-1999
-      const date = new Date(0);
-      date.setUTCFullYear(year, month - 1, day);
-      const weekday = date.getUTCDay();
-      if (weekday === 0 || weekday === 6) continue;
-
-      const stats = days[weekday - 1];
-      stats.total += 1;
-      const outcome = outcomeOf(trade);
-      if (outcome === 'win') stats.wins += 1;
-      else if (outcome === 'loss') stats.losses += 1;
-      else stats.breakEvens += 1;
-    }
-
-    for (const stats of days) stats.winRate = winRate(stats.wins, stats.losses);
-    return days;
   });
 
   calendar = computed(() => buildCalendarMonth(this.trades(), this.calendarMonth(), todayLocal()));
@@ -168,50 +134,16 @@ export class Dashboard {
   }
 
   mistakes = signal<Mistake[]>([]);
-  costRange = signal<'month' | 'all'>('all');
-  costMonth = signal<YearMonth>(currentMonth());
+  readonly tabLabels = { timing: 'Timing', psychology: 'Psychology', discipline: 'Discipline' };
 
-  mistakeCost = computed(() => {
-    const trades =
-      this.costRange() === 'all' ? this.trades() : tradesInMonth(this.trades(), this.costMonth());
-    return buildMistakeCost(trades, this.mistakes());
-  });
-
-  // Bar width for a row: share of the most expensive mistake's loss
-  costBarWidth(net: number): number {
-    const worst = Math.min(0, ...this.mistakeCost().rows.map((r) => r.net));
-    return net < 0 && worst < 0 ? Math.round((net / worst) * 100) : 0;
-  }
-
-  edgeRange = signal<'month' | 'all'>('all');
-  edgeMonth = signal<YearMonth>(currentMonth());
-
-  edge = computed(() => {
-    const trades = this.trades();
-    if (this.edgeRange() === 'all') return buildEdgeAnalytics(trades);
-    return buildEdgeAnalytics(tradesInMonth(trades, this.edgeMonth()));
-  });
-
-  gradeMax = computed(() => Math.max(1, ...this.edge().grades.map((g) => g.total)));
-
-  readonly minSample = MIN_SAMPLE;
-  readonly winRateTier = winRateTier;
-  readonly formatMinutes = formatMinutes;
-  readonly tierBar = {
-    high: 'bg-gradient-to-r from-emerald-500 to-teal-400',
-    mid: 'bg-blue-500',
-    low: 'bg-rose-500',
-  };
-  readonly tierColumn = {
-    high: 'bg-gradient-to-t from-emerald-600 to-teal-400',
-    mid: 'bg-blue-500/80',
-    low: 'bg-rose-500/80',
-  };
-  readonly tierTile = {
-    high: 'bg-emerald-500/15 border-emerald-500/45 text-emerald-400',
-    mid: 'bg-blue-500/15 border-blue-500/45 text-blue-300',
-    low: 'bg-rose-500/15 border-rose-500/45 text-rose-400',
-  };
+  // All-time findings, each linking to the Reports tab that explains it
+  highlights = computed(() =>
+    buildHighlights(
+      buildEdgeAnalytics(this.trades()),
+      buildMistakeCost(this.trades(), this.mistakes()),
+      this.ruleStats(),
+    ),
+  );
 
   dailyTrades = computed(() => {
     const map = new Map<string, any[]>();
