@@ -1,7 +1,7 @@
 <div class="bg-[#080c14] min-h-screen text-slate-300 font-sans">
   @if (showNewTradeModal()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-carbon-950 rounded-lg max-h-[90vh] w-full max-w-2xl mx-4 overflow-y-auto">
+      <div class="bg-carbon-950 rounded-lg max-h-[94vh] w-full max-w-5xl mx-4 overflow-y-auto">
         <app-new-trade
           (saved)="onTradeCreated()"
           (added)="onTradeAdded()"

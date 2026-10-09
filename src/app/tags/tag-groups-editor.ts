@@ -1,4 +1,5 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../environments/environment';
@@ -8,7 +9,7 @@ import { Tag, TagGroup } from './tags';
 // Playbook section: tag groups (Setup, News, Market...) and their tags
 @Component({
   selector: 'app-tag-groups-editor',
-  imports: [FormsModule],
+  imports: [FormsModule, DecimalPipe],
   host: { class: 'block' },
   template: `
     <section class="bg-[#121722] border border-[#1F293D] rounded-2xl shadow-xl overflow-hidden">
@@ -75,7 +76,20 @@ import { Tag, TagGroup } from './tags';
                   class="inline-flex items-center gap-1.5 text-xs pl-3 pr-1.5 py-1 rounded-full border border-slate-400/35 bg-[#0E131C] text-slate-200"
                 >
                   {{ tag.name }}
-                  <span class="font-mono text-[10px] text-slate-500">{{ tag.count ?? 0 }}</span>
+                  @let st = statsByTag().get(tag.id);
+                  <span class="font-mono text-[10px] text-slate-500">{{
+                    trades() ? (st?.count ?? 0) : (tag.count ?? 0)
+                  }}</span>
+                  @if (trades() && st) {
+                    <span
+                      class="font-mono text-[10px]"
+                      [class.text-emerald-400]="st.net > 0"
+                      [class.text-rose-400]="st.net < 0"
+                      >{{ st.net > 0 ? '+' : st.net < 0 ? '-' : '' }}\${{
+                        (st.net < 0 ? -st.net : st.net) | number: '1.2-2'
+                      }}</span
+                    >
+                  }
                   <button
                     type="button"
                     (click)="deleteTag(group, tag)"
@@ -130,6 +144,21 @@ import { Tag, TagGroup } from './tags';
 export class TagGroupsEditor {
   private http = inject(HttpClient);
   private tradeMode = inject(TradeModeService);
+
+  // Trades to total up per tag (the Playbook passes the ones in its date range)
+  trades = input<{ tagIds?: number[]; netPnl: number }[] | null>(null);
+  readonly statsByTag = computed(() => {
+    const map = new Map<number, { count: number; net: number }>();
+    for (const t of this.trades() ?? []) {
+      for (const id of t.tagIds ?? []) {
+        const s = map.get(id) ?? { count: 0, net: 0 };
+        s.count += 1;
+        s.net += t.netPnl;
+        map.set(id, s);
+      }
+    }
+    return map;
+  });
 
   groups = signal<TagGroup[]>([]);
   error = signal('');

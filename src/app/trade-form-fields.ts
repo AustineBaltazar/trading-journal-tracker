@@ -33,6 +33,7 @@ export function estimateNetPnl(t: {
 // picking the highlighted auto choice keeps it on auto.
 @Component({
   selector: 'app-result-picker',
+  host: { class: 'block' },
   imports: [DecimalPipe],
   template: `
     <div class="flex items-baseline justify-between mb-1.5">
@@ -113,6 +114,7 @@ export class ResultPicker {
 // Emotion chips: pick all that apply. FOMO and Revenge show red, like on the trades list.
 @Component({
   selector: 'app-emotion-picker',
+  host: { class: 'block' },
   template: `
     <div class="flex items-baseline justify-between mb-1.5">
       <span class="text-xs font-medium text-slate-300">Emotions</span>
