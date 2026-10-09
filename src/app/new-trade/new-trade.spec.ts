@@ -27,6 +27,9 @@ describe('NewTrade', () => {
     await fixture.whenStable();
     http.expectOne((r) => r.url.endsWith('/rules')).flush({ rules });
     http
+      .expectOne((r) => r.url.endsWith('/tag-groups'))
+      .flush({ groups: [{ id: 1, name: 'Setup', tags: [{ id: 5, name: 'IFVG' }] }] });
+    http
       .expectOne((r) => r.url.endsWith('/mistakes'))
       .flush({
         mistakes: [
@@ -72,6 +75,94 @@ describe('NewTrade', () => {
     component.onSubmit();
     expect(completeSave().mode).toBe('backtest');
     expect(saved).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends stop and target, shows R, and saves tags', async () => {
+    await create();
+    Object.assign(component, {
+      direction: 'short',
+      contracts: 4,
+      entry_price: 21085.25,
+      exit_price: 21028.75,
+      fees: 4.96,
+    });
+    component.stop_price = 21105.25;
+    component.target_price = '';
+    expect(component.rPreview).toEqual({ rMultiple: 2.83, plannedR: null, riskPoints: 20 });
+    expect(component.riskDollars).toBe(160);
+    component.toggleTag(5);
+    component.onSubmit();
+    expect(completeSave()).toMatchObject({ stop_price: 21105.25, target_price: null });
+    const tags = http.expectOne((r) => r.url.endsWith('/trades/99/tags'));
+    expect(tags.request.body).toEqual({ tag_ids: [5] });
+    tags.flush({});
+  });
+
+  it('moves between the three steps and saves from any of them', async () => {
+    await create();
+    expect(component.step()).toBe(0);
+    component.goTo(2);
+    expect(component.step()).toBe(2);
+    component.goTo(9);
+    expect(component.step()).toBe(2);
+    component.onSubmit();
+    expect(completeSave()).toMatchObject({ symbol: 'MNQ' });
+  });
+
+  it('exit at target / at stop copies the price', async () => {
+    await create();
+    Object.assign(component, {
+      direction: 'short',
+      entry_price: 21085.25,
+      stop_price: 21105.25,
+      target_price: 21025.25,
+    });
+    component.exitAt('target');
+    expect(component.exit_price).toBe(21025.25);
+    expect(component.rPreview?.rMultiple).toBe(3);
+    component.exitAt('stop');
+    expect(component.rPreview?.rMultiple).toBe(-1);
+  });
+
+  it('suggests the session from the entry time until one is picked', async () => {
+    await create();
+    component.entry_time = '10:53';
+    component.onEntryTimeChange();
+    expect(component.session).toBe('New York AM');
+    component.entry_time = '14:20';
+    component.onEntryTimeChange();
+    expect(component.session).toBe('New York PM');
+    component.session = 'London';
+    component.onSessionPicked();
+    component.entry_time = '10:00';
+    component.onEntryTimeChange();
+    expect(component.session).toBe('London');
+  });
+
+  it('saves review answers with the trade', async () => {
+    await create();
+    component.setAnswer(4, 'yes');
+    component.setAnswer(5, 'no');
+    component.onSubmit();
+    completeSave();
+    const answers = http.match((r) => r.url.endsWith('/trade-answers'));
+    expect(answers.map((r) => r.request.body)).toEqual([
+      { trade_id: 99, question_id: 4, choice: 'yes', comment: null },
+      { trade_id: 99, question_id: 5, choice: 'no', comment: null },
+    ]);
+  });
+
+  it('blocks a stop on the wrong side before saving', async () => {
+    await create();
+    Object.assign(component, {
+      direction: 'long',
+      entry_price: 21000,
+      exit_price: 21010,
+      stop_price: 21005,
+    });
+    component.onSubmit();
+    expect(component.errorMessage()).toBe('The stop for a long goes below the entry.');
+    http.expectNone((r) => r.method === 'POST');
   });
 
   it('sends the emotions and the picked result (null = auto)', async () => {
@@ -198,5 +289,30 @@ describe('NewTrade', () => {
     component.onSubmit(true);
     component.onSubmit(true);
     expect(http.match((r) => r.method === 'POST' && r.url.endsWith('/trades')).length).toBe(1);
+  });
+});
+
+describe('NewTrade fees', () => {
+  afterEach(() => localStorage.removeItem('feePerContract:MNQ'));
+
+  it('fills fees from the fee per contract used last time, and remembers a typed one', async () => {
+    localStorage.setItem('feePerContract:MNQ', '1.24');
+    await TestBed.configureTestingModule({
+      imports: [NewTrade],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(NewTrade);
+    const c = fixture.componentInstance;
+    await fixture.whenStable();
+    expect(c.fees).toBe(1.24);
+    c.stepContracts(3);
+    expect(c.fees).toBe(4.96);
+
+    c.fees = 6;
+    c.onFeesTyped();
+    c.stepContracts(1);
+    expect(c.fees).toBe(6);
+    c.onSubmit();
+    expect(localStorage.getItem('feePerContract:MNQ')).toBe('1.2');
   });
 });

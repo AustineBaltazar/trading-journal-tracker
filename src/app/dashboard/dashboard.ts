@@ -134,7 +134,12 @@ export class Dashboard {
   }
 
   mistakes = signal<Mistake[]>([]);
-  readonly tabLabels = { timing: 'Timing', psychology: 'Psychology', discipline: 'Discipline' };
+  readonly tabLabels = {
+    timing: 'Timing',
+    psychology: 'Psychology',
+    discipline: 'Discipline',
+    tags: 'Tags',
+  };
 
   // All-time findings, each linking to the Reports tab that explains it
   highlights = computed(() =>

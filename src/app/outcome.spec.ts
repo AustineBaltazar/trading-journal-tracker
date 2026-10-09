@@ -1,4 +1,12 @@
-import { autoOutcome, countOutcomes, emotionsOf, outcomeOf, winRate } from './outcome';
+import {
+  autoOutcome,
+  countOutcomes,
+  emotionsOf,
+  estimateR,
+  formatR,
+  outcomeOf,
+  winRate,
+} from './outcome';
 
 describe('outcome', () => {
   it('uses what the API sent, then a picked result, then the prices', () => {
@@ -33,5 +41,28 @@ describe('outcome', () => {
     ]);
     expect(emotionsOf({ emotions: [], emotion: 'Calm' })).toEqual(['Calm']);
     expect(emotionsOf({})).toEqual([]);
+  });
+});
+
+describe('R', () => {
+  it('formats R with a sign and one decimal', () => {
+    expect(formatR(2.83)).toBe('+2.8R');
+    expect(formatR(-1)).toBe('-1.0R');
+    expect(formatR(0)).toBe('0.0R');
+    expect(formatR(null)).toBe('—');
+  });
+
+  it('estimates R like the API, and needs a stop on the right side', () => {
+    const short = {
+      direction: 'short',
+      entry_price: 21085.25,
+      exit_price: 21028.75,
+      stop_price: 21105.25,
+      target_price: 21025.25,
+    };
+    expect(estimateR(short)).toEqual({ rMultiple: 2.83, plannedR: 3, riskPoints: 20 });
+    expect(estimateR({ ...short, target_price: '' })?.plannedR).toBeNull();
+    expect(estimateR({ ...short, stop_price: null })).toBeNull();
+    expect(estimateR({ ...short, stop_price: 21000 })).toBeNull();
   });
 });

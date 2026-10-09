@@ -1,7 +1,7 @@
 <div class="bg-[#080c14] min-h-screen text-slate-300 font-sans">
   @if (showNewTradeModal()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-carbon-950 rounded-lg max-h-[90vh] w-full max-w-2xl mx-4 overflow-y-auto">
+      <div class="bg-carbon-950 rounded-lg max-h-[94vh] w-full max-w-5xl mx-4 overflow-y-auto">
         <app-new-trade
           (saved)="onTradeCreated()"
           (added)="onTradeAdded()"
@@ -419,6 +419,11 @@
                     }
                     {{ trade.netPnl > 0 ? '+' : trade.netPnl < 0 ? '-' : ''
                     }}{{ abs(trade.netPnl) | number: '1.2-2' }}
+                    @if (trade.rMultiple !== null && trade.rMultiple !== undefined) {
+                      <div class="text-[10px] font-normal text-slate-500">
+                        {{ formatR(trade.rMultiple) }}
+                      </div>
+                    }
                   </td>
                   <td class="py-3.5 px-5 text-xs text-slate-400 font-sans whitespace-nowrap">
                     {{ trade.strategy || '—' }}

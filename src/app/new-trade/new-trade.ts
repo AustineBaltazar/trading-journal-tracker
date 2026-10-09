@@ -1,23 +1,37 @@
-import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  inject,
+  OnInit,
+  Output,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { EventEmitter, Output } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { environment } from '../../environments/environment';
-import { GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
 import { TradeMode, TradeModeService } from '../trade-mode';
-import { Mistake, MistakePicker } from '../mistakes/mistakes';
-import { autoOutcome, TradeOutcome } from '../outcome';
-import { EmotionPicker, estimateNetPnl, ResultPicker, toggleEmotion } from '../trade-form-fields';
+import { MistakePicker } from '../mistakes/mistakes';
+import { TagPicker } from '../tags/tags';
+import { EmotionPicker, ResultPicker } from '../trade-form-fields';
 import { ImageGallery } from '../image-gallery/image-gallery';
+import { TradeFormBase } from '../trade-form/trade-form-base';
 
 @Component({
-  imports: [FormsModule, MistakePicker, ResultPicker, EmotionPicker, ImageGallery],
+  imports: [
+    FormsModule,
+    DecimalPipe,
+    MistakePicker,
+    ResultPicker,
+    EmotionPicker,
+    ImageGallery,
+    TagPicker,
+  ],
   selector: 'app-new-trade',
-  styleUrl: './new-trade.css',
-  templateUrl: './new-trade.html',
+  styleUrl: '../trade-form/trade-form.css',
+  templateUrl: '../trade-form/trade-form.html',
 })
-export class NewTrade implements OnInit {
-  private http = inject(HttpClient);
+export class NewTrade extends TradeFormBase implements OnInit {
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   // saved: trade saved and the form should close
@@ -26,146 +40,29 @@ export class NewTrade implements OnInit {
   @Output() added = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
+  readonly isEdit = false;
   // Starts on the app's current live/backtest mode
-  mode: TradeMode = inject(TradeModeService).mode();
-  saving = signal(false);
-  loggedCount = signal(0);
-
-  trade_date = todayLocal();
-  symbol = 'MNQ';
-  direction = 'long';
-  contracts = 1;
-  entry_price = 0;
-  exit_price = 0;
-  fees = 0;
-  strategy = '';
-  screenshot_link = '';
-  notes = '';
-  entry_time = '';
-  exit_time = '';
-  session = '';
-  emotions: string[] = [];
-  grade = '';
-  result: TradeOutcome | null = null; // null = auto from the prices
-
-  readonly sessions = SESSIONS;
-  readonly grades = GRADES;
+  override mode: TradeMode = inject(TradeModeService).mode();
 
   // Screenshots wait here until the trade exists, then upload
   private gallery = viewChild(ImageGallery);
-
-  get duration(): string | null {
-    return tradeDuration(this.entry_time, this.exit_time);
-  }
-
-  get netPnlEstimate(): number {
-    return estimateNetPnl(this);
-  }
-
-  get entryEqualsExit(): boolean {
-    return Number(this.entry_price) === Number(this.exit_price);
-  }
-
-  get autoResult(): TradeOutcome {
-    return autoOutcome(this.entry_price, this.exit_price, this.netPnlEstimate);
-  }
-
-  setResult(value: TradeOutcome | null) {
-    this.result = value;
-  }
-
-  toggleEmotion(emotion: string) {
-    this.emotions = toggleEmotion(this.emotions, emotion);
-  }
-
-  errorMessage = signal('');
-
-  allRules = signal<any[]>([]);
-  checkedRuleIds = signal<Set<number>>(new Set());
-  mistakes = signal<Mistake[]>([]);
-  selectedMistakeIds = signal<Set<number>>(new Set());
-
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  }
 
   ngOnInit() {
     this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
       this.allRules.set(response.rules);
       this.checkedRuleIds.set(new Set(response.rules.map((r: any) => r.id)));
     });
-    this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
-      .subscribe((response) => this.mistakes.set(response.mistakes));
-  }
-
-  toggleMistake(id: number) {
-    this.selectedMistakeIds.update((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  isRuleChecked(ruleId: number): boolean {
-    return this.checkedRuleIds().has(ruleId);
-  }
-
-  toggleRuleChecked(ruleId: number, event: Event) {
-    const checked = (event.target as HTMLInputElement).checked;
-    this.checkedRuleIds.update((current) => {
-      const next = new Set(current);
-      if (checked) next.add(ruleId);
-      else next.delete(ruleId);
-      return next;
-    });
-  }
-
-  setDirection(value: string) {
-    this.direction = value;
-  }
-
-  setMode(value: TradeMode) {
-    this.mode = value;
+    this.loadLists();
+    this.applyFeeDefault();
   }
 
   onSubmit(addAnother = false) {
-    this.errorMessage.set('');
-    if (this.saving()) return;
-
-    if (!this.trade_date) {
-      this.errorMessage.set('Please select a date.');
-      return;
-    }
-
+    if (this.saving() || !this.validate()) return;
     this.saving.set(true);
+    this.rememberFees();
 
     this.http
-      .post<any>(
-        `${environment.apiUrl}/trades`,
-        {
-          trade_date: this.trade_date,
-          symbol: this.symbol,
-          direction: this.direction,
-          contracts: this.contracts,
-          entry_price: this.entry_price,
-          exit_price: this.exit_price,
-          fees: this.fees,
-          strategy: this.strategy,
-          screenshot_link: this.screenshot_link || null,
-          notes: this.notes || null,
-          entry_time: this.entry_time || null,
-          exit_time: this.exit_time || null,
-          session: this.session || null,
-          emotions: this.emotions,
-          grade: this.grade || null,
-          result: this.result,
-          mode: this.mode,
-        },
-        this.authHeaders(),
-      )
+      .post<any>(`${environment.apiUrl}/trades`, this.payload(), this.authHeaders())
       .subscribe({
         next: (newTrade) => this.linkExtras(newTrade.id, () => this.finish(addAnother)),
         error: (err) => {
@@ -175,16 +72,55 @@ export class NewTrade implements OnInit {
       });
   }
 
-  // Rules, mistakes and screenshots are saved in parallel; done() runs once all finish
+  // Rules, mistakes, tags, answers and screenshots are saved in parallel; done() runs once all finish
   private linkExtras(tradeId: number, done: () => void) {
-    let pending = 3;
+    let pending = 5;
     const oneDone = () => {
       pending -= 1;
       if (pending === 0) done();
     };
     this.linkRules(tradeId, oneDone);
-    this.saveMistakes(tradeId, oneDone);
+    this.putList(
+      `trades/${tradeId}/mistakes`,
+      { mistake_ids: [...this.selectedMistakeIds()] },
+      oneDone,
+    );
+    this.putList(`trades/${tradeId}/tags`, { tag_ids: [...this.selectedTagIds()] }, oneDone);
+    this.saveAnswers(tradeId, oneDone);
     this.uploadScreenshots(tradeId, oneDone);
+  }
+
+  // Mistakes and tags: nothing to send for an empty list on a new trade
+  private putList(path: string, body: Record<string, number[]>, done: () => void) {
+    if (Object.values(body)[0].length === 0) {
+      done();
+      return;
+    }
+    this.http
+      .put(`${environment.apiUrl}/${path}`, body, this.authHeaders())
+      .subscribe({ next: done, error: done });
+  }
+
+  private saveAnswers(tradeId: number, done: () => void) {
+    const entries = [...this.answers().entries()];
+    if (entries.length === 0) {
+      done();
+      return;
+    }
+    let remaining = entries.length;
+    const one = () => {
+      remaining -= 1;
+      if (remaining === 0) done();
+    };
+    for (const [questionId, choice] of entries) {
+      this.http
+        .post(
+          `${environment.apiUrl}/trade-answers`,
+          { trade_id: tradeId, question_id: questionId, choice, comment: null },
+          this.authHeaders(),
+        )
+        .subscribe({ next: one, error: one });
+    }
   }
 
   private uploadScreenshots(tradeId: number, done: () => void) {
@@ -210,48 +146,25 @@ export class NewTrade implements OnInit {
       });
   }
 
-  private saveMistakes(tradeId: number, done: () => void) {
-    const ids = [...this.selectedMistakeIds()];
-    if (ids.length === 0) {
-      done();
-      return;
-    }
-    this.http
-      .put(
-        `${environment.apiUrl}/trades/${tradeId}/mistakes`,
-        { mistake_ids: ids },
-        this.authHeaders(),
-      )
-      .subscribe({ next: done, error: done });
-  }
-
   private linkRules(tradeId: number, done: () => void) {
     const allRules = this.allRules();
-
     if (allRules.length === 0) {
       done();
       return;
     }
-
     let remaining = allRules.length;
+    const one = () => {
+      remaining -= 1;
+      if (remaining === 0) done();
+    };
     for (const rule of allRules) {
-      const followed = this.checkedRuleIds().has(rule.id);
       this.http
         .post<any>(
           `${environment.apiUrl}/trade-rules`,
-          { trade_id: tradeId, rule_id: rule.id, followed },
+          { trade_id: tradeId, rule_id: rule.id, followed: this.checkedRuleIds().has(rule.id) },
           this.authHeaders(),
         )
-        .subscribe({
-          next: () => {
-            remaining -= 1;
-            if (remaining === 0) done();
-          },
-          error: () => {
-            remaining -= 1;
-            if (remaining === 0) done();
-          },
-        });
+        .subscribe({ next: one, error: one });
     }
   }
 
@@ -266,8 +179,8 @@ export class NewTrade implements OnInit {
     this.added.emit();
   }
 
-  // Keeps the setup that repeats across a session (date, symbol, strategy,
-  // session, direction, contracts, fees, mode) and clears the per-trade fields.
+  // Keeps the setup that repeats across a session (date, symbol, setup, session,
+  // direction, contracts, fees, mode) and clears the per-trade fields.
   resetForNextTrade() {
     this.entry_price = 0;
     this.exit_price = 0;
@@ -276,11 +189,17 @@ export class NewTrade implements OnInit {
     this.emotions = [];
     this.grade = '';
     this.result = null;
+    this.stop_price = null;
+    this.target_price = null;
     this.gallery()?.clearQueued();
     this.notes = '';
     this.screenshot_link = '';
+    this.answers.set(new Map());
     this.checkedRuleIds.set(new Set(this.allRules().map((r: any) => r.id)));
     this.selectedMistakeIds.set(new Set());
+    const setupIds = new Set((this.setupGroup()?.tags ?? []).map((t) => t.id));
+    this.selectedTagIds.update((ids) => new Set([...ids].filter((id) => setupIds.has(id))));
+    this.goTo(0);
     // Focus the first cleared field with its 0 selected, so typing replaces it
     setTimeout(() => {
       const entry = this.host.nativeElement.querySelector<HTMLInputElement>('[name="entry_price"]');
