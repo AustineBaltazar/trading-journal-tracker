@@ -1,7 +1,7 @@
 <div class="bg-[#070A10] min-h-screen text-slate-200 font-sans">
   @if (showEditModal() && trade()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="w-full max-w-[530px] max-h-[90vh] overflow-y-auto">
+      <div class="w-full max-w-5xl max-h-[94vh] overflow-y-auto">
         <app-edit-trade [tradeId]="trade().id" (saved)="onEditSaved()" (cancelled)="closeEdit()" />
       </div>
     </div>
@@ -81,6 +81,19 @@
               >{{ outcomeLabel[o] }}{{ trade().result ? '' : ' · auto' }}</span
             >
           }
+          @if (trade().rMultiple !== null) {
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border"
+              [class]="
+                trade().rMultiple > 0
+                  ? 'text-emerald-300 border-emerald-500/40'
+                  : trade().rMultiple < 0
+                    ? 'text-rose-300 border-rose-500/40'
+                    : 'text-slate-300 border-slate-400/45'
+              "
+              >{{ formatR(trade().rMultiple) }}</span
+            >
+          }
           @if (trade().mode === 'backtest') {
             <span
               class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
@@ -139,431 +152,381 @@
       </div>
     </header>
 
-    <div class="p-6 sm:p-8 max-w-6xl w-full mx-auto space-y-6">
-      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-[#131B2E]/60 backdrop-blur-sm p-4"
-        >
-          <span class="text-xs font-medium text-slate-400 tracking-wide">Entry</span>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span class="text-2xl lg:text-3xl font-bold tracking-tight text-white font-mono">{{
-              trade().entry_price | number: '1.0-2'
-            }}</span>
-            <span class="text-[11px] text-slate-400 font-mono">pts</span>
-          </div>
-        </div>
-
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-[#131B2E]/60 backdrop-blur-sm p-4"
-        >
-          <span class="text-xs font-medium text-slate-400 tracking-wide">Exit</span>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span class="text-2xl lg:text-3xl font-bold tracking-tight text-white font-mono">{{
-              trade().exit_price | number: '1.0-2'
-            }}</span>
-            <span class="text-[11px] text-slate-400 font-mono">pts</span>
+    <div
+      class="p-6 sm:p-8 max-w-[1400px] w-full mx-auto grid grid-cols-1 xl:grid-cols-[400px_minmax(0,1fr)] gap-6 items-start"
+    >
+      <!-- Every field in one compact list -->
+      <aside
+        class="rounded-xl border border-white/10 bg-[#131B2E]/50 px-5 py-2 divide-y divide-white/10 text-sm"
+      >
+        <div class="py-4 space-y-2.5">
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Trade</h3>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Mode</span>
             <span
-              class="text-xs font-semibold font-mono px-1.5 py-0.5 rounded border"
-              [class.text-black]="pointDifference() > 0"
-              [class.bg-emerald-500]="pointDifference() > 0"
-              [class.border-emerald-500]="pointDifference() > 0"
-              [class.text-black]="pointDifference() < 0"
-              [class.bg-rose-500]="pointDifference() < 0"
-              [class.border-rose-500]="pointDifference() < 0"
-            >
-              {{ pointDifference() > 0 ? '+' : '' }}{{ pointDifference() }} pts
-            </span>
-          </div>
-        </div>
-
-        <div
-          class="relative overflow-hidden rounded-xl border border-white/10 bg-[#131B2E]/60 backdrop-blur-sm p-4"
-        >
-          <span class="text-xs font-medium text-slate-400 tracking-wide">Contracts</span>
-          <div class="flex items-baseline gap-2 mt-1">
-            <span class="text-2xl lg:text-3xl font-bold tracking-tight text-white font-mono">{{
-              trade().contracts
-            }}</span>
-            <span class="text-xs text-slate-400">lots</span>
-          </div>
-          <p class="text-[11px] text-slate-400 mt-1 font-mono">
-            ${{ pointValue() | number: '1.2-2' }} / pt per contract
-          </p>
-        </div>
-
-        <div
-          class="relative overflow-hidden rounded-xl border p-4"
-          [class.border-emerald-500]="outcome() === 'win'"
-          [class.border-rose-500]="outcome() === 'loss'"
-          [class.border-slate-500]="outcome() === 'be'"
-          style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), #131b2e)"
-        >
-          <div class="flex items-center gap-1.5">
-            <span
-              class="w-1.5 h-1.5 rounded-full"
-              [class.bg-emerald-400]="outcome() === 'win'"
-              [class.bg-rose-400]="outcome() === 'loss'"
-              [class.bg-slate-400]="outcome() === 'be'"
-            ></span>
-            <span
-              class="text-xs font-semibold tracking-wide"
-              [class.text-emerald-400]="outcome() === 'win'"
-              [class.text-rose-400]="outcome() === 'loss'"
-              [class.text-slate-300]="outcome() === 'be'"
-              >Net P/L</span
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              >{{ trade().mode === 'backtest' ? 'Backtest' : 'Live' }}</span
             >
           </div>
-          <div class="flex items-baseline gap-2 mt-1">
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Strategy</span>
             <span
-              class="text-2xl lg:text-3xl font-extrabold tracking-tight font-mono"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              >{{ trade().strategy || '—' }}</span
+            >
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Session</span>
+            <span
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              >{{ trade().session || '—' }}</span
+            >
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Contracts</span>
+            <span
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              >{{ trade().contracts }} {{ trade().symbol }}</span
+            >
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Entry / exit time</span>
+            <span class="flex items-center gap-2"
+              ><span
+                class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                >{{ trade().entry_time || '—' }} → {{ trade().exit_time || '—' }}</span
+              ><span class="text-xs text-slate-500 font-mono">{{ duration() ?? '' }}</span></span
+            >
+          </div>
+        </div>
+
+        <div class="py-4 space-y-2.5">
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Prices</h3>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Entry price</span>
+            <span
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              >{{ trade().entry_price | number: '1.2-2' }}</span
+            >
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Stop loss</span>
+            @if (trade().stop_price !== null) {
+              <span class="flex items-center gap-2"
+                ><span
+                  class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-rose-300"
+                  >{{ trade().stop_price | number: '1.2-2' }}</span
+                ><span class="text-xs text-slate-500 font-mono"
+                  >{{ priceGap(trade().stop_price) }} pts</span
+                ></span
+              >
+            } @else {
+              <span class="text-slate-500">Not set</span>
+            }
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Take profit</span>
+            @if (trade().target_price !== null) {
+              <span class="flex items-center gap-2"
+                ><span
+                  class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-emerald-300"
+                  >{{ trade().target_price | number: '1.2-2' }}</span
+                ><span class="text-xs text-slate-500 font-mono"
+                  >{{ priceGap(trade().target_price) }} pts</span
+                ></span
+              >
+            } @else {
+              <span class="text-slate-500">Not set</span>
+            }
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Exit price</span>
+            <span class="flex items-center gap-2"
+              ><span
+                class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                >{{ trade().exit_price | number: '1.2-2' }}</span
+              ><span
+                class="text-xs font-mono"
+                [class.text-emerald-400]="pointDifference() > 0"
+                [class.text-rose-400]="pointDifference() < 0"
+                [class.text-slate-500]="pointDifference() === 0"
+                >{{ pointDifference() > 0 ? '+' : '' }}{{ pointDifference() }} pts</span
+              ></span
+            >
+          </div>
+          @if (trade().rMultiple !== null) {
+            <div class="grid grid-cols-3 gap-2 pt-1 font-mono">
+              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                <span class="block text-[10px] text-slate-500 font-sans">Risk</span>
+                <b class="text-rose-300">${{ riskDollars() | number: '1.0-0' }}</b>
+              </div>
+              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                <span class="block text-[10px] text-slate-500 font-sans">Planned</span>
+                <b class="text-slate-100">{{
+                  trade().plannedR !== null ? '1 : ' + trade().plannedR : '—'
+                }}</b>
+              </div>
+              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                <span class="block text-[10px] text-slate-500 font-sans">Result</span>
+                <b
+                  [class.text-emerald-400]="trade().rMultiple > 0"
+                  [class.text-rose-400]="trade().rMultiple < 0"
+                  [class.text-slate-200]="trade().rMultiple === 0"
+                  >{{ formatR(trade().rMultiple) }}</b
+                >
+              </div>
+            </div>
+          } @else {
+            <p class="text-xs text-slate-500">Add a stop in Edit to see this trade in R.</p>
+          }
+        </div>
+
+        <div class="py-4 space-y-2.5">
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Result</h3>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Gross P/L</span>
+            <span
+              class="font-mono"
+              [class.text-emerald-400]="grossPnl() > 0"
+              [class.text-rose-400]="grossPnl() < 0"
+              >{{ grossPnl() > 0 ? '+' : '' }}{{ grossPnl() | number: '1.2-2' }}</span
+            >
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Fees</span>
+            <span class="font-mono text-rose-400">-{{ trade().fees | number: '1.2-2' }}</span>
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Net P/L</span>
+            <span
+              class="font-mono text-base font-bold"
               [class.text-emerald-400]="outcome() === 'win'"
               [class.text-rose-400]="outcome() === 'loss'"
               [class.text-slate-200]="outcome() === 'be'"
+              >{{ trade().netPnl > 0 ? '+' : '' }}{{ trade().netPnl | number: '1.2-2' }}</span
             >
-              {{ trade().netPnl > 0 ? '+' : '' }}{{ trade().netPnl | number: '1.0-2' }}
+          </div>
+        </div>
+
+        <div class="py-4 space-y-2.5">
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Review</h3>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Emotions</span>
+            <span class="flex flex-wrap gap-1">
+              @for (e of emotions(); track e) {
+                <span
+                  class="text-xs px-2.5 py-0.5 rounded-full border border-blue-400/45 bg-blue-600/10 text-blue-100"
+                  >{{ e }}</span
+                >
+              } @empty {
+                <span class="text-slate-500">—</span>
+              }
             </span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1 font-mono">
-            Gross:
-            <span class="text-slate-300">{{ grossPnl() > 0 ? '+' : '' }}{{ grossPnl() }}</span> ·
-            Fees: <span class="text-rose-400">-{{ trade().fees | number: '1.0-2' }}</span>
-          </p>
-        </div>
-      </section>
-
-      <section
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-5"
-      >
-        <h3
-          class="text-xs uppercase tracking-wider font-semibold text-slate-400 flex items-center gap-2"
-        >
-          <svg
-            class="w-4 h-4 text-blue-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          Execution parameters &amp; strategy
-        </h3>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Strategy</span>
-            <div
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white font-mono text-xs font-medium"
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Grade</span>
+            <span
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              >{{ trade().grade || '—' }}</span
             >
-              <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-              {{ trade().strategy || '—' }}
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Mistakes</span>
+            @if (mistakeNames().length === 0) {
+              <span class="text-xs font-medium text-emerald-400">✓ Clean trade</span>
+            } @else {
+              <span class="flex flex-wrap gap-1">
+                @for (name of mistakeNames(); track name) {
+                  <span
+                    class="text-xs px-2.5 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
+                    >{{ name }}</span
+                  >
+                }
+              </span>
+            }
+          </div>
+          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+            <span class="text-slate-400">Rules</span>
+            <span class="text-slate-200">{{
+              linkedRules().length ? ruleAdherenceLabel() : '—'
+            }}</span>
+          </div>
+          @if (
+            followedRulesOnly().length > 0 && followedRulesOnly().length < linkedRules().length
+          ) {
+            <p class="text-[11px] text-slate-500">Followed: {{ followedRuleNames() }}</p>
+          }
+        </div>
+
+        <div class="py-4 space-y-2.5">
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Tags</h3>
+          @for (group of tradeTags(); track group.name) {
+            <div class="grid grid-cols-[120px_minmax(0,1fr)] items-start gap-3">
+              <span class="text-slate-400">{{ group.name }}</span>
+              <span class="flex flex-wrap gap-1">
+                @for (tag of group.tags; track tag.id) {
+                  <span
+                    class="text-xs px-2.5 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
+                    >{{ tag.name }}</span
+                  >
+                } @empty {
+                  <span class="text-slate-500">—</span>
+                }
+              </span>
             </div>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Fees</span>
-            <p class="font-mono text-sm text-slate-200 font-semibold">
-              ${{ trade().fees | number: '1.0-2' }}
-            </p>
-          </div>
-          @if (trade().screenshot_link) {
-            <div class="col-span-2">
-              <span class="block text-xs font-medium text-slate-400 mb-1.5">Screenshot</span>
+          } @empty {
+            <p class="text-xs text-slate-500">Set up tag groups in the Playbook.</p>
+          }
+        </div>
+      </aside>
+
+      <!-- Note and charts first: what you look at when reviewing -->
+      <div class="space-y-6 min-w-0">
+        <div>
+          @if (trade().notes) {
+            <p class="text-lg text-slate-100 leading-snug">{{ trade().notes }}</p>
+            <span class="text-xs text-slate-500">Trade notes</span>
+          } @else {
+            <p class="text-sm text-slate-500">No notes for this trade. Add them in Edit.</p>
+          }
+        </div>
+
+        <section>
+          <div class="flex items-baseline justify-between mb-3">
+            <h3 class="text-xs uppercase tracking-wider font-semibold text-slate-400">
+              Screenshots
+              @if (trade().images?.length) {
+                <span class="ml-1 normal-case tracking-normal text-slate-500 font-normal"
+                  >{{ trade().images.length }} / 6</span
+                >
+              }
+            </h3>
+            @if (trade().screenshot_link) {
               <a
                 [href]="trade().screenshot_link"
                 target="_blank"
                 rel="noopener"
-                class="group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 hover:text-blue-300 text-xs font-medium transition-all"
+                class="text-xs text-blue-300 hover:text-blue-200"
+                >Open chart link ↗</a
               >
-                <svg
-                  class="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                <span>Open link</span>
-                <svg
-                  class="w-3.5 h-3.5 opacity-70 group-hover:opacity-100"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </a>
-            </div>
-          }
-        </div>
+            }
+          </div>
+          <app-image-gallery
+            addLabel="Add screenshot"
+            [featured]="true"
+            [target]="imageTarget()"
+            [images]="trade().images || []"
+            (added)="onImageAdded($event)"
+            (removed)="onImageRemoved($event)"
+            (captioned)="onCaptioned($event)"
+          />
+        </section>
 
-        <div
-          class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 pt-5 border-t border-white/10"
+        <section
+          class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-6"
         >
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Entry time</span>
-            <p class="font-mono text-sm text-slate-200 font-semibold">
-              {{ trade().entry_time || '—' }}
-            </p>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Exit time</span>
-            <p class="font-mono text-sm text-slate-200 font-semibold">
-              {{ trade().exit_time || '—' }}
-            </p>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Duration</span>
-            <p class="font-mono text-sm text-slate-200 font-semibold">
-              {{ duration() ?? '—' }}
-            </p>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Session</span>
-            <p class="text-sm text-slate-200 font-semibold">{{ trade().session || '—' }}</p>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">{{
-              emotions().length > 1 ? 'Emotions' : 'Emotion'
-            }}</span>
-            <p class="text-sm text-slate-200 font-semibold">
-              {{ emotions().length ? emotions().join(' · ') : '—' }}
-            </p>
-          </div>
-          <div>
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Grade</span>
-            <p class="font-mono text-sm text-white font-bold">{{ trade().grade || '—' }}</p>
-          </div>
-        </div>
-
-        <div class="pt-5 border-t border-white/10">
-          <span class="block text-xs font-medium text-slate-400 mb-2">Mistakes</span>
-          @if (mistakeNames().length === 0) {
-            <span class="text-xs font-medium text-emerald-400">✓ Clean trade, no mistakes</span>
-          } @else {
-            <div class="flex flex-wrap gap-1.5">
-              @for (name of mistakeNames(); track name) {
-                <span
-                  class="text-xs px-2.5 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
-                  >{{ name }}</span
-                >
-              }
-            </div>
-          }
-        </div>
-
-        @if (trade().notes) {
-          <div class="pt-2 border-t border-white/10">
-            <span class="block text-xs font-medium text-slate-400 mb-1.5">Trade notes</span>
-            <div
-              class="rounded-lg bg-black/20 border border-white/10 p-3.5 text-sm text-slate-300 flex items-start gap-3"
-            >
-              <span class="text-blue-400 font-serif text-lg leading-none select-none">"</span>
-              <p>{{ trade().notes }}</p>
-            </div>
-          </div>
-        }
-      </section>
-
-      <section class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6">
-        <h3 class="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-4">
-          Screenshots
-          @if (trade().images?.length) {
-            <span class="ml-1 normal-case tracking-normal text-slate-500 font-normal"
-              >{{ trade().images.length }} / 6</span
-            >
-          }
-        </h3>
-        <app-image-gallery
-          addLabel="Add screenshot"
-          [target]="imageTarget()"
-          [images]="trade().images || []"
-          (added)="onImageAdded($event)"
-          (removed)="onImageRemoved($event)"
-          (captioned)="onCaptioned($event)"
-        />
-      </section>
-
-      <section
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-4"
-      >
-        <div class="flex items-center justify-between flex-wrap gap-2">
           <h3
             class="text-xs uppercase tracking-wider font-semibold text-slate-400 flex items-center gap-2"
           >
             <svg
-              class="w-4 h-4 text-emerald-400"
+              class="w-4 h-4 text-indigo-400"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
               viewBox="0 0 24 24"
             >
               <path
-                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712M12 17.25h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
             </svg>
-            Rules followed
+            Review questions
           </h3>
-          @if (linkedRules().length > 0) {
-            <span
-              class="text-xs font-mono font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
-            >
-              {{ ruleAdherenceLabel() }}
-            </span>
-          }
-        </div>
 
-        @if (followedRulesOnly().length === 0) {
-          <p class="text-slate-500 text-sm">No rules marked as followed for this trade.</p>
-        } @else {
-          <div class="flex flex-wrap items-center gap-3">
-            @for (rule of followedRulesOnly(); track rule.id) {
-              <div
-                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
-              >
-                <span
-                  class="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400"
-                >
-                  <svg
-                    class="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M4.5 12.75l6 6 9-13.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-                {{ rule.name }}
-              </div>
-            }
-          </div>
-        }
-      </section>
+          @if (allQuestions().length === 0) {
+            <p class="text-slate-500 text-sm">No questions in your Playbook yet.</p>
+          } @else {
+            <div class="space-y-5">
+              @for (q of allQuestions(); track q.id) {
+                <div class="rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
+                  <p class="text-sm font-medium text-slate-100">{{ q.question_text }}</p>
+                  <div class="flex flex-wrap items-center gap-6">
+                    @for (
+                      option of [
+                        { v: 'yes', l: 'Yes' },
+                        { v: 'no', l: 'No' },
+                        { v: 'other', l: 'Other' },
+                      ];
+                      track option.v
+                    ) {
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          [name]="'q' + q.id"
+                          [checked]="getDraftChoice(q.id) === option.v"
+                          (change)="setDraftChoice(q.id, option.v)"
+                          class="w-4 h-4 text-blue-600 bg-transparent border-slate-700 focus:ring-blue-500"
+                        />
+                        <span
+                          class="text-xs font-medium"
+                          [class.text-white]="getDraftChoice(q.id) === option.v"
+                          [class.text-slate-400]="getDraftChoice(q.id) !== option.v"
+                          >{{ option.l }}</span
+                        >
+                      </label>
+                    }
+                  </div>
 
-      <section
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-6"
-      >
-        <h3
-          class="text-xs uppercase tracking-wider font-semibold text-slate-400 flex items-center gap-2"
-        >
-          <svg
-            class="w-4 h-4 text-indigo-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712M12 17.25h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          Review questions
-        </h3>
-
-        @if (allQuestions().length === 0) {
-          <p class="text-slate-500 text-sm">No questions in your Playbook yet.</p>
-        } @else {
-          <div class="space-y-5">
-            @for (q of allQuestions(); track q.id) {
-              <div class="rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
-                <p class="text-sm font-medium text-slate-100">{{ q.question_text }}</p>
-                <div class="flex flex-wrap items-center gap-6">
-                  @for (
-                    option of [
-                      { v: 'yes', l: 'Yes' },
-                      { v: 'no', l: 'No' },
-                      { v: 'other', l: 'Other' },
-                    ];
-                    track option.v
-                  ) {
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        [name]="'q' + q.id"
-                        [checked]="getDraftChoice(q.id) === option.v"
-                        (change)="setDraftChoice(q.id, option.v)"
-                        class="w-4 h-4 text-blue-600 bg-transparent border-slate-700 focus:ring-blue-500"
-                      />
-                      <span
-                        class="text-xs font-medium"
-                        [class.text-white]="getDraftChoice(q.id) === option.v"
-                        [class.text-slate-400]="getDraftChoice(q.id) !== option.v"
-                        >{{ option.l }}</span
-                      >
-                    </label>
+                  @if (getDraftChoice(q.id) === 'other') {
+                    <div class="pt-1">
+                      <textarea
+                        [ngModel]="getDraftComment(q.id)"
+                        (ngModelChange)="setDraftComment(q.id, $event)"
+                        name="comment-{{ q.id }}"
+                        rows="2"
+                        maxlength="200"
+                        placeholder="Provide additional details..."
+                        class="w-full rounded-md border border-white/10 bg-[#0F1523]/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-y p-3"
+                      ></textarea>
+                      <div class="flex justify-end mt-1.5">
+                        <span class="text-[11px] font-mono text-slate-500"
+                          >{{ getDraftComment(q.id).length }} / 200 chars</span
+                        >
+                      </div>
+                    </div>
                   }
                 </div>
+              }
+            </div>
 
-                @if (getDraftChoice(q.id) === 'other') {
-                  <div class="pt-1">
-                    <textarea
-                      [ngModel]="getDraftComment(q.id)"
-                      (ngModelChange)="setDraftComment(q.id, $event)"
-                      name="comment-{{ q.id }}"
-                      rows="2"
-                      maxlength="200"
-                      placeholder="Provide additional details..."
-                      class="w-full rounded-md border border-white/10 bg-[#0F1523]/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-y p-3"
-                    ></textarea>
-                    <div class="flex justify-end mt-1.5">
-                      <span class="text-[11px] font-mono text-slate-500"
-                        >{{ getDraftComment(q.id).length }} / 200 chars</span
-                      >
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <div class="flex items-center justify-end gap-3 pt-2">
-            @if (saveStatus() === 'success') {
-              <span class="text-emerald-400 text-xs">Saved</span>
-            }
-            @if (saveStatus() === 'error') {
-              <span class="text-rose-400 text-xs">Something went wrong</span>
-            }
-            <button
-              (click)="saveAllAnswers()"
-              [disabled]="saveStatus() === 'saving'"
-              class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
-            >
-              <svg
-                class="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                viewBox="0 0 24 24"
+            <div class="flex items-center justify-end gap-3 pt-2">
+              @if (saveStatus() === 'success') {
+                <span class="text-emerald-400 text-xs">Saved</span>
+              }
+              @if (saveStatus() === 'error') {
+                <span class="text-rose-400 text-xs">Something went wrong</span>
+              }
+              <button
+                (click)="saveAllAnswers()"
+                [disabled]="saveStatus() === 'saving'"
+                class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
               >
-                <path d="M4.5 12.75l6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              {{ saveStatus() === 'saving' ? 'Saving...' : 'Save answers' }}
-            </button>
-          </div>
-        }
-      </section>
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M4.5 12.75l6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                {{ saveStatus() === 'saving' ? 'Saving...' : 'Save answers' }}
+              </button>
+            </div>
+          }
+        </section>
+      </div>
     </div>
   }
 </div>

@@ -3,7 +3,14 @@ import { DecimalPipe } from '@angular/common';
 import { RESULT_OPTIONS, TradeOutcome } from './outcome';
 import { EMOTIONS } from './trade-journal';
 
-const POINT_VALUES: Record<string, number> = { MNQ: 2, NQ: 20 };
+export const POINT_VALUES: Record<string, number> = { MNQ: 2, NQ: 20 };
+
+// A price input's value as a number, or null when it's empty
+export function blankPrice(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
 const BAD_EMOTIONS = new Set(['FOMO', 'Revenge']);
 
 // Net P/L while the form is being filled in, same math as the API's utils/pnl.js
@@ -26,6 +33,7 @@ export function estimateNetPnl(t: {
 // picking the highlighted auto choice keeps it on auto.
 @Component({
   selector: 'app-result-picker',
+  host: { class: 'block' },
   imports: [DecimalPipe],
   template: `
     <div class="flex items-baseline justify-between mb-1.5">
@@ -106,6 +114,7 @@ export class ResultPicker {
 // Emotion chips: pick all that apply. FOMO and Revenge show red, like on the trades list.
 @Component({
   selector: 'app-emotion-picker',
+  host: { class: 'block' },
   template: `
     <div class="flex items-baseline justify-between mb-1.5">
       <span class="text-xs font-medium text-slate-300">Emotions</span>

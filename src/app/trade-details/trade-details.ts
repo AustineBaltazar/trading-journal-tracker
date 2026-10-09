@@ -8,6 +8,8 @@ import { environment } from '../../environments/environment';
 import { tradeDuration } from '../trade-journal';
 import { emotionsOf, outcomeOf } from '../outcome';
 import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-gallery';
+import { TagGroup, tagsByGroup } from '../tags/tags';
+import { formatR } from '../outcome';
 
 interface DraftAnswer {
   choice: string;
@@ -43,6 +45,28 @@ export class TradeDetails implements OnInit {
     base: `${environment.apiUrl}/trades/${this.tradeId}/images`,
     item: `${environment.apiUrl}/trade-images`,
   }));
+  tagGroups = signal<TagGroup[]>([]);
+  tradeTags = computed(() => tagsByGroup(this.tagGroups(), this.trade()?.tagIds));
+  readonly formatR = formatR;
+
+  // Dollars at risk: stop distance x point value x contracts
+  riskDollars = computed(() => {
+    const t = this.trade();
+    if (!t || t.stop_price === null) return 0;
+    return Math.abs(Number(t.entry_price) - Number(t.stop_price)) * this.pointValue() * t.contracts;
+  });
+
+  // Points between the entry and another price, always positive
+  priceGap(price: number | string): number {
+    return Math.round(Math.abs(Number(price) - Number(this.trade().entry_price)) * 100) / 100;
+  }
+
+  followedRuleNames(): string {
+    return this.followedRulesOnly()
+      .map((r) => r.name)
+      .join(', ');
+  }
+
   allRules = signal<any[]>([]);
   linkedRules = signal<any[]>([]);
   allQuestions = signal<any[]>([]);
@@ -62,6 +86,9 @@ export class TradeDetails implements OnInit {
       .subscribe((response) => this.allMistakes.set(response.mistakes));
     this.loadRules();
     this.loadQuestions();
+    this.http
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .subscribe((response) => this.tagGroups.set(response.groups));
   }
 
   private authHeaders() {

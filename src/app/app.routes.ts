@@ -24,6 +24,10 @@ export const routes: Routes = [
         path: 'journal',
         loadComponent: () => import('./journal/journal').then((m) => m.Journal),
       },
+      {
+        path: 'reports',
+        loadComponent: () => import('./reports/reports').then((m) => m.Reports),
+      },
       { path: 'playbook', component: Playbook },
     ],
   },

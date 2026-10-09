@@ -1,0 +1,812 @@
+<div
+  class="bg-[#0f1522] rounded-2xl overflow-hidden"
+  style="
+    box-shadow:
+      0 25px 60px -15px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.08);
+  "
+>
+  <div
+    class="h-1 w-full"
+    [class]="
+      mode === 'backtest'
+        ? 'bg-violet-600'
+        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600'
+    "
+  ></div>
+
+  <!-- Title and the step bar -->
+  <div class="flex items-center justify-between px-6 pt-4 pb-1">
+    <div class="flex items-center gap-2">
+      <h2 class="text-lg font-semibold text-white tracking-tight">
+        {{ isEdit ? 'Edit trade' : 'New trade' }}
+      </h2>
+      @if (mode === 'backtest') {
+        <span
+          class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
+          >BACKTEST</span
+        >
+      }
+    </div>
+    <button
+      (click)="cancel()"
+      type="button"
+      aria-label="Close"
+      class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/70 transition-colors"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
+  <nav
+    class="flex items-center justify-center gap-2 px-4 py-3 border-b border-[#1e293b] text-sm flex-wrap"
+    aria-label="Steps"
+  >
+    @for (s of steps; track s.label; let i = $index; let last = $last) {
+      <button
+        type="button"
+        (click)="goTo(i)"
+        [attr.aria-current]="step() === i ? 'step' : null"
+        class="flex items-center gap-2 rounded-lg px-1.5 py-0.5"
+        [class]="step() === i ? 'text-white font-semibold' : 'text-slate-500 hover:text-slate-300'"
+      >
+        <span
+          class="w-6 h-6 rounded-full grid place-items-center text-xs border"
+          [class]="
+            step() === i
+              ? 'bg-blue-600 border-blue-600 text-white'
+              : step() > i
+                ? 'border-emerald-500/50 text-emerald-400'
+                : 'border-[#26354f]'
+          "
+          >{{ step() > i ? '✓' : i + 1 }}</span
+        >
+        {{ s.label }}
+      </button>
+      @if (!last) {
+        <span class="text-slate-700">›</span>
+      }
+    }
+  </nav>
+
+  @if (!loaded()) {
+    <p class="px-6 py-10 text-slate-500 text-sm">Loading...</p>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-[190px_minmax(0,1fr)]">
+      <!-- Step list: jump to any step -->
+      <aside class="hidden md:flex flex-col gap-1.5 border-r border-[#1e293b] p-3">
+        @for (s of steps; track s.label; let i = $index) {
+          <button
+            type="button"
+            (click)="goTo(i)"
+            class="flex gap-2.5 items-start text-left rounded-lg p-2 transition-colors"
+            [class]="
+              step() === i ? 'bg-[#141c2c] text-white' : 'text-slate-500 hover:text-slate-300'
+            "
+          >
+            <span
+              class="shrink-0 w-6 h-6 rounded-md grid place-items-center text-xs border"
+              [class]="
+                step() === i
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : step() > i
+                    ? 'border-emerald-500/45 text-emerald-400'
+                    : 'border-[#26354f]'
+              "
+              >{{ step() > i ? '✓' : i + 1 }}</span
+            >
+            <span class="text-[13px] leading-tight"
+              >{{ s.label }}<span class="block text-[11px] text-slate-500">{{ s.hint }}</span></span
+            >
+          </button>
+        }
+        <p class="mt-3 pt-3 border-t border-dashed border-[#1e293b] text-[11px] text-slate-500">
+          Save works from any step once the essentials are in.
+        </p>
+      </aside>
+
+      <form
+        (ngSubmit)="onSubmit()"
+        class="px-6 py-5 space-y-4 max-h-[68vh] overflow-y-auto min-w-0"
+      >
+        @if (errorMessage()) {
+          <p class="text-rose-400 text-xs" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <!-- All steps stay rendered (only hidden), so nothing typed or queued is lost -->
+        <!-- ============ Step 1: Essentials ============ -->
+        <div [hidden]="step() !== 0" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1.5">Mode</label>
+            <div
+              role="radiogroup"
+              aria-label="Trade mode"
+              class="grid grid-cols-2 gap-2 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+            >
+              <button
+                type="button"
+                role="radio"
+                [attr.aria-checked]="mode === 'live'"
+                (click)="setMode('live')"
+                class="py-1.5 rounded-lg border transition-colors"
+                [class]="
+                  mode === 'live'
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                "
+              >
+                Live
+              </button>
+              <button
+                type="button"
+                role="radio"
+                [attr.aria-checked]="mode === 'backtest'"
+                (click)="setMode('backtest')"
+                class="py-1.5 rounded-lg border transition-colors"
+                [class]="
+                  mode === 'backtest'
+                    ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                "
+              >
+                Backtest
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+            <div>
+              <label for="tf-date" class="block text-xs font-medium text-slate-300 mb-1.5">{{
+                mode === 'backtest' ? 'Date (chart date)' : 'Date'
+              }}</label>
+              <input
+                id="tf-date"
+                type="date"
+                [(ngModel)]="trade_date"
+                name="trade_date"
+                class="tf-in font-mono"
+              />
+            </div>
+            <div>
+              <label for="tf-entry-time" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Entry time</label
+              >
+              <input
+                id="tf-entry-time"
+                type="time"
+                [ngModel]="entry_time"
+                (ngModelChange)="entry_time = $event; onEntryTimeChange()"
+                name="entry_time"
+                class="tf-in font-mono"
+              />
+            </div>
+            <div>
+              <label
+                for="tf-exit-time"
+                class="flex justify-between text-xs font-medium text-slate-300 mb-1.5"
+                >Exit time
+                @if (duration) {
+                  <span class="font-mono font-normal text-slate-500">{{ duration }}</span>
+                }
+              </label>
+              <input
+                id="tf-exit-time"
+                type="time"
+                [(ngModel)]="exit_time"
+                name="exit_time"
+                class="tf-in font-mono"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            <div>
+              <label for="tf-symbol" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Symbol</label
+              >
+              <select
+                id="tf-symbol"
+                [ngModel]="symbol"
+                (ngModelChange)="symbol = $event; onSymbolChange()"
+                name="symbol"
+                class="tf-in cursor-pointer"
+              >
+                <option value="MNQ">MNQ (Micro E-mini NQ)</option>
+                <option value="NQ">NQ (E-mini Nasdaq-100)</option>
+              </select>
+            </div>
+            <div>
+              <span class="block text-xs font-medium text-slate-300 mb-1.5">Direction</span>
+              <div
+                class="grid grid-cols-2 gap-2 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+              >
+                <button
+                  type="button"
+                  (click)="setDirection('long')"
+                  [attr.aria-pressed]="direction === 'long'"
+                  class="py-1.5 rounded-lg border transition-colors"
+                  [class]="
+                    direction === 'long'
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/45'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  "
+                >
+                  ↑ Long
+                </button>
+                <button
+                  type="button"
+                  (click)="setDirection('short')"
+                  [attr.aria-pressed]="direction === 'short'"
+                  class="py-1.5 rounded-lg border transition-colors"
+                  [class]="
+                    direction === 'short'
+                      ? 'bg-rose-500/12 text-rose-300 border-rose-500/45'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  "
+                >
+                  ↓ Short
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+            <div>
+              <label for="tf-contracts" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Contracts</label
+              >
+              <div
+                class="grid grid-cols-[36px_1fr_36px] rounded-xl border border-[#26354f] bg-[#161e30] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  (click)="stepContracts(-1)"
+                  aria-label="One fewer contract"
+                  class="text-slate-400 hover:text-white"
+                >
+                  −
+                </button>
+                <input
+                  id="tf-contracts"
+                  type="number"
+                  min="1"
+                  step="1"
+                  [ngModel]="contracts"
+                  (ngModelChange)="contracts = $event; updateAutoFees()"
+                  name="contracts"
+                  class="bg-transparent text-center text-slate-200 text-xs py-2.5 font-mono border-x border-[#26354f] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  (click)="stepContracts(1)"
+                  aria-label="One more contract"
+                  class="text-slate-400 hover:text-white"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div>
+              <label for="tf-entry" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Entry price</label
+              >
+              <input
+                id="tf-entry"
+                type="number"
+                step="0.25"
+                [(ngModel)]="entry_price"
+                name="entry_price"
+                class="tf-in font-mono"
+              />
+            </div>
+            <div>
+              <label for="tf-exit" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Exit price</label
+              >
+              <input
+                id="tf-exit"
+                type="number"
+                step="0.25"
+                [(ngModel)]="exit_price"
+                name="exit_price"
+                class="tf-in font-mono"
+              />
+              @if (
+                (stop_price !== null && stop_price !== '') ||
+                (target_price !== null && target_price !== '')
+              ) {
+                <div class="flex gap-1.5 mt-1.5">
+                  @if (target_price !== null && target_price !== '') {
+                    <button type="button" (click)="exitAt('target')" class="tf-quick">
+                      At target
+                    </button>
+                  }
+                  @if (stop_price !== null && stop_price !== '') {
+                    <button type="button" (click)="exitAt('stop')" class="tf-quick">At stop</button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
+            <div>
+              <label
+                for="tf-stop"
+                class="flex justify-between text-xs font-medium text-slate-300 mb-1.5"
+                >Stop loss<span class="font-normal text-slate-500">{{
+                  gap(stop_price) !== null ? gap(stop_price) + ' pts' : 'optional'
+                }}</span></label
+              >
+              <input
+                id="tf-stop"
+                type="number"
+                step="0.25"
+                [(ngModel)]="stop_price"
+                name="stop_price"
+                placeholder="—"
+                class="tf-in font-mono text-rose-200"
+              />
+            </div>
+            <div>
+              <label
+                for="tf-target"
+                class="flex justify-between text-xs font-medium text-slate-300 mb-1.5"
+                >Take profit<span class="font-normal text-slate-500">{{
+                  gap(target_price) !== null ? gap(target_price) + ' pts' : 'optional'
+                }}</span></label
+              >
+              <input
+                id="tf-target"
+                type="number"
+                step="0.25"
+                [(ngModel)]="target_price"
+                name="target_price"
+                placeholder="—"
+                class="tf-in font-mono text-emerald-200"
+              />
+            </div>
+            <div>
+              <label
+                for="tf-fees"
+                class="flex justify-between text-xs font-medium text-slate-300 mb-1.5"
+                >Fees ($)
+                @if (feesAuto && feePerContract !== null) {
+                  <span class="font-normal text-slate-500"
+                    >auto · ${{ feePerContract }} × {{ contracts }}</span
+                  >
+                }
+              </label>
+              <input
+                id="tf-fees"
+                type="number"
+                step="0.01"
+                [ngModel]="fees"
+                (ngModelChange)="fees = $event; onFeesTyped()"
+                name="fees"
+                class="tf-in font-mono"
+              />
+            </div>
+          </div>
+          @if (stopProblem) {
+            <p class="text-[11px] text-rose-400 -mt-2">{{ stopProblem }}</p>
+          }
+
+          <!-- Live P/L -->
+          @let r = rPreview;
+          <div
+            class="grid grid-cols-2 sm:grid-cols-[1.3fr_1fr_1fr_1fr] rounded-xl border overflow-hidden"
+            [class]="
+              shownResult === 'win'
+                ? 'border-emerald-500/45 bg-emerald-500/5'
+                : shownResult === 'loss'
+                  ? 'border-rose-500/40 bg-rose-500/5'
+                  : 'border-slate-500/45 bg-slate-400/5'
+            "
+          >
+            <div class="p-3 col-span-2 sm:col-span-1">
+              <span class="block text-[11px] text-slate-400">Net P/L</span>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span
+                  class="text-2xl font-bold font-mono"
+                  [class.text-emerald-400]="netPnlEstimate > 0"
+                  [class.text-rose-400]="netPnlEstimate < 0"
+                  [class.text-slate-200]="netPnlEstimate === 0"
+                  >{{ netPnlEstimate > 0 ? '+' : netPnlEstimate < 0 ? '-' : '' }}${{
+                    (netPnlEstimate < 0 ? -netPnlEstimate : netPnlEstimate) | number: '1.2-2'
+                  }}</span
+                >
+                <span
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                  [class]="
+                    shownResult === 'win'
+                      ? 'text-emerald-300 border-emerald-500/45'
+                      : shownResult === 'loss'
+                        ? 'text-rose-300 border-rose-500/45'
+                        : 'text-slate-300 border-slate-400/45'
+                  "
+                  >{{ shownResult === 'be' ? 'BE' : shownResult === 'win' ? 'WIN' : 'LOSS'
+                  }}{{ result === null ? ' · auto' : '' }}</span
+                >
+              </div>
+            </div>
+            <div class="p-3 border-l border-[#1e293b]">
+              <span class="block text-[11px] text-slate-400">Gross</span>
+              <b class="font-mono text-sm"
+                >{{ grossEstimate >= 0 ? '+' : '-' }}${{
+                  (grossEstimate < 0 ? -grossEstimate : grossEstimate) | number: '1.2-2'
+                }}</b
+              >
+              <span class="block text-[10px] text-slate-500 font-mono"
+                >{{ grossPoints }} pts × {{ contracts }}</span
+              >
+            </div>
+            <div class="p-3 border-l border-[#1e293b]">
+              <span class="block text-[11px] text-slate-400">Fees</span>
+              <b class="font-mono text-sm text-rose-400">-${{ feesValue | number: '1.2-2' }}</b>
+            </div>
+            <div class="p-3 border-l border-[#1e293b]">
+              <span class="block text-[11px] text-slate-400">Result in R</span>
+              @if (r) {
+                <b
+                  class="font-mono text-sm"
+                  [class.text-emerald-400]="r.rMultiple > 0"
+                  [class.text-rose-400]="r.rMultiple < 0"
+                  >{{ formatR(r.rMultiple) }}</b
+                >
+                <span class="block text-[10px] text-slate-500 font-mono"
+                  >risk ${{ riskDollars | number: '1.0-0'
+                  }}{{ r.plannedR !== null ? ' · planned 1 : ' + r.plannedR : '' }}</span
+                >
+              } @else {
+                <b class="font-mono text-sm text-slate-500">—</b>
+                <span class="block text-[10px] text-slate-500">add a stop</span>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            <div>
+              <span class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Setup <span class="font-normal text-slate-500">tag</span></span
+              >
+              @if (setupGroup(); as setup) {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (tag of setup.tags; track tag.id) {
+                    <button
+                      type="button"
+                      (click)="toggleTag(tag.id)"
+                      [attr.aria-pressed]="selectedTagIds().has(tag.id)"
+                      class="text-xs px-3 py-1 rounded-full border transition-colors"
+                      [class]="
+                        selectedTagIds().has(tag.id)
+                          ? 'border-blue-400/55 bg-blue-600/15 text-blue-100'
+                          : 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+                      "
+                    >
+                      {{ tag.name }}
+                    </button>
+                  } @empty {
+                    <span class="text-xs text-slate-500">Add setups in the Playbook › Tags.</span>
+                  }
+                </div>
+              } @else {
+                <input
+                  type="text"
+                  [(ngModel)]="strategy"
+                  name="strategy"
+                  placeholder="Strategy"
+                  class="tf-in"
+                />
+              }
+            </div>
+            <div>
+              <label for="tf-notes" class="block text-xs font-medium text-slate-300 mb-1.5"
+                >Notes</label
+              >
+              <textarea
+                id="tf-notes"
+                [(ngModel)]="notes"
+                name="notes"
+                rows="2"
+                placeholder="Waited for the retest, entered on the second candle"
+                class="tf-in leading-relaxed resize-y"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ Step 2: Execution ============ -->
+        <div [hidden]="step() !== 1" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+            <div>
+              <label
+                for="tf-session"
+                class="flex justify-between text-xs font-medium text-slate-300 mb-1.5"
+                >Session
+                @if (sessionAuto && entry_time) {
+                  <span class="font-normal text-slate-500">from {{ entry_time }}</span>
+                }
+              </label>
+              <select
+                id="tf-session"
+                [ngModel]="session"
+                (ngModelChange)="session = $event; onSessionPicked()"
+                name="session"
+                class="tf-in cursor-pointer"
+              >
+                <option value="">—</option>
+                @for (option of sessions; track option) {
+                  <option [value]="option">{{ option }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <span class="block text-xs font-medium text-slate-300 mb-1.5">Grade</span>
+              <div
+                class="grid grid-cols-8 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+                role="group"
+                aria-label="Grade"
+              >
+                @for (g of grades; track g) {
+                  <button
+                    type="button"
+                    (click)="setGrade(g)"
+                    [attr.aria-pressed]="grade === g"
+                    class="py-1.5 rounded-lg border transition-colors"
+                    [class]="
+                      grade === g
+                        ? 'bg-blue-600/20 border-blue-500/55 text-blue-100'
+                        : 'border-transparent text-slate-400 hover:text-slate-200'
+                    "
+                  >
+                    {{ g }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <app-result-picker
+            [result]="result"
+            [auto]="autoResult"
+            [netPnl]="netPnlEstimate"
+            [entryEqualsExit]="entryEqualsExit"
+            (changed)="setResult($event)"
+          />
+
+          <app-emotion-picker [selected]="emotions" (toggle)="toggleEmotion($event)" />
+
+          @if (otherTagGroups().length > 0) {
+            <app-tag-picker
+              [groups]="otherTagGroups()"
+              [selected]="selectedTagIds()"
+              (toggle)="toggleTag($event)"
+            />
+          }
+
+          @if (allRules().length > 0) {
+            <div>
+              <div class="flex items-baseline justify-between mb-2">
+                <span class="text-xs font-medium text-slate-300">Rules followed</span>
+                <span class="text-[10px] text-blue-400 font-mono"
+                  >{{ checkedRuleIds().size }}/{{ allRules().length }}</span
+                >
+              </div>
+              <div
+                class="flex flex-wrap gap-x-5 gap-y-2 bg-[#0e1423] p-3 rounded-xl border border-[#1e2a42]"
+              >
+                @for (rule of allRules(); track rule.id) {
+                  <label
+                    class="flex items-center gap-2 cursor-pointer select-none text-xs text-slate-300"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="checkedRuleIds().has(rule.id)"
+                      (change)="toggleRule(rule.id)"
+                      class="w-4 h-4 rounded text-blue-600 bg-[#161e30] border-[#293854] focus:ring-blue-500/40 cursor-pointer"
+                    />
+                    {{ rule.name }}
+                  </label>
+                }
+              </div>
+            </div>
+          }
+
+          <app-mistake-picker
+            [options]="mistakes()"
+            [selected]="selectedMistakeIds()"
+            (toggle)="toggleMistake($event)"
+          />
+        </div>
+
+        <!-- ============ Step 3: Review ============ -->
+        <div [hidden]="step() !== 2" class="space-y-4">
+          <div>
+            <div class="flex items-baseline justify-between mb-1.5">
+              <span class="text-xs font-medium text-slate-300">Screenshots</span>
+              <span class="text-[10px] text-slate-500"
+                >up to 6 ·
+                {{ isEdit ? 'saved as soon as they upload' : 'upload when you save' }}</span
+              >
+            </div>
+            <app-image-gallery
+              addLabel="Add screenshot"
+              [captionSuggestions]="['Pre-trade', 'Entry', 'Exit', 'Post-trade']"
+              [target]="imageTarget"
+              [images]="images()"
+              (added)="onImageAdded($event)"
+              (removed)="onImageRemoved($event)"
+              (captioned)="onCaptioned($event)"
+            />
+          </div>
+
+          @let q = score;
+          <div
+            class="grid grid-cols-[84px_minmax(0,1fr)] gap-4 items-center rounded-xl border border-[#1e293b] bg-[#0e1420] p-3"
+          >
+            <svg
+              viewBox="0 0 80 80"
+              class="w-20 h-20"
+              role="img"
+              [attr.aria-label]="'Trade quality ' + q.score + ' out of 100'"
+            >
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#1e293b" stroke-width="7" />
+              <circle
+                cx="40"
+                cy="40"
+                r="34"
+                fill="none"
+                stroke-width="7"
+                stroke-linecap="round"
+                transform="rotate(-90 40 40)"
+                [attr.stroke]="q.score >= 65 ? '#10b981' : q.score >= 45 ? '#3b82f6' : '#f43f5e'"
+                [attr.stroke-dasharray]="(213.6 * q.score) / 100 + ' 213.6'"
+              />
+              <text
+                x="40"
+                y="46"
+                text-anchor="middle"
+                fill="#e2e8f0"
+                font-size="20"
+                font-weight="700"
+                font-family="ui-monospace, Consolas, monospace"
+              >
+                {{ q.score }}
+              </text>
+            </svg>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-white">Trade quality</div>
+              <div
+                class="text-sm"
+                [class.text-emerald-400]="q.score >= 65"
+                [class.text-blue-300]="q.score >= 45 && q.score < 65"
+                [class.text-rose-400]="q.score < 45"
+              >
+                {{ q.label }}
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">
+                @for (p of q.parts; track p.label; let last = $last) {
+                  {{ p.label }} {{ p.earned }}/{{ p.max }}{{ last ? '' : ' · ' }}
+                }
+              </div>
+              <div class="text-[10px] text-slate-600 mt-1">
+                How well you executed, not whether it made money.
+              </div>
+            </div>
+          </div>
+
+          @if (questions().length > 0) {
+            <div>
+              <div class="flex items-baseline justify-between mb-1.5">
+                <span class="text-xs font-medium text-slate-300">Review questions</span>
+                <span class="text-[10px] text-slate-500">from your Playbook</span>
+              </div>
+              <div class="space-y-1.5">
+                @for (question of questions(); track question.id) {
+                  <div
+                    class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#1e293b] bg-[#0e1420] px-3 py-2 text-xs text-slate-300"
+                  >
+                    <span>{{ question.question_text }}</span>
+                    <div
+                      class="grid grid-cols-3 gap-1 p-0.5 bg-[#141c2c] border border-[#24334d] rounded-lg"
+                      role="radiogroup"
+                      [attr.aria-label]="question.question_text"
+                    >
+                      @for (choice of ['yes', 'no', 'other']; track choice) {
+                        <button
+                          type="button"
+                          role="radio"
+                          [attr.aria-checked]="answerOf(question.id) === choice"
+                          (click)="setAnswer(question.id, $any(choice))"
+                          class="px-3 py-1 rounded-md border text-[11px] font-semibold capitalize"
+                          [class]="
+                            answerOf(question.id) === choice
+                              ? choice === 'yes'
+                                ? 'bg-emerald-500/15 border-emerald-500/45 text-emerald-300'
+                                : choice === 'no'
+                                  ? 'bg-rose-500/12 border-rose-500/45 text-rose-300'
+                                  : 'bg-slate-500/15 border-slate-400/45 text-slate-200'
+                              : 'border-transparent text-slate-400 hover:text-slate-200'
+                          "
+                        >
+                          {{ choice }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <div>
+            <label
+              for="tf-link"
+              class="flex items-center justify-between text-xs font-medium text-slate-300 mb-1.5"
+            >
+              <span>Chart link</span>
+              <span class="text-[10px] text-slate-500 font-normal">TradingView / chart URL</span>
+            </label>
+            <input
+              id="tf-link"
+              type="text"
+              [(ngModel)]="screenshot_link"
+              name="screenshot_link"
+              placeholder="https://www.tradingview.com/x/AbC123/"
+              class="tf-in font-mono text-blue-400"
+            />
+          </div>
+        </div>
+
+        @if (loggedCount() > 0) {
+          <div
+            class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-[#0f1a14] border border-emerald-500/35 text-xs text-emerald-200"
+            role="status"
+          >
+            <span
+              >✓ Trade saved ·
+              <span class="font-semibold text-white">{{ loggedCount() }}</span> logged this
+              sitting</span
+            >
+            <span class="text-slate-500">ready for the next one</span>
+          </div>
+        }
+      </form>
+    </div>
+
+    <!-- Footer: back / save / next on every step -->
+    <div class="flex flex-wrap items-center gap-2 px-6 py-3.5 border-t border-[#1e293b]">
+      @if (step() === 0) {
+        <button type="button" (click)="cancel()" class="tf-btn">Cancel</button>
+      } @else {
+        <button type="button" (click)="goTo(step() - 1)" class="tf-btn">← Back</button>
+      }
+      <span class="flex-1"></span>
+      @if (!isEdit) {
+        <button
+          type="button"
+          (click)="onSubmit(true)"
+          [disabled]="saving()"
+          class="tf-btn"
+          title="Saves, then keeps the date, symbol, setup, session, direction and size for the next trade"
+        >
+          Save and add another
+        </button>
+      }
+      <button
+        type="button"
+        (click)="onSubmit()"
+        [disabled]="saving()"
+        class="tf-btn"
+        [class]="step() === steps.length - 1 ? 'tf-btn tf-primary' : 'tf-btn tf-secondary'"
+      >
+        {{ saving() ? 'Saving...' : isEdit ? 'Save changes' : 'Save trade' }}
+      </button>
+      @if (step() < steps.length - 1) {
+        <button type="button" (click)="goTo(step() + 1)" class="tf-btn tf-primary">Next →</button>
+      }
+    </div>
+  }
+</div>

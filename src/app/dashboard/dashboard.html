@@ -629,694 +629,236 @@
 
     <!-- Calendar heatmap -->
     @let cal = calendar();
-    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
-      <!-- Three columns so the picker stays centered whatever the summary says -->
-      <div
-        class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-4 pb-5 border-b border-slate-800/80"
-      >
-        <h3 class="text-sm font-semibold text-white tracking-wide">Monthly trading heatmap</h3>
-        <app-month-picker
-          [value]="calendarMonth()"
-          [marked]="tradeMonths()"
-          (valueChange)="calendarMonth.set($event)"
-        />
+    <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_320px] gap-6 mb-6 items-start">
+      <section class="surface-card border border-slate-800/80 rounded-xl p-6 min-w-0">
+        <!-- Three columns so the picker stays centered whatever the summary says -->
         <div
-          class="flex flex-wrap items-center lg:justify-end gap-x-4 gap-y-1.5 text-xs font-mono text-slate-400"
+          class="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-4 pb-5 border-b border-slate-800/80"
         >
-          <span>
-            Green days
-            <span class="font-semibold text-emerald-400">{{ cal.summary.greenDays }}</span> · Red
-            days <span class="font-semibold text-rose-400">{{ cal.summary.redDays }}</span>
-          </span>
-          @if (cal.summary.best; as best) {
-            <span>
-              Best
-              <span class="font-semibold text-emerald-400">+${{ best.pnl | number: '1.2-2' }}</span>
-              {{ monthLabel().slice(0, 3) }} {{ best.day }}
-            </span>
-          }
-          @if (cal.summary.worst; as worst) {
-            <span>
-              Worst
-              <span class="font-semibold text-rose-400"
-                >-${{ absValue(worst.pnl) | number: '1.2-2' }}</span
-              >
-              {{ monthLabel().slice(0, 3) }} {{ worst.day }}
-            </span>
-          }
-          <span class="flex items-center gap-2">
-            Month net
-            <span
-              class="font-bold px-2 py-0.5 rounded-md border"
-              [class]="
-                cal.summary.net > 0
-                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
-                  : cal.summary.net < 0
-                    ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
-                    : 'text-slate-300 bg-slate-800/60 border-slate-700'
-              "
-            >
-              {{ cal.summary.net > 0 ? '+' : cal.summary.net < 0 ? '-' : '' }}${{
-                absValue(cal.summary.net) | number: '1.2-2'
-              }}
-            </span>
-          </span>
-        </div>
-      </div>
-
-      <div
-        class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-5 text-center text-[11px] font-medium text-slate-400 font-mono uppercase tracking-wider"
-      >
-        @for (d of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; track d) {
-          <div class="py-1">{{ d }}</div>
-        }
-        <div class="py-1 text-slate-300 hidden md:block">Week</div>
-      </div>
-
-      @for (week of cal.weeks; track $index) {
-        <div
-          class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-2.5 font-mono"
-        >
-          @for (cell of week.days; track $index) {
-            @if (!cell) {
-              <div class="h-20"></div>
-            } @else if (cell.count === 0) {
-              <div
-                class="h-20 rounded-xl p-2.5 border border-slate-800/60"
-                [class.outline]="cell.isToday"
-                [class.outline-2]="cell.isToday"
-                [class.outline-offset-2]="cell.isToday"
-                [class.outline-blue-400]="cell.isToday"
-              >
-                <span class="text-xs font-semibold text-slate-600">{{ cell.day }}</span>
-              </div>
-            } @else {
-              <button
-                type="button"
-                (click)="onDayClick(cell.date)"
-                class="h-20 rounded-xl p-2.5 flex flex-col justify-between border text-left transition hover:brightness-125"
-                [class.border-slate-800]="cell.pnl === 0"
-                [class.bg-space-900]="cell.pnl === 0"
-                [style]="dayStyle(cell)"
-                [class.outline]="cell.isToday"
-                [class.outline-2]="cell.isToday"
-                [class.outline-offset-2]="cell.isToday"
-                [class.outline-blue-400]="cell.isToday"
-              >
-                <div class="flex justify-between items-center w-full">
-                  <span class="text-xs font-semibold text-slate-100">{{ cell.day }}</span>
-                  <span class="flex items-center gap-1.5 text-[10px] text-slate-200">
-                    @if (cell.wins) {
-                      {{ cell.wins }}W
-                    }
-                    @if (cell.wins && cell.losses) {
-                      ·
-                    }
-                    @if (cell.losses) {
-                      {{ cell.losses }}L
-                    }
-                    @if ((cell.wins || cell.losses) && cell.breakEvens) {
-                      ·
-                    }
-                    @if (cell.breakEvens) {
-                      {{ cell.breakEvens }}BE
-                    }
-                    @if (cell.ruleBroken) {
-                      <span
-                        class="w-1.5 h-1.5 rounded-full bg-rose-500 ring-2 ring-black/40"
-                        title="Broke a rule this day"
-                      ></span>
-                    }
-                  </span>
-                </div>
-                <div
-                  class="text-sm font-bold tracking-tight whitespace-nowrap"
-                  [class.text-emerald-300]="cell.pnl > 0 && (cell.wins || cell.losses)"
-                  [class.text-rose-300]="cell.pnl < 0 && (cell.wins || cell.losses)"
-                  [class.text-slate-200]="cell.pnl === 0 || (!cell.wins && !cell.losses)"
-                >
-                  {{ cell.pnl > 0 ? '+' : cell.pnl < 0 ? '-' : '' }}${{
-                    absValue(cell.pnl) | number: '1.2-2'
-                  }}
-                </div>
-              </button>
-            }
-          }
+          <h3 class="text-sm font-semibold text-white tracking-wide">Monthly trading heatmap</h3>
+          <app-month-picker
+            [value]="calendarMonth()"
+            [marked]="tradeMonths()"
+            (valueChange)="calendarMonth.set($event)"
+          />
           <div
-            class="hidden md:flex h-20 rounded-xl border border-slate-800 bg-space-900 px-3 flex-col items-end justify-center gap-0.5"
+            class="flex flex-wrap items-center lg:justify-end gap-x-4 gap-y-1.5 text-xs font-mono text-slate-400"
           >
-            @if (week.count === 0) {
-              <span class="text-slate-700">—</span>
-            } @else {
-              <span
-                class="text-sm font-bold whitespace-nowrap"
-                [class.text-emerald-400]="week.pnl > 0"
-                [class.text-rose-400]="week.pnl < 0"
-                [class.text-slate-300]="week.pnl === 0"
-              >
-                {{ week.pnl > 0 ? '+' : week.pnl < 0 ? '-' : '' }}${{
-                  absValue(week.pnl) | number: '1.2-2'
-                }}
-              </span>
-              <span class="text-[11px] text-slate-500">
-                {{ week.count }} {{ week.count === 1 ? 'trade' : 'trades' }}
-              </span>
-            }
-          </div>
-        </div>
-      }
-
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-4 text-[11px] text-slate-500">
-        <span class="flex items-center gap-1.5">
-          Big loss
-          <span class="flex gap-0.5">
-            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/55"></span>
-            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/25"></span>
-            <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/10"></span>
-            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/10"></span>
-            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/25"></span>
-            <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/55"></span>
-          </span>
-          Big win
-        </span>
-        <span class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-          Broke a rule that day
-        </span>
-        <span>Click a day to see its trades</span>
-      </div>
-    </section>
-
-    <!-- Performance by day of week -->
-    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
-      <div class="flex items-baseline gap-2 mb-4">
-        <h3 class="text-sm font-semibold text-white tracking-wide">Performance by day</h3>
-        <span class="text-xs text-slate-400">Grouped by trade date</span>
-      </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        @for (day of performanceByDay(); track day.name) {
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="text-xs font-medium text-slate-400 mb-2">{{ day.name }}</div>
-            @if (day.total === 0) {
-              <div class="text-2xl font-bold font-mono text-slate-600 tracking-tight">—</div>
-              <div class="text-[11px] text-slate-500 mt-1">No trades</div>
-            } @else {
-              <div class="text-2xl font-bold font-mono text-white tracking-tight">
-                {{ day.winRate }}%
-              </div>
-              <div class="text-[11px] font-mono mt-1">
-                <span class="text-emerald-400">{{ day.wins }}W</span>
-                <span class="text-slate-600"> / </span>
-                <span class="text-rose-400">{{ day.losses }}L</span>
-                @if (day.breakEvens) {
-                  <span class="text-slate-600"> / </span>
-                  <span class="text-slate-300">{{ day.breakEvens }}BE</span>
-                }
-              </div>
-              <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
-                <div
-                  class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full"
-                  [style.width.%]="day.winRate"
-                ></div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </section>
-
-    <!-- Edge analytics -->
-    @let e = edge();
-    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
-      <div class="flex flex-wrap items-baseline justify-between gap-3 mb-4">
-        <div class="flex flex-wrap items-baseline gap-2">
-          <h3 class="text-sm font-semibold text-white tracking-wide">Edge analytics</h3>
-          <span class="text-xs text-slate-400">
-            {{ e.taggedCount }} tagged trades · {{ e.untaggedCount }} untagged not counted
-          </span>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          @if (edgeRange() === 'month') {
-            <app-month-picker
-              [value]="edgeMonth()"
-              [marked]="tradeMonths()"
-              (valueChange)="edgeMonth.set($event)"
-            />
-          }
-          <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
-            <button
-              type="button"
-              (click)="edgeRange.set('month')"
-              class="px-2.5 py-1 rounded-md transition-colors"
-              [class]="
-                edgeRange() === 'month'
-                  ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
-              "
-            >
-              Month
-            </button>
-            <button
-              type="button"
-              (click)="edgeRange.set('all')"
-              class="px-2.5 py-1 rounded-md transition-colors"
-              [class]="
-                edgeRange() === 'all'
-                  ? 'bg-blue-600/25 text-blue-300 border border-blue-500/60'
-                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
-              "
-            >
-              All time
-            </button>
-          </div>
-        </div>
-      </div>
-
-      @if (e.taggedCount === 0) {
-        <p class="text-slate-500 text-sm">
-          Add a session, emotion, grade, or entry time to your trades to see where your edge is.
-        </p>
-      } @else {
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="text-xs text-slate-400 mb-1.5">Most profitable session</div>
-            @if (e.bestSession; as s) {
-              <div class="text-lg font-bold text-white tracking-tight">{{ s.key }}</div>
-              <div
-                class="text-[11px] font-mono"
-                [class.text-emerald-400]="s.net >= 0"
-                [class.text-rose-400]="s.net < 0"
-              >
-                {{ s.net > 0 ? '+' : '' }}{{ s.net | number: '1.2-2' }} · {{ s.winRate }}% win
-              </div>
-            } @else {
-              <div class="text-lg font-bold text-slate-600">—</div>
-              <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
-            }
-          </div>
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="text-xs text-slate-400 mb-1.5">Best entry hour</div>
-            @if (e.bestHour; as h) {
-              <div class="text-lg font-bold font-mono text-white tracking-tight">
-                {{ h.key }}:00
-              </div>
-              <div class="text-[11px] font-mono text-emerald-400">
-                {{ h.winRate }}% win · {{ h.total }} trades
-              </div>
-            } @else {
-              <div class="text-lg font-bold text-slate-600">—</div>
-              <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
-            }
-          </div>
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="text-xs text-slate-400 mb-1.5">Costliest emotion</div>
-            @if (e.costliestEmotion; as c) {
-              <div class="text-lg font-bold text-white tracking-tight">{{ c.key }}</div>
-              <div class="text-[11px] font-mono text-rose-400">
-                {{ c.net | number: '1.2-2' }} · {{ c.total }}
-                {{ c.total === 1 ? 'trade' : 'trades' }}
-              </div>
-            } @else {
-              <div class="text-lg font-bold text-slate-600">—</div>
-              <div class="text-[11px] text-slate-500">No losing emotion yet</div>
-            }
-          </div>
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="text-xs text-slate-400 mb-1.5">A-grade setups</div>
-            @if (e.aGradeShare !== null) {
-              <div class="text-lg font-bold font-mono text-white tracking-tight">
-                {{ e.aGradeShare }}%
-              </div>
-              <div class="text-[11px] text-slate-400">
-                of graded trades · most taken:
-                <span class="font-mono text-slate-200">{{ e.mostTakenGrade }}</span>
-              </div>
-            } @else {
-              <div class="text-lg font-bold text-slate-600">—</div>
-              <div class="text-[11px] text-slate-500">No graded trades yet</div>
-            }
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
-          @for (
-            group of [
-              { title: 'Win rate by session', rows: e.sessions },
-              { title: 'Emotion vs result', rows: e.emotions },
-            ];
-            track group.title
-          ) {
-            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-              <div class="flex items-baseline justify-between mb-2">
-                <span class="text-xs font-semibold text-white">{{ group.title }}</span>
-                <span class="text-[10px] text-slate-500">win % · net P/L · trades</span>
-              </div>
-              @if (group.rows.length === 0) {
-                <p class="text-xs text-slate-500 py-2">No trades tagged yet.</p>
-              }
-              @for (row of group.rows; track row.key) {
-                <div
-                  class="grid grid-cols-[96px_minmax(0,1fr)_40px_72px_24px] gap-2.5 items-center py-1.5 text-xs border-b border-slate-800/60 last:border-0"
-                  [class.opacity-50]="row.total < minSample"
+            <span>
+              Green days
+              <span class="font-semibold text-emerald-400">{{ cal.summary.greenDays }}</span> · Red
+              days <span class="font-semibold text-rose-400">{{ cal.summary.redDays }}</span>
+            </span>
+            @if (cal.summary.best; as best) {
+              <span>
+                Best
+                <span class="font-semibold text-emerald-400"
+                  >+${{ best.pnl | number: '1.2-2' }}</span
                 >
-                  <span class="text-slate-300 truncate">{{ row.key }}</span>
-                  <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
-                    <div
-                      class="h-full rounded-full"
-                      [class]="tierBar[winRateTier(row.winRate)]"
-                      [style.width.%]="row.winRate"
-                    ></div>
-                  </div>
-                  <span class="text-right font-mono text-slate-200">{{ row.winRate }}%</span>
-                  <span
-                    class="text-right font-mono"
-                    [class.text-emerald-400]="row.net >= 0"
-                    [class.text-rose-400]="row.net < 0"
-                  >
-                    {{ row.net > 0 ? '+' : '' }}{{ row.net | number: '1.0-0' }}
-                  </span>
-                  <span class="text-right font-mono text-slate-500 text-[11px]">{{
-                    row.total
-                  }}</span>
-                </div>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="flex items-baseline justify-between mb-3">
-              <span class="text-xs font-semibold text-white">When you enter</span>
-              <span class="text-[10px] text-slate-500"
-                >color = win rate · faded = under {{ minSample }}</span
-              >
-            </div>
-            @if (e.hours.length === 0) {
-              <p class="text-xs text-slate-500 py-2">No entry times logged yet.</p>
-            } @else {
-              <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 text-center font-mono">
-                @for (hour of e.hours; track hour.key) {
-                  <div>
-                    @if (hour.total < minSample) {
-                      <div
-                        class="h-12 rounded-lg border border-slate-800 bg-[#0e1423] flex items-center justify-center text-xs text-slate-600"
-                      >
-                        —
-                      </div>
-                    } @else {
-                      <div
-                        class="h-12 rounded-lg border flex items-center justify-center text-xs font-semibold"
-                        [class]="tierTile[winRateTier(hour.winRate)]"
-                      >
-                        {{ hour.winRate }}%
-                      </div>
-                    }
-                    <div class="text-[11px] text-slate-300 mt-1">{{ hour.key }}:00</div>
-                    <div class="text-[10px] text-slate-500">{{ hour.total }}</div>
-                  </div>
-                }
-              </div>
-            }
-            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-mono">
-              <span>
-                Avg hold · winners
-                <span class="text-emerald-400">{{ formatMinutes(e.avgHoldWinners) }}</span>
+                {{ monthLabel().slice(0, 3) }} {{ best.day }}
               </span>
-              <span>
-                losers <span class="text-rose-400">{{ formatMinutes(e.avgHoldLosers) }}</span>
-              </span>
-            </div>
-          </div>
-
-          <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
-            <div class="flex items-baseline justify-between mb-3">
-              <span class="text-xs font-semibold text-white">Grades</span>
-              <span class="text-[10px] text-slate-500">height = how often · color = win rate</span>
-            </div>
-            @if (e.grades.length === 0) {
-              <p class="text-xs text-slate-500 py-2">No graded trades yet.</p>
-            } @else {
-              <div class="flex items-end gap-2 h-24 border-b border-slate-800">
-                @for (grade of e.grades; track grade.key) {
-                  <div class="flex-1 flex flex-col justify-end h-full">
-                    <div
-                      class="rounded-t-md"
-                      [class]="tierColumn[winRateTier(grade.winRate)]"
-                      [class.opacity-50]="grade.total < minSample"
-                      [style.height.%]="(grade.total / gradeMax()) * 100"
-                    ></div>
-                  </div>
-                }
-              </div>
-              <div class="flex gap-2 mt-2 text-center font-mono">
-                @for (grade of e.grades; track grade.key) {
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm font-bold text-white">{{ grade.key }}</div>
-                    <div class="text-[10px] text-slate-500">
-                      {{ grade.total }} · {{ grade.winRate }}%
-                    </div>
-                  </div>
-                }
-              </div>
             }
-          </div>
-        </div>
-      }
-    </section>
-
-    <!-- Cost of mistakes -->
-    @let mc = mistakeCost();
-    <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div class="flex flex-wrap items-baseline gap-2">
-          <h3 class="text-sm font-semibold text-white tracking-wide">Cost of mistakes</h3>
-          <span class="text-xs text-slate-400">
-            {{ mc.total.count }} trades · {{ mc.withMistakes.count }} with a mistake
-          </span>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          @if (costRange() === 'month') {
-            <app-month-picker
-              [value]="costMonth()"
-              [marked]="tradeMonths()"
-              (valueChange)="costMonth.set($event)"
-            />
-          }
-          <div class="flex gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs">
-            @for (r of ['all', 'month']; track r) {
-              <button
-                type="button"
-                (click)="costRange.set($any(r))"
-                class="px-2.5 py-1 rounded-md transition-colors border"
+            @if (cal.summary.worst; as worst) {
+              <span>
+                Worst
+                <span class="font-semibold text-rose-400"
+                  >-${{ absValue(worst.pnl) | number: '1.2-2' }}</span
+                >
+                {{ monthLabel().slice(0, 3) }} {{ worst.day }}
+              </span>
+            }
+            <span class="flex items-center gap-2">
+              Month net
+              <span
+                class="font-bold px-2 py-0.5 rounded-md border"
                 [class]="
-                  costRange() === r
-                    ? 'bg-blue-600/25 text-blue-300 border-blue-500/60'
-                    : 'text-slate-400 hover:text-slate-200 border-transparent'
+                  cal.summary.net > 0
+                    ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+                    : cal.summary.net < 0
+                      ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+                      : 'text-slate-300 bg-slate-800/60 border-slate-700'
                 "
               >
-                {{ r === 'all' ? 'All time' : 'Month' }}
-              </button>
+                {{ cal.summary.net > 0 ? '+' : cal.summary.net < 0 ? '-' : '' }}${{
+                  absValue(cal.summary.net) | number: '1.2-2'
+                }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div
+          class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-5 text-center text-[11px] font-medium text-slate-400 font-mono uppercase tracking-wider"
+        >
+          @for (d of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']; track d) {
+            <div class="py-1">{{ d }}</div>
+          }
+          <div class="py-1 text-slate-300 hidden md:block">Week</div>
+        </div>
+
+        @for (week of cal.weeks; track $index) {
+          <div
+            class="grid grid-cols-5 md:grid-cols-[repeat(5,minmax(0,1fr))_minmax(110px,0.8fr)] gap-2.5 mt-2.5 font-mono"
+          >
+            @for (cell of week.days; track $index) {
+              @if (!cell) {
+                <div class="h-20"></div>
+              } @else if (cell.count === 0) {
+                <div
+                  class="h-20 rounded-xl p-2.5 border border-slate-800/60"
+                  [class.outline]="cell.isToday"
+                  [class.outline-2]="cell.isToday"
+                  [class.outline-offset-2]="cell.isToday"
+                  [class.outline-blue-400]="cell.isToday"
+                >
+                  <span class="text-xs font-semibold text-slate-600">{{ cell.day }}</span>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  (click)="onDayClick(cell.date)"
+                  class="h-20 rounded-xl p-2.5 flex flex-col justify-between border text-left transition hover:brightness-125"
+                  [class.border-slate-800]="cell.pnl === 0"
+                  [class.bg-space-900]="cell.pnl === 0"
+                  [style]="dayStyle(cell)"
+                  [class.outline]="cell.isToday"
+                  [class.outline-2]="cell.isToday"
+                  [class.outline-offset-2]="cell.isToday"
+                  [class.outline-blue-400]="cell.isToday"
+                >
+                  <div class="flex justify-between items-center w-full">
+                    <span class="text-xs font-semibold text-slate-100">{{ cell.day }}</span>
+                    <span class="flex items-center gap-1.5 text-[10px] text-slate-200">
+                      @if (cell.wins) {
+                        {{ cell.wins }}W
+                      }
+                      @if (cell.wins && cell.losses) {
+                        ·
+                      }
+                      @if (cell.losses) {
+                        {{ cell.losses }}L
+                      }
+                      @if ((cell.wins || cell.losses) && cell.breakEvens) {
+                        ·
+                      }
+                      @if (cell.breakEvens) {
+                        {{ cell.breakEvens }}BE
+                      }
+                      @if (cell.ruleBroken) {
+                        <span
+                          class="w-1.5 h-1.5 rounded-full bg-rose-500 ring-2 ring-black/40"
+                          title="Broke a rule this day"
+                        ></span>
+                      }
+                    </span>
+                  </div>
+                  <div
+                    class="text-sm font-bold tracking-tight whitespace-nowrap"
+                    [class.text-emerald-300]="cell.pnl > 0 && (cell.wins || cell.losses)"
+                    [class.text-rose-300]="cell.pnl < 0 && (cell.wins || cell.losses)"
+                    [class.text-slate-200]="cell.pnl === 0 || (!cell.wins && !cell.losses)"
+                  >
+                    {{ cell.pnl > 0 ? '+' : cell.pnl < 0 ? '-' : '' }}${{
+                      absValue(cell.pnl) | number: '1.2-2'
+                    }}
+                  </div>
+                </button>
+              }
             }
+            <div
+              class="hidden md:flex h-20 rounded-xl border border-slate-800 bg-space-900 px-3 flex-col items-end justify-center gap-0.5"
+            >
+              @if (week.count === 0) {
+                <span class="text-slate-700">—</span>
+              } @else {
+                <span
+                  class="text-sm font-bold whitespace-nowrap"
+                  [class.text-emerald-400]="week.pnl > 0"
+                  [class.text-rose-400]="week.pnl < 0"
+                  [class.text-slate-300]="week.pnl === 0"
+                >
+                  {{ week.pnl > 0 ? '+' : week.pnl < 0 ? '-' : '' }}${{
+                    absValue(week.pnl) | number: '1.2-2'
+                  }}
+                </span>
+                <span class="text-[11px] text-slate-500">
+                  {{ week.count }} {{ week.count === 1 ? 'trade' : 'trades' }}
+                </span>
+              }
+            </div>
           </div>
-        </div>
-      </div>
+        }
 
-      @if (mc.total.count === 0) {
-        <p class="text-slate-500 text-sm">No trades in this period.</p>
-      } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 font-mono">
-          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
-            <div class="text-[11px] text-slate-400">Net P/L</div>
-            <div
-              class="text-xl font-bold"
-              [class.text-emerald-400]="mc.total.net >= 0"
-              [class.text-rose-400]="mc.total.net < 0"
-            >
-              {{ mc.total.net > 0 ? '+' : mc.total.net < 0 ? '-' : '' }}${{
-                absValue(mc.total.net) | number: '1.2-2'
-              }}
-            </div>
-            <div class="text-[11px] text-slate-500">all {{ mc.total.count }} trades</div>
-          </div>
-          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
-            <div class="text-[11px] text-slate-400">Clean trades only</div>
-            <div
-              class="text-xl font-bold"
-              [class.text-emerald-400]="mc.clean.net >= 0"
-              [class.text-rose-400]="mc.clean.net < 0"
-            >
-              {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
-                absValue(mc.clean.net) | number: '1.2-2'
-              }}
-            </div>
-            <div class="text-[11px] text-slate-500">
-              {{ mc.clean.count }} trades · {{ mc.clean.winRate }}% win
-            </div>
-          </div>
-          <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
-            <div class="text-[11px] text-slate-400">Trades with mistakes</div>
-            <div
-              class="text-xl font-bold"
-              [class.text-emerald-400]="mc.withMistakes.net >= 0"
-              [class.text-rose-400]="mc.withMistakes.net < 0"
-            >
-              {{ mc.withMistakes.net > 0 ? '+' : mc.withMistakes.net < 0 ? '-' : '' }}${{
-                absValue(mc.withMistakes.net) | number: '1.2-2'
-              }}
-            </div>
-            <div class="text-[11px] text-slate-500">
-              {{ mc.withMistakes.count }} trades · {{ mc.withMistakes.winRate }}% win
-            </div>
-          </div>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-4 text-[11px] text-slate-500">
+          <span class="flex items-center gap-1.5">
+            Big loss
+            <span class="flex gap-0.5">
+              <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/55"></span>
+              <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/25"></span>
+              <span class="w-3.5 h-2.5 rounded-sm bg-rose-500/10"></span>
+              <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/10"></span>
+              <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/25"></span>
+              <span class="w-3.5 h-2.5 rounded-sm bg-emerald-500/55"></span>
+            </span>
+            Big win
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            Broke a rule that day
+          </span>
+          <span>Click a day to see its trades</span>
         </div>
+      </section>
 
-        @if (mc.rows.length === 0) {
-          <p class="text-sm text-slate-400">
-            No mistakes tagged in this period. Tag them on the trade form to see what they cost.
+      <!-- Highlights: all-time findings that link into Reports -->
+      <aside class="surface-card border border-slate-800/80 rounded-xl p-6">
+        <div class="flex items-baseline justify-between gap-2 mb-4">
+          <h3 class="text-sm font-semibold text-white tracking-wide">Highlights</h3>
+          <span class="text-xs text-slate-400">All time</span>
+        </div>
+        @if (highlights().length === 0) {
+          <p class="text-sm text-slate-500">
+            Log a few trades with a session, emotion, entry time and mistakes to see what stands
+            out.
           </p>
         } @else {
-          @if (mc.withMistakes.net < 0 && mc.rows[0].net < 0) {
-            <p
-              class="text-sm text-slate-300 bg-rose-500/5 border border-rose-500/25 rounded-lg px-4 py-2.5 mb-4"
-            >
-              Mistakes cost you
-              <span class="font-semibold text-rose-400"
-                >${{ absValue(mc.withMistakes.net) | number: '1.2-2' }}</span
-              >. Fix <span class="font-semibold text-rose-400">{{ mc.rows[0].name }}</span> first:
-              it's your most expensive mistake.
-            </p>
-          }
-
-          <div class="overflow-x-auto">
-            <table class="w-full min-w-[560px] text-sm">
-              <thead>
-                <tr
-                  class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800"
-                >
-                  <th class="text-left py-2 px-2">Mistake</th>
-                  <th class="text-center py-2 px-2">Times</th>
-                  <th class="text-center py-2 px-2">Win rate</th>
-                  <th class="text-left py-2 px-2">Share of cost</th>
-                  <th class="text-right py-2 px-2">Net P/L</th>
-                </tr>
-              </thead>
-              <tbody class="font-mono">
-                @for (row of mc.rows; track row.id) {
-                  <tr class="border-b border-slate-800/60">
-                    <td class="py-2.5 px-2 font-sans text-slate-200">{{ row.name }}</td>
-                    <td class="py-2.5 px-2 text-center text-slate-300">{{ row.count }}</td>
-                    <td class="py-2.5 px-2 text-center text-slate-300">{{ row.winRate }}%</td>
-                    <td class="py-2.5 px-2">
-                      <div class="h-1.5 min-w-[90px] rounded-full bg-slate-800 overflow-hidden">
-                        <div
-                          class="h-full rounded-full bg-rose-500"
-                          [style.width.%]="costBarWidth(row.net)"
-                        ></div>
-                      </div>
-                    </td>
-                    <td
-                      class="py-2.5 px-2 text-right whitespace-nowrap"
-                      [class.text-emerald-400]="row.net >= 0"
-                      [class.text-rose-400]="row.net < 0"
-                    >
-                      {{ row.net > 0 ? '+' : row.net < 0 ? '-' : '' }}${{
-                        absValue(row.net) | number: '1.2-2'
-                      }}
-                    </td>
-                  </tr>
-                }
-                <tr class="bg-emerald-500/5">
-                  <td class="py-2.5 px-2 font-sans font-semibold text-emerald-400">
-                    Clean trades (no mistakes)
-                  </td>
-                  <td class="py-2.5 px-2 text-center text-slate-300">{{ mc.clean.count }}</td>
-                  <td class="py-2.5 px-2 text-center text-slate-300">{{ mc.clean.winRate }}%</td>
-                  <td class="py-2.5 px-2"></td>
-                  <td
-                    class="py-2.5 px-2 text-right whitespace-nowrap"
-                    [class.text-emerald-400]="mc.clean.net >= 0"
-                    [class.text-rose-400]="mc.clean.net < 0"
+          <div class="space-y-2.5">
+            @for (h of highlights(); track h.label) {
+              <a
+                routerLink="/reports"
+                [queryParams]="{ tab: h.tab, range: 'all' }"
+                class="group block rounded-lg border border-slate-800 bg-space-900 px-4 py-3 hover:border-slate-600 transition-colors"
+              >
+                <div class="text-xs text-slate-400">{{ h.label }}</div>
+                <div class="flex items-baseline justify-between gap-3">
+                  <span class="text-base font-semibold text-white truncate">{{ h.value }}</span>
+                  <span
+                    class="text-[11px] text-blue-300 group-hover:text-blue-200 whitespace-nowrap"
+                    >{{ tabLabels[h.tab] }} →</span
                   >
-                    {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
-                      absValue(mc.clean.net) | number: '1.2-2'
-                    }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                </div>
+                <div class="text-[11px] font-mono text-slate-400">
+                  @if (h.amount !== null) {
+                    <span
+                      [class.text-emerald-400]="h.amount > 0"
+                      [class.text-rose-400]="h.amount < 0"
+                      >{{ h.amount > 0 ? '+' : '-'
+                      }}{{ absValue(h.amount) | number: '1.2-2' }}</span
+                    >
+                    ·
+                  }
+                  {{ h.detail }}
+                </div>
+              </a>
+            }
           </div>
-          <p class="text-[11px] text-slate-500 mt-3">
-            A trade with more than one mistake counts in each of its rows.
-          </p>
         }
-      }
-    </section>
-
-    <!-- Rule adherence -->
-    <section class="surface-card border border-slate-800/80 rounded-xl p-6 space-y-6">
-      <h3 class="text-sm font-semibold text-white tracking-wide">
-        Rule adherence &amp; execution discipline
-      </h3>
-
-      @if (ruleStats()) {
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="bg-space-900/80 border border-slate-800 rounded-xl p-3.5">
-            <span class="text-xs text-slate-400 font-medium">Followed all rules</span>
-            <div class="mt-2 flex items-baseline gap-2">
-              <span class="text-2xl font-bold font-mono text-white"
-                >{{ ruleStats().followedAllPercentage }}%</span
-              >
-              <span class="text-xs text-slate-400 font-mono"
-                >{{ ruleStats().followedTradesCount }} of
-                {{ ruleStats().totalTradesWithRules }} trades</span
-              >
-            </div>
-          </div>
-          <div class="bg-space-900/80 border border-emerald-500/20 rounded-xl p-3.5">
-            <span class="text-xs text-slate-400 font-medium">Avg P/L, rules followed</span>
-            <div class="mt-2 text-2xl font-bold font-mono text-emerald-400">
-              +${{ ruleStats().avgPnlRulesFollowed }}
-            </div>
-          </div>
-          <div class="bg-space-900/80 border border-rose-500/20 rounded-xl p-3.5">
-            <span class="text-xs text-slate-400 font-medium">Avg P/L, rule broken</span>
-            <div class="mt-2 text-2xl font-bold font-mono text-rose-400">
-              -${{ absValue(ruleStats().avgPnlRuleBroken) }}
-            </div>
-          </div>
-        </div>
-      }
-
-      @if (ruleAdherence().length === 0) {
-        <p class="text-slate-500 text-sm">No rules linked to trades yet.</p>
-      } @else {
-        <div class="space-y-4 pt-2">
-          @for (rule of ruleAdherence(); track rule.name) {
-            <div>
-              <div class="flex items-center justify-between text-xs mb-1.5 font-medium">
-                <span class="text-slate-300 flex items-center gap-2">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  {{ rule.name }}
-                </span>
-                <span class="font-mono text-slate-400">
-                  <span class="text-white font-semibold">{{ rule.followedCount }}</span> /
-                  {{ rule.total }}
-                  <span class="text-emerald-400 ml-1">({{ rule.percentage }}%)</span>
-                </span>
-              </div>
-              <div
-                class="h-2 w-full bg-space-900 rounded-full overflow-hidden border border-slate-800/80"
-              >
-                <div
-                  class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
-                  [style.width.%]="rule.percentage"
-                ></div>
-              </div>
-            </div>
-          }
-        </div>
-      }
-    </section>
+        <a
+          routerLink="/reports"
+          class="inline-block mt-4 text-xs text-slate-400 hover:text-white underline-offset-2 hover:underline"
+          >Open Reports →</a
+        >
+      </aside>
+    </div>
   }
 </div>

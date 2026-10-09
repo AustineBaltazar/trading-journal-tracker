@@ -1,0 +1,771 @@
+<div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
+  <header
+    class="px-2 py-3 border-b border-[#1F293D]/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
+  >
+    <div>
+      <h1 class="text-xl font-semibold text-white tracking-tight flex items-center gap-2.5">
+        Reports <app-mode-badge />
+      </h1>
+      <p class="text-xs text-slate-400 mt-0.5">Why you win and lose</p>
+    </div>
+  </header>
+
+  <!-- One date range for every section -->
+  <section
+    class="surface-card border border-slate-800/80 rounded-xl px-4 py-3 my-6 flex flex-wrap items-center justify-between gap-3"
+  >
+    <div class="flex flex-wrap items-center gap-2">
+      <div
+        class="flex flex-wrap gap-1 p-1 bg-space-900 border border-slate-800 rounded-lg text-xs"
+        role="radiogroup"
+        aria-label="Date range"
+      >
+        @for (option of rangeOptions; track option.key) {
+          <button
+            type="button"
+            role="radio"
+            [attr.aria-checked]="range() === option.key"
+            (click)="setRange(option.key)"
+            class="px-2.5 py-1 rounded-md transition-colors border"
+            [class]="
+              range() === option.key
+                ? 'bg-blue-600/25 text-blue-300 border-blue-500/60'
+                : 'text-slate-400 hover:text-slate-200 border-transparent'
+            "
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+      @if (range() === 'custom') {
+        <label class="flex items-center gap-1.5 text-xs text-slate-400">
+          From
+          <input
+            type="date"
+            [value]="custom().from ?? ''"
+            (change)="setCustom('from', $any($event.target).value)"
+            class="bg-[#161e30] border border-[#26354f] rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
+          />
+        </label>
+        <label class="flex items-center gap-1.5 text-xs text-slate-400">
+          to
+          <input
+            type="date"
+            [value]="custom().to ?? ''"
+            (change)="setCustom('to', $any($event.target).value)"
+            class="bg-[#161e30] border border-[#26354f] rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
+          />
+        </label>
+      }
+    </div>
+    @let s = scope();
+    <div class="text-xs font-mono text-slate-400" aria-live="polite">
+      @if (s.count === 0) {
+        No trades in this range
+      } @else {
+        {{ s.count }} {{ s.count === 1 ? 'trade' : 'trades' }} · {{ formatDate(s.first)
+        }}{{ s.first !== s.last ? ' – ' + formatDate(s.last) : '' }} ·
+        <span [class.text-emerald-400]="s.net > 0" [class.text-rose-400]="s.net < 0"
+          >{{ s.net > 0 ? '+' : s.net < 0 ? '-' : '' }}{{ absValue(s.net) | number: '1.2-2' }}</span
+        >
+        · {{ s.winRate }}% win
+        @if (s.breakEvens) {
+          · {{ s.breakEvens }} BE
+        }
+      }
+    </div>
+  </section>
+
+  <nav class="flex gap-1 border-b border-slate-800 mb-6" aria-label="Report sections">
+    @for (t of tabs; track t.key) {
+      <button
+        type="button"
+        (click)="setTab(t.key)"
+        [attr.aria-current]="tab() === t.key ? 'page' : null"
+        class="px-4 py-2 text-sm -mb-px border-b-2 transition-colors"
+        [class]="
+          tab() === t.key
+            ? 'border-blue-500 text-white'
+            : 'border-transparent text-slate-400 hover:text-slate-200'
+        "
+      >
+        {{ t.label }}
+      </button>
+    }
+  </nav>
+
+  @if (!loaded()) {
+    <p class="text-slate-500">Loading...</p>
+  } @else if (scope().count === 0) {
+    <p class="text-slate-500 text-sm">
+      No trades in this range. Pick a longer range, or log trades to see your reports.
+    </p>
+  } @else {
+    @let e = edge();
+    @switch (tab()) {
+      @case ('timing') {
+        <!-- Performance by day of week -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+          <div class="flex items-baseline gap-2 mb-4">
+            <h2 class="text-sm font-semibold text-white tracking-wide">Performance by day</h2>
+            <span class="text-xs text-slate-400">Grouped by trade date</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            @for (day of byDay(); track day.name) {
+              <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+                <div class="text-xs font-medium text-slate-400 mb-2">{{ day.name }}</div>
+                @if (day.total === 0) {
+                  <div class="text-2xl font-bold font-mono text-slate-600 tracking-tight">—</div>
+                  <div class="text-[11px] text-slate-500 mt-1">No trades</div>
+                } @else {
+                  <div class="text-2xl font-bold font-mono text-white tracking-tight">
+                    {{ day.winRate }}%
+                  </div>
+                  <div class="text-[11px] font-mono mt-1">
+                    <span class="text-emerald-400">{{ day.wins }}W</span>
+                    <span class="text-slate-600"> / </span>
+                    <span class="text-rose-400">{{ day.losses }}L</span>
+                    @if (day.breakEvens) {
+                      <span class="text-slate-600"> / </span>
+                      <span class="text-slate-300">{{ day.breakEvens }}BE</span>
+                    }
+                  </div>
+                  <div class="w-full bg-slate-800 h-1.5 rounded-full mt-2.5 overflow-hidden">
+                    <div
+                      class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full"
+                      [style.width.%]="day.winRate"
+                    ></div>
+                  </div>
+                  <div
+                    class="text-[11px] font-mono mt-2"
+                    [class.text-emerald-400]="day.net > 0"
+                    [class.text-rose-400]="day.net < 0"
+                  >
+                    {{ day.net > 0 ? '+' : '' }}{{ day.net | number: '1.2-2' }}
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+          <div class="flex flex-wrap items-baseline gap-2 mb-4">
+            <h2 class="text-sm font-semibold text-white tracking-wide">Session and entry time</h2>
+            <span class="text-xs text-slate-400">
+              {{ e.taggedCount }} tagged trades · {{ e.untaggedCount }} untagged not counted
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="text-xs text-slate-400 mb-1.5">Most profitable session</div>
+              @if (e.bestSession; as s) {
+                <div class="text-lg font-bold text-white tracking-tight">{{ s.key }}</div>
+                <div
+                  class="text-[11px] font-mono"
+                  [class.text-emerald-400]="s.net >= 0"
+                  [class.text-rose-400]="s.net < 0"
+                >
+                  {{ s.net > 0 ? '+' : '' }}{{ s.net | number: '1.2-2' }} · {{ s.winRate }}% win
+                </div>
+              } @else {
+                <div class="text-lg font-bold text-slate-600">—</div>
+                <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
+              }
+            </div>
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="text-xs text-slate-400 mb-1.5">Best entry hour</div>
+              @if (e.bestHour; as h) {
+                <div class="text-lg font-bold font-mono text-white tracking-tight">
+                  {{ h.key }}:00
+                </div>
+                <div class="text-[11px] font-mono text-emerald-400">
+                  {{ h.winRate }}% win · {{ h.total }} trades
+                </div>
+              } @else {
+                <div class="text-lg font-bold text-slate-600">—</div>
+                <div class="text-[11px] text-slate-500">Needs {{ minSample }}+ trades</div>
+              }
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="flex items-baseline justify-between mb-2">
+                <span class="text-xs font-semibold text-white">Win rate by session</span>
+                <span class="text-[10px] text-slate-500">win % · net P/L · trades</span>
+              </div>
+              @if (e.sessions.length === 0) {
+                <p class="text-xs text-slate-500 py-2">No trades tagged yet.</p>
+              }
+              @for (row of e.sessions; track row.key) {
+                <div
+                  class="grid grid-cols-[96px_minmax(0,1fr)_40px_72px_24px] gap-2.5 items-center py-1.5 text-xs border-b border-slate-800/60 last:border-0"
+                  [class.opacity-50]="row.total < minSample"
+                >
+                  <span class="text-slate-300 truncate">{{ row.key }}</span>
+                  <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      [class]="tierBar[winRateTier(row.winRate)]"
+                      [style.width.%]="row.winRate"
+                    ></div>
+                  </div>
+                  <span class="text-right font-mono text-slate-200">{{ row.winRate }}%</span>
+                  <span
+                    class="text-right font-mono"
+                    [class.text-emerald-400]="row.net >= 0"
+                    [class.text-rose-400]="row.net < 0"
+                  >
+                    {{ row.net > 0 ? '+' : '' }}{{ row.net | number: '1.0-0' }}
+                  </span>
+                  <span class="text-right font-mono text-slate-500 text-[11px]">{{
+                    row.total
+                  }}</span>
+                </div>
+              }
+            </div>
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="flex items-baseline justify-between mb-3">
+                <span class="text-xs font-semibold text-white">When you enter</span>
+                <span class="text-[10px] text-slate-500"
+                  >color = win rate · faded = under {{ minSample }}</span
+                >
+              </div>
+              @if (e.hours.length === 0) {
+                <p class="text-xs text-slate-500 py-2">No entry times logged yet.</p>
+              } @else {
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 text-center font-mono">
+                  @for (hour of e.hours; track hour.key) {
+                    <div>
+                      @if (hour.total < minSample) {
+                        <div
+                          class="h-12 rounded-lg border border-slate-800 bg-[#0e1423] flex items-center justify-center text-xs text-slate-600"
+                        >
+                          —
+                        </div>
+                      } @else {
+                        <div
+                          class="h-12 rounded-lg border flex items-center justify-center text-xs font-semibold"
+                          [class]="tierTile[winRateTier(hour.winRate)]"
+                        >
+                          {{ hour.winRate }}%
+                        </div>
+                      }
+                      <div class="text-[11px] text-slate-300 mt-1">{{ hour.key }}:00</div>
+                      <div class="text-[10px] text-slate-500">{{ hour.total }}</div>
+                    </div>
+                  }
+                </div>
+              }
+              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-mono">
+                <span>
+                  Avg hold · winners
+                  <span class="text-emerald-400">{{ formatMinutes(e.avgHoldWinners) }}</span>
+                </span>
+                <span>
+                  losers <span class="text-rose-400">{{ formatMinutes(e.avgHoldLosers) }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+      @case ('psychology') {
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+          <div class="flex flex-wrap items-baseline gap-2 mb-4">
+            <h2 class="text-sm font-semibold text-white tracking-wide">Emotions and grades</h2>
+            <span class="text-xs text-slate-400">
+              {{ e.taggedCount }} tagged trades · {{ e.untaggedCount }} untagged not counted
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="text-xs text-slate-400 mb-1.5">Costliest emotion</div>
+              @if (e.costliestEmotion; as c) {
+                <div class="text-lg font-bold text-white tracking-tight">{{ c.key }}</div>
+                <div class="text-[11px] font-mono text-rose-400">
+                  {{ c.net | number: '1.2-2' }} · {{ c.total }}
+                  {{ c.total === 1 ? 'trade' : 'trades' }}
+                </div>
+              } @else {
+                <div class="text-lg font-bold text-slate-600">—</div>
+                <div class="text-[11px] text-slate-500">No losing emotion yet</div>
+              }
+            </div>
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="text-xs text-slate-400 mb-1.5">A-grade setups</div>
+              @if (e.aGradeShare !== null) {
+                <div class="text-lg font-bold font-mono text-white tracking-tight">
+                  {{ e.aGradeShare }}%
+                </div>
+                <div class="text-[11px] text-slate-400">
+                  of graded trades · most taken:
+                  <span class="font-mono text-slate-200">{{ e.mostTakenGrade }}</span>
+                </div>
+              } @else {
+                <div class="text-lg font-bold text-slate-600">—</div>
+                <div class="text-[11px] text-slate-500">No graded trades yet</div>
+              }
+            </div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="flex items-baseline justify-between mb-2">
+                <span class="text-xs font-semibold text-white">Emotion vs result</span>
+                <span class="text-[10px] text-slate-500"
+                  >a trade counts under each of its emotions</span
+                >
+              </div>
+              @if (e.emotions.length === 0) {
+                <p class="text-xs text-slate-500 py-2">No trades tagged yet.</p>
+              }
+              @for (row of e.emotions; track row.key) {
+                <div
+                  class="grid grid-cols-[96px_minmax(0,1fr)_40px_72px_24px] gap-2.5 items-center py-1.5 text-xs border-b border-slate-800/60 last:border-0"
+                  [class.opacity-50]="row.total < minSample"
+                >
+                  <span class="text-slate-300 truncate">{{ row.key }}</span>
+                  <div class="h-2 rounded-full bg-slate-800 overflow-hidden">
+                    <div
+                      class="h-full rounded-full"
+                      [class]="tierBar[winRateTier(row.winRate)]"
+                      [style.width.%]="row.winRate"
+                    ></div>
+                  </div>
+                  <span class="text-right font-mono text-slate-200">{{ row.winRate }}%</span>
+                  <span
+                    class="text-right font-mono"
+                    [class.text-emerald-400]="row.net >= 0"
+                    [class.text-rose-400]="row.net < 0"
+                  >
+                    {{ row.net > 0 ? '+' : '' }}{{ row.net | number: '1.0-0' }}
+                  </span>
+                  <span class="text-right font-mono text-slate-500 text-[11px]">{{
+                    row.total
+                  }}</span>
+                </div>
+              }
+            </div>
+            <div class="bg-space-900 border border-slate-800 rounded-lg p-4">
+              <div class="flex items-baseline justify-between mb-3">
+                <span class="text-xs font-semibold text-white">Grades</span>
+                <span class="text-[10px] text-slate-500"
+                  >height = how often · color = win rate</span
+                >
+              </div>
+              @if (e.grades.length === 0) {
+                <p class="text-xs text-slate-500 py-2">No graded trades yet.</p>
+              } @else {
+                <div class="flex items-end gap-2 h-24 border-b border-slate-800">
+                  @for (grade of e.grades; track grade.key) {
+                    <div class="flex-1 flex flex-col justify-end h-full">
+                      <div
+                        class="rounded-t-md"
+                        [class]="tierColumn[winRateTier(grade.winRate)]"
+                        [class.opacity-50]="grade.total < minSample"
+                        [style.height.%]="(grade.total / gradeMax()) * 100"
+                      ></div>
+                    </div>
+                  }
+                </div>
+                <div class="flex gap-2 mt-2 text-center font-mono">
+                  @for (grade of e.grades; track grade.key) {
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-bold text-white">{{ grade.key }}</div>
+                      <div class="text-[10px] text-slate-500">
+                        {{ grade.total }} · {{ grade.winRate }}%
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </section>
+      }
+      @case ('discipline') {
+        <!-- Risk in R (trades with a stop) -->
+        @let rs = rStats();
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+          <div class="flex flex-wrap items-baseline gap-2 mb-4">
+            <h2 class="text-sm font-semibold text-white tracking-wide">Risk in R</h2>
+            <span class="text-xs text-slate-400">
+              {{ rs.withStop }} of {{ rs.total }} trades have a stop
+            </span>
+          </div>
+          @if (rs.withStop === 0) {
+            <p class="text-slate-500 text-sm">
+              Add a stop loss to your trades to see expectancy and how your wins and losses compare
+              in R.
+            </p>
+          } @else {
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5 font-mono">
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400 font-sans">Expectancy</div>
+                <div
+                  class="text-xl font-bold"
+                  [class.text-emerald-400]="(rs.expectancy ?? 0) > 0"
+                  [class.text-rose-400]="(rs.expectancy ?? 0) < 0"
+                >
+                  {{ formatR(rs.expectancy) }}
+                </div>
+                <div class="text-[11px] text-slate-500 font-sans">average per trade</div>
+              </div>
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400 font-sans">Avg winner</div>
+                <div class="text-xl font-bold text-emerald-400">{{ formatR(rs.avgWinR) }}</div>
+              </div>
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400 font-sans">Avg loser</div>
+                <div class="text-xl font-bold text-rose-400">{{ formatR(rs.avgLossR) }}</div>
+                <div class="text-[11px] text-slate-500 font-sans">should be close to −1R</div>
+              </div>
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400 font-sans">Planned R:R</div>
+                <div class="text-xl font-bold text-slate-100">
+                  {{ rs.avgPlannedR !== null ? '1 : ' + rs.avgPlannedR : '—' }}
+                </div>
+                <div class="text-[11px] text-slate-500 font-sans">
+                  @if (rs.hitTargetPct !== null) {
+                    {{ rs.hitTargetPct }}% hit the target
+                  } @else {
+                    no targets set
+                  }
+                </div>
+              </div>
+              <div
+                class="bg-space-900 border rounded-lg px-4 py-3"
+                [class.border-rose-500/40]="rs.pastStop > 0"
+                [class.border-slate-800]="rs.pastStop === 0"
+              >
+                <div class="text-[11px] text-slate-400 font-sans">Lost more than 1R</div>
+                <div class="text-xl font-bold" [class.text-rose-400]="rs.pastStop > 0">
+                  {{ rs.pastStop }}
+                </div>
+                <div class="text-[11px] text-slate-500 font-sans">stop moved or slipped</div>
+              </div>
+            </div>
+
+            <div class="text-xs font-semibold text-white mb-2">Where your trades land</div>
+            <div class="flex items-end gap-2 h-28 border-b border-slate-800">
+              @for (b of rs.buckets; track b.label) {
+                <div class="flex-1 flex flex-col justify-end h-full items-center gap-1">
+                  @if (b.count) {
+                    <span class="text-[10px] font-mono text-slate-400">{{ b.count }}</span>
+                  }
+                  <div
+                    class="w-full rounded-t-md"
+                    [class]="
+                      b.tone === 'win'
+                        ? 'bg-emerald-500/80'
+                        : b.tone === 'loss'
+                          ? 'bg-rose-500/80'
+                          : 'bg-slate-500/70'
+                    "
+                    [style.height.%]="(b.count / rBucketMax()) * 85"
+                  ></div>
+                </div>
+              }
+            </div>
+            <div class="flex gap-2 mt-1.5 text-[10px] font-mono text-slate-500 text-center">
+              @for (b of rs.buckets; track b.label) {
+                <span class="flex-1 min-w-0 truncate">{{ b.label }}</span>
+              }
+            </div>
+          }
+        </section>
+        <!-- Cost of mistakes -->
+        @let mc = mistakeCost();
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+          <div class="flex flex-wrap items-baseline gap-2 mb-4">
+            <h2 class="text-sm font-semibold text-white tracking-wide">Cost of mistakes</h2>
+            <span class="text-xs text-slate-400">
+              {{ mc.total.count }} trades · {{ mc.withMistakes.count }} with a mistake
+            </span>
+          </div>
+          @if (mc.total.count === 0) {
+            <p class="text-slate-500 text-sm">No trades in this period.</p>
+          } @else {
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 font-mono">
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400">Net P/L</div>
+                <div
+                  class="text-xl font-bold"
+                  [class.text-emerald-400]="mc.total.net >= 0"
+                  [class.text-rose-400]="mc.total.net < 0"
+                >
+                  {{ mc.total.net > 0 ? '+' : mc.total.net < 0 ? '-' : '' }}${{
+                    absValue(mc.total.net) | number: '1.2-2'
+                  }}
+                </div>
+                <div class="text-[11px] text-slate-500">all {{ mc.total.count }} trades</div>
+              </div>
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400">Clean trades only</div>
+                <div
+                  class="text-xl font-bold"
+                  [class.text-emerald-400]="mc.clean.net >= 0"
+                  [class.text-rose-400]="mc.clean.net < 0"
+                >
+                  {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
+                    absValue(mc.clean.net) | number: '1.2-2'
+                  }}
+                </div>
+                <div class="text-[11px] text-slate-500">
+                  {{ mc.clean.count }} trades · {{ mc.clean.winRate }}% win
+                </div>
+              </div>
+              <div class="bg-space-900 border border-slate-800 rounded-lg px-4 py-3">
+                <div class="text-[11px] text-slate-400">Trades with mistakes</div>
+                <div
+                  class="text-xl font-bold"
+                  [class.text-emerald-400]="mc.withMistakes.net >= 0"
+                  [class.text-rose-400]="mc.withMistakes.net < 0"
+                >
+                  {{ mc.withMistakes.net > 0 ? '+' : mc.withMistakes.net < 0 ? '-' : '' }}${{
+                    absValue(mc.withMistakes.net) | number: '1.2-2'
+                  }}
+                </div>
+                <div class="text-[11px] text-slate-500">
+                  {{ mc.withMistakes.count }} trades · {{ mc.withMistakes.winRate }}% win
+                </div>
+              </div>
+            </div>
+
+            @if (mc.rows.length === 0) {
+              <p class="text-sm text-slate-400">
+                No mistakes tagged in this period. Tag them on the trade form to see what they cost.
+              </p>
+            } @else {
+              @if (mc.withMistakes.net < 0 && mc.rows[0].net < 0) {
+                <p
+                  class="text-sm text-slate-300 bg-rose-500/5 border border-rose-500/25 rounded-lg px-4 py-2.5 mb-4"
+                >
+                  Mistakes cost you
+                  <span class="font-semibold text-rose-400"
+                    >${{ absValue(mc.withMistakes.net) | number: '1.2-2' }}</span
+                  >. Fix
+                  <span class="font-semibold text-rose-400">{{ mc.rows[0].name }}</span> first: it's
+                  your most expensive mistake.
+                </p>
+              }
+
+              <div class="overflow-x-auto">
+                <table class="w-full min-w-[560px] text-sm">
+                  <thead>
+                    <tr
+                      class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800"
+                    >
+                      <th class="text-left py-2 px-2">Mistake</th>
+                      <th class="text-center py-2 px-2">Times</th>
+                      <th class="text-center py-2 px-2">Win rate</th>
+                      <th class="text-left py-2 px-2">Share of cost</th>
+                      <th class="text-right py-2 px-2">Net P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody class="font-mono">
+                    @for (row of mc.rows; track row.id) {
+                      <tr class="border-b border-slate-800/60">
+                        <td class="py-2.5 px-2 font-sans text-slate-200">{{ row.name }}</td>
+                        <td class="py-2.5 px-2 text-center text-slate-300">{{ row.count }}</td>
+                        <td class="py-2.5 px-2 text-center text-slate-300">{{ row.winRate }}%</td>
+                        <td class="py-2.5 px-2">
+                          <div class="h-1.5 min-w-[90px] rounded-full bg-slate-800 overflow-hidden">
+                            <div
+                              class="h-full rounded-full bg-rose-500"
+                              [style.width.%]="costBarWidth(row.net)"
+                            ></div>
+                          </div>
+                        </td>
+                        <td
+                          class="py-2.5 px-2 text-right whitespace-nowrap"
+                          [class.text-emerald-400]="row.net >= 0"
+                          [class.text-rose-400]="row.net < 0"
+                        >
+                          {{ row.net > 0 ? '+' : row.net < 0 ? '-' : '' }}${{
+                            absValue(row.net) | number: '1.2-2'
+                          }}
+                        </td>
+                      </tr>
+                    }
+                    <tr class="bg-emerald-500/5">
+                      <td class="py-2.5 px-2 font-sans font-semibold text-emerald-400">
+                        Clean trades (no mistakes)
+                      </td>
+                      <td class="py-2.5 px-2 text-center text-slate-300">{{ mc.clean.count }}</td>
+                      <td class="py-2.5 px-2 text-center text-slate-300">
+                        {{ mc.clean.winRate }}%
+                      </td>
+                      <td class="py-2.5 px-2"></td>
+                      <td
+                        class="py-2.5 px-2 text-right whitespace-nowrap"
+                        [class.text-emerald-400]="mc.clean.net >= 0"
+                        [class.text-rose-400]="mc.clean.net < 0"
+                      >
+                        {{ mc.clean.net > 0 ? '+' : mc.clean.net < 0 ? '-' : '' }}${{
+                          absValue(mc.clean.net) | number: '1.2-2'
+                        }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-3">
+                A trade with more than one mistake counts in each of its rows.
+              </p>
+            }
+          }
+        </section>
+
+        <!-- Rule adherence -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-6 space-y-6">
+          <h2 class="text-sm font-semibold text-white tracking-wide">
+            Rule adherence &amp; execution discipline
+          </h2>
+          @if (ruleStats()) {
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="bg-space-900/80 border border-slate-800 rounded-xl p-3.5">
+                <span class="text-xs text-slate-400 font-medium">Followed all rules</span>
+                <div class="mt-2 flex items-baseline gap-2">
+                  <span class="text-2xl font-bold font-mono text-white"
+                    >{{ ruleStats().followedAllPercentage }}%</span
+                  >
+                  <span class="text-xs text-slate-400 font-mono"
+                    >{{ ruleStats().followedTradesCount }} of
+                    {{ ruleStats().totalTradesWithRules }} trades</span
+                  >
+                </div>
+              </div>
+              <div class="bg-space-900/80 border border-emerald-500/20 rounded-xl p-3.5">
+                <span class="text-xs text-slate-400 font-medium">Avg P/L, rules followed</span>
+                <div class="mt-2 text-2xl font-bold font-mono text-emerald-400">
+                  +${{ ruleStats().avgPnlRulesFollowed }}
+                </div>
+              </div>
+              <div class="bg-space-900/80 border border-rose-500/20 rounded-xl p-3.5">
+                <span class="text-xs text-slate-400 font-medium">Avg P/L, rule broken</span>
+                <div class="mt-2 text-2xl font-bold font-mono text-rose-400">
+                  -${{ absValue(ruleStats().avgPnlRuleBroken) }}
+                </div>
+              </div>
+            </div>
+          }
+
+          @if ((ruleStats()?.adherence ?? []).length === 0) {
+            <p class="text-slate-500 text-sm">No rules linked to trades yet.</p>
+          } @else {
+            <div class="space-y-4 pt-2">
+              @for (rule of ruleStats()?.adherence ?? []; track rule.name) {
+                <div>
+                  <div class="flex items-center justify-between text-xs mb-1.5 font-medium">
+                    <span class="text-slate-300 flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                      {{ rule.name }}
+                    </span>
+                    <span class="font-mono text-slate-400">
+                      <span class="text-white font-semibold">{{ rule.followedCount }}</span> /
+                      {{ rule.total }}
+                      <span class="text-emerald-400 ml-1">({{ rule.percentage }}%)</span>
+                    </span>
+                  </div>
+                  <div
+                    class="h-2 w-full bg-space-900 rounded-full overflow-hidden border border-slate-800/80"
+                  >
+                    <div
+                      class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                      [style.width.%]="rule.percentage"
+                    ></div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+      @case ('tags') {
+        @for (group of tagReport(); track group.name) {
+          <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
+            <div class="flex flex-wrap items-baseline gap-2 mb-4">
+              <h2 class="text-sm font-semibold text-white tracking-wide">By {{ group.name }}</h2>
+              @if (group.untagged) {
+                <span class="text-xs text-slate-400"
+                  >{{ group.untagged }} trades without a {{ group.name }} tag</span
+                >
+              }
+            </div>
+            @if (group.rows.length === 0) {
+              <p class="text-slate-500 text-sm">
+                No trades in this range have a {{ group.name }} tag.
+              </p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="text-[10px] uppercase tracking-wider text-slate-500 text-left">
+                      <th class="font-semibold pb-2 pr-3">Tag</th>
+                      <th class="font-semibold pb-2 px-3 text-right">Trades</th>
+                      <th class="font-semibold pb-2 px-3 text-right">W / L / BE</th>
+                      <th class="font-semibold pb-2 px-3 text-right">Win %</th>
+                      <th class="font-semibold pb-2 px-3 text-right">Avg R</th>
+                      <th class="font-semibold pb-2 pl-3 text-right">Net P/L</th>
+                    </tr>
+                  </thead>
+                  <tbody class="font-mono">
+                    @for (row of group.rows; track row.id) {
+                      <tr
+                        class="border-t border-slate-800/70"
+                        [class.opacity-50]="row.total < minSample"
+                      >
+                        <td class="py-2.5 pr-3 font-sans">
+                          <span
+                            class="text-xs px-2.5 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
+                            >{{ row.name }}</span
+                          >
+                        </td>
+                        <td class="py-2.5 px-3 text-right text-slate-300">{{ row.total }}</td>
+                        <td class="py-2.5 px-3 text-right text-xs">
+                          <span class="text-emerald-400">{{ row.wins }}</span> /
+                          <span class="text-rose-400">{{ row.losses }}</span> /
+                          <span class="text-slate-300">{{ row.breakEvens }}</span>
+                        </td>
+                        <td class="py-2.5 px-3 text-right text-slate-200">{{ row.winRate }}%</td>
+                        <td
+                          class="py-2.5 px-3 text-right"
+                          [class.text-emerald-400]="(row.avgR ?? 0) > 0"
+                          [class.text-rose-400]="(row.avgR ?? 0) < 0"
+                          [class.text-slate-500]="row.avgR === null"
+                        >
+                          {{ formatR(row.avgR) }}
+                          @if (row.avgR !== null && row.withR < row.total) {
+                            <div class="text-[10px] text-slate-500">
+                              {{ row.withR }} of {{ row.total }}
+                            </div>
+                          }
+                        </td>
+                        <td
+                          class="py-2.5 pl-3 text-right"
+                          [class.text-emerald-400]="row.net > 0"
+                          [class.text-rose-400]="row.net < 0"
+                        >
+                          {{ row.net > 0 ? '+' : '' }}{{ row.net | number: '1.2-2' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-3">
+                A trade with two tags from this group counts in both rows. Faded = under
+                {{ minSample }} trades.
+              </p>
+            }
+          </section>
+        } @empty {
+          <p class="text-slate-500 text-sm">
+            Set up tag groups in the Playbook to see results by tag.
+          </p>
+        }
+      }
+    }
+  }
+</div>

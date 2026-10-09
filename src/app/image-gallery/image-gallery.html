@@ -1,7 +1,13 @@
-<div class="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2.5">
+<div
+  class="grid gap-2.5"
+  [class]="
+    featured() ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-[repeat(auto-fill,minmax(170px,1fr))]'
+  "
+>
   @for (image of shown(); track image.id; let i = $index) {
     <figure
       class="m-0 rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden group relative"
+      [class.md:col-span-2]="featured() && i === 0"
     >
       <button
         type="button"
@@ -37,6 +43,7 @@
             type="text"
             maxlength="120"
             [value]="image.caption || ''"
+            [attr.list]="captionSuggestions().length ? listId : null"
             (keydown.enter)="saveCaption(image, captionInput.value)"
             (keydown.escape)="editingCaptionId.set(null)"
             (blur)="saveCaption(image, captionInput.value)"
@@ -108,6 +115,14 @@
     </div>
   }
 </div>
+
+@if (captionSuggestions().length) {
+  <datalist [id]="listId">
+    @for (s of captionSuggestions(); track s) {
+      <option [value]="s"></option>
+    }
+  </datalist>
+}
 
 @if (error()) {
   <p class="text-xs text-rose-400 mt-2" role="alert">{{ error() }}</p>

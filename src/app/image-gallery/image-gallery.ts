@@ -67,6 +67,11 @@ export class ImageGallery implements OnDestroy {
   target = input<ImageTarget | null>(null);
   images = input<GalleryImage[]>([]);
   addLabel = input('Add chart');
+  // Big review layout: first image full width, the rest two across
+  featured = input(false);
+  // Quick picks offered while typing a caption (e.g. Pre-trade, Entry, Exit)
+  captionSuggestions = input<string[]>([]);
+  readonly listId = `captions-${nextLocalId++}`;
 
   added = output<GalleryImage>();
   removed = output<number>();
