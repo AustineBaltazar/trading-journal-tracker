@@ -1,7 +1,13 @@
-<div class="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-2.5">
+<div
+  class="grid gap-2.5"
+  [class]="
+    featured() ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-[repeat(auto-fill,minmax(170px,1fr))]'
+  "
+>
   @for (image of shown(); track image.id; let i = $index) {
     <figure
       class="m-0 rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden group relative"
+      [class.md:col-span-2]="featured() && i === 0"
     >
       <button
         type="button"

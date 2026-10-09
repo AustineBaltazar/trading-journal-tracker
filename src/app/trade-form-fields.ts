@@ -3,7 +3,14 @@ import { DecimalPipe } from '@angular/common';
 import { RESULT_OPTIONS, TradeOutcome } from './outcome';
 import { EMOTIONS } from './trade-journal';
 
-const POINT_VALUES: Record<string, number> = { MNQ: 2, NQ: 20 };
+export const POINT_VALUES: Record<string, number> = { MNQ: 2, NQ: 20 };
+
+// A price input's value as a number, or null when it's empty
+export function blankPrice(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
 const BAD_EMOTIONS = new Set(['FOMO', 'Revenge']);
 
 // Net P/L while the form is being filled in, same math as the API's utils/pnl.js

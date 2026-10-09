@@ -11,10 +11,13 @@ import {
 } from '../dashboard/edge-analytics';
 import { buildMistakeCost, Mistake } from '../mistakes/mistakes';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
-import { countOutcomes } from '../outcome';
+import { countOutcomes, formatR } from '../outcome';
+import { TagGroup } from '../tags/tags';
 import { todayLocal } from '../trade-journal';
 import {
   buildDayOfWeek,
+  buildRStats,
+  buildTagReport,
   DateRange,
   isRangeKey,
   RANGE_OPTIONS,
@@ -61,6 +64,7 @@ export class Reports {
       label: 'Discipline',
       question: 'What your mistakes and rules cost or earn',
     },
+    { key: 'tags', label: 'Tags', question: 'Results by setup, news and market' },
   ];
 
   tab = signal<ReportTab>('timing');
@@ -71,6 +75,7 @@ export class Reports {
   loaded = signal(false);
   mistakes = signal<Mistake[]>([]);
   ruleStats = signal<any>(null);
+  tagGroups = signal<TagGroup[]>([]);
 
   readonly dates = computed(() => rangeDates(this.range(), todayLocal(), this.custom()));
   readonly rangeTrades = computed(() => tradesInRange(this.trades(), this.dates()));
@@ -93,6 +98,10 @@ export class Reports {
   readonly edge = computed(() => buildEdgeAnalytics(this.rangeTrades()));
   readonly gradeMax = computed(() => Math.max(1, ...this.edge().grades.map((g) => g.total)));
   readonly mistakeCost = computed(() => buildMistakeCost(this.rangeTrades(), this.mistakes()));
+  readonly rStats = computed(() => buildRStats(this.rangeTrades()));
+  readonly rBucketMax = computed(() => Math.max(1, ...this.rStats().buckets.map((b) => b.count)));
+  readonly tagReport = computed(() => buildTagReport(this.rangeTrades(), this.tagGroups()));
+  readonly formatR = formatR;
 
   readonly minSample = MIN_SAMPLE;
   readonly winRateTier = winRateTier;
@@ -127,6 +136,9 @@ export class Reports {
     this.http
       .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
       .subscribe((response) => this.mistakes.set(response.mistakes));
+    this.http
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .subscribe((response) => this.tagGroups.set(response.groups));
   }
 
   private authHeaders() {

@@ -62,3 +62,33 @@ export function emotionsOf(trade: {
   if (trade.emotions?.length) return trade.emotions;
   return trade.emotion ? [trade.emotion] : [];
 }
+
+// +2.8R / -1.0R / 0.0R
+export function formatR(r: number | null | undefined): string {
+  if (r === null || r === undefined) return '—';
+  return `${r > 0 ? '+' : r < 0 ? '-' : ''}${Math.abs(r).toFixed(1)}R`;
+}
+
+// R values while a trade is being filled in, same math as the API's rValues:
+// result = points made / points risked, planned = target distance / points risked.
+// Null when there's no stop, or the stop is on the wrong side of the entry.
+export function estimateR(t: {
+  direction: string;
+  entry_price: number | string;
+  exit_price: number | string;
+  stop_price: number | string | null;
+  target_price: number | string | null;
+}): { rMultiple: number; plannedR: number | null; riskPoints: number } | null {
+  if (t.stop_price === null || t.stop_price === '') return null;
+  const dir = t.direction === 'long' ? 1 : -1;
+  const entry = Number(t.entry_price);
+  const risk = dir * (entry - Number(t.stop_price));
+  if (!(risk > 0)) return null;
+  const r2 = (n: number) => Math.round(n * 100) / 100;
+  const hasTarget = t.target_price !== null && t.target_price !== '';
+  return {
+    rMultiple: r2((dir * (Number(t.exit_price) - entry)) / risk),
+    plannedR: hasTarget ? r2((dir * (Number(t.target_price) - entry)) / risk) : null,
+    riskPoints: r2(risk),
+  };
+}

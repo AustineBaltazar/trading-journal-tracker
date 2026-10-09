@@ -27,6 +27,9 @@ describe('NewTrade', () => {
     await fixture.whenStable();
     http.expectOne((r) => r.url.endsWith('/rules')).flush({ rules });
     http
+      .expectOne((r) => r.url.endsWith('/tag-groups'))
+      .flush({ groups: [{ id: 1, name: 'Setup', tags: [{ id: 5, name: 'IFVG' }] }] });
+    http
       .expectOne((r) => r.url.endsWith('/mistakes'))
       .flush({
         mistakes: [
@@ -72,6 +75,40 @@ describe('NewTrade', () => {
     component.onSubmit();
     expect(completeSave().mode).toBe('backtest');
     expect(saved).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends stop and target, shows R, and saves tags', async () => {
+    await create();
+    Object.assign(component, {
+      direction: 'short',
+      contracts: 4,
+      entry_price: 21085.25,
+      exit_price: 21028.75,
+      fees: 4.96,
+    });
+    component.stop_price = 21105.25;
+    component.target_price = '';
+    expect(component.rPreview).toEqual({ rMultiple: 2.83, plannedR: null, riskPoints: 20 });
+    expect(component.riskDollars).toBe(160);
+    component.toggleTag(5);
+    component.onSubmit();
+    expect(completeSave()).toMatchObject({ stop_price: 21105.25, target_price: null });
+    const tags = http.expectOne((r) => r.url.endsWith('/trades/99/tags'));
+    expect(tags.request.body).toEqual({ tag_ids: [5] });
+    tags.flush({});
+  });
+
+  it('blocks a stop on the wrong side before saving', async () => {
+    await create();
+    Object.assign(component, {
+      direction: 'long',
+      entry_price: 21000,
+      exit_price: 21010,
+      stop_price: 21005,
+    });
+    component.onSubmit();
+    expect(component.errorMessage()).toBe('The stop for a long goes below the entry.');
+    http.expectNone((r) => r.method === 'POST');
   });
 
   it('sends the emotions and the picked result (null = auto)', async () => {

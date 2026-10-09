@@ -4,9 +4,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
+import { TagGroupsEditor } from '../tags/tag-groups-editor';
 
 @Component({
-  imports: [FormsModule, ModeBadge],
+  imports: [FormsModule, ModeBadge, TagGroupsEditor],
   selector: 'app-playbook',
   styleUrl: './playbook.css',
   templateUrl: './playbook.html',

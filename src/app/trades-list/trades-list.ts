@@ -7,7 +7,7 @@ import { NewTrade } from '../new-trade/new-trade';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
-import { emotionsOf, outcomeOf } from '../outcome';
+import { emotionsOf, formatR, outcomeOf } from '../outcome';
 import { environment } from '../../environments/environment';
 import {
   currentMonth,
@@ -150,6 +150,7 @@ export class TradesList {
   }
 
   readonly emotionsOf = emotionsOf;
+  readonly formatR = formatR;
 
   isBreakEven(trade: any): boolean {
     return outcomeOf(trade) === 'be';

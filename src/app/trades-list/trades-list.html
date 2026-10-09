@@ -419,6 +419,11 @@
                     }
                     {{ trade.netPnl > 0 ? '+' : trade.netPnl < 0 ? '-' : ''
                     }}{{ abs(trade.netPnl) | number: '1.2-2' }}
+                    @if (trade.rMultiple !== null && trade.rMultiple !== undefined) {
+                      <div class="text-[10px] font-normal text-slate-500">
+                        {{ formatR(trade.rMultiple) }}
+                      </div>
+                    }
                   </td>
                   <td class="py-3.5 px-5 text-xs text-slate-400 font-sans whitespace-nowrap">
                     {{ trade.strategy || '—' }}

@@ -10,7 +10,7 @@ export const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
   { key: 'custom', label: 'Custom' },
 ];
 
-export const REPORT_TABS = ['timing', 'psychology', 'discipline'] as const;
+export const REPORT_TABS = ['timing', 'psychology', 'discipline', 'tags'] as const;
 export type ReportTab = (typeof REPORT_TABS)[number];
 
 // Inclusive YYYY-MM-DD bounds; null = open-ended
@@ -109,4 +109,123 @@ export function buildDayOfWeek(trades: (OutcomeFields & { trade_date: string })[
     net: Math.round(d.net * 100) / 100,
     winRate: winRate(d.wins, d.losses),
   }));
+}
+
+// ---------- R (needs a stop on the trade) ----------
+
+export interface RBucket {
+  label: string;
+  count: number;
+  tone: 'loss' | 'flat' | 'win';
+}
+
+export interface RStats {
+  withStop: number; // trades that have an R value
+  total: number;
+  expectancy: number | null; // average R per trade
+  avgWinR: number | null;
+  avgLossR: number | null;
+  avgPlannedR: number | null;
+  hitTargetPct: number | null; // trades with a target that reached it
+  pastStop: number; // losses worse than -1R: the stop was moved or slipped
+  buckets: RBucket[];
+}
+
+// [label, upper bound (exclusive), tone]; the last bucket catches everything above
+const R_BUCKETS: [string, number, RBucket['tone']][] = [
+  ['Past −1R', -1.05, 'loss'],
+  ['−1R', -0.75, 'loss'],
+  ['−0.5R', -0.25, 'loss'],
+  ['0R', 0.25, 'flat'],
+  ['+0.5R', 0.75, 'win'],
+  ['+1R', 1.25, 'win'],
+  ['+1.5R', 1.75, 'win'],
+  ['+2R', 2.5, 'win'],
+  ['+2.5R+', Infinity, 'win'],
+];
+
+const avg = (xs: number[]) =>
+  xs.length ? Math.round((xs.reduce((s, x) => s + x, 0) / xs.length) * 100) / 100 : null;
+
+export function buildRStats(
+  trades: (OutcomeFields & { rMultiple?: number | null; plannedR?: number | null })[],
+): RStats {
+  const withR = trades.filter((t) => t.rMultiple !== null && t.rMultiple !== undefined);
+  const rs = withR.map((t) => t.rMultiple as number);
+  const withTarget = withR.filter((t) => t.plannedR !== null && t.plannedR !== undefined);
+  const hit = withTarget.filter((t) => (t.rMultiple as number) >= (t.plannedR as number) - 0.01);
+  return {
+    withStop: withR.length,
+    total: trades.length,
+    expectancy: avg(rs),
+    avgWinR: avg(withR.filter((t) => outcomeOf(t) === 'win').map((t) => t.rMultiple as number)),
+    avgLossR: avg(withR.filter((t) => outcomeOf(t) === 'loss').map((t) => t.rMultiple as number)),
+    avgPlannedR: avg(withTarget.map((t) => t.plannedR as number)),
+    hitTargetPct: withTarget.length ? Math.round((hit.length / withTarget.length) * 100) : null,
+    pastStop: rs.filter((r) => r < -1.05).length,
+    buckets: R_BUCKETS.map(([label, upper, tone], i) => {
+      const lower = i === 0 ? -Infinity : R_BUCKETS[i - 1][1];
+      return { label, tone, count: rs.filter((r) => r >= lower && r < upper).length };
+    }),
+  };
+}
+
+// ---------- tags ----------
+
+export interface TagRow {
+  id: number;
+  name: string;
+  total: number;
+  wins: number;
+  losses: number;
+  breakEvens: number;
+  winRate: number;
+  avgR: number | null;
+  withR: number; // trades behind avgR (the ones with a stop)
+  net: number;
+}
+
+export interface TagGroupReport {
+  name: string;
+  rows: TagRow[]; // tags used in the range, best net P/L first
+  untagged: number; // trades with no tag from this group
+}
+
+export function buildTagReport(
+  trades: (OutcomeFields & { tagIds?: number[]; rMultiple?: number | null })[],
+  groups: { name: string; tags: { id: number; name: string }[] }[],
+): TagGroupReport[] {
+  return groups.map((group) => {
+    const groupIds = new Set(group.tags.map((t) => t.id));
+    const rows = group.tags
+      .map((tag) => {
+        const tagged = trades.filter((t) => t.tagIds?.includes(tag.id));
+        let wins = 0;
+        let losses = 0;
+        for (const t of tagged) {
+          const o = outcomeOf(t);
+          if (o === 'win') wins += 1;
+          else if (o === 'loss') losses += 1;
+        }
+        const rs = tagged
+          .map((t) => t.rMultiple)
+          .filter((r): r is number => r !== null && r !== undefined);
+        return {
+          id: tag.id,
+          name: tag.name,
+          total: tagged.length,
+          wins,
+          losses,
+          breakEvens: tagged.length - wins - losses,
+          winRate: winRate(wins, losses),
+          avgR: avg(rs),
+          withR: rs.length,
+          net: Math.round(tagged.reduce((s, t) => s + t.netPnl, 0) * 100) / 100,
+        };
+      })
+      .filter((row) => row.total > 0)
+      .sort((a, b) => b.net - a.net);
+    const untagged = trades.filter((t) => !(t.tagIds ?? []).some((id) => groupIds.has(id))).length;
+    return { name: group.name, rows, untagged };
+  });
 }

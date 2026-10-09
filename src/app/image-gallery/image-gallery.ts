@@ -67,6 +67,8 @@ export class ImageGallery implements OnDestroy {
   target = input<ImageTarget | null>(null);
   images = input<GalleryImage[]>([]);
   addLabel = input('Add chart');
+  // Big review layout: first image full width, the rest two across
+  featured = input(false);
 
   added = output<GalleryImage>();
   removed = output<number>();

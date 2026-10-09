@@ -1,17 +1,34 @@
 import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { EventEmitter, Output } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
 import { TradeMode, TradeModeService } from '../trade-mode';
 import { Mistake, MistakePicker } from '../mistakes/mistakes';
-import { autoOutcome, TradeOutcome } from '../outcome';
-import { EmotionPicker, estimateNetPnl, ResultPicker, toggleEmotion } from '../trade-form-fields';
+import { autoOutcome, estimateR, formatR, TradeOutcome } from '../outcome';
+import { TagGroup, TagPicker } from '../tags/tags';
+import {
+  blankPrice,
+  EmotionPicker,
+  estimateNetPnl,
+  POINT_VALUES,
+  ResultPicker,
+  toggleEmotion,
+} from '../trade-form-fields';
 import { ImageGallery } from '../image-gallery/image-gallery';
 
 @Component({
-  imports: [FormsModule, MistakePicker, ResultPicker, EmotionPicker, ImageGallery],
+  imports: [
+    FormsModule,
+    DecimalPipe,
+    MistakePicker,
+    ResultPicker,
+    EmotionPicker,
+    ImageGallery,
+    TagPicker,
+  ],
   selector: 'app-new-trade',
   styleUrl: './new-trade.css',
   templateUrl: './new-trade.html',
@@ -47,6 +64,8 @@ export class NewTrade implements OnInit {
   emotions: string[] = [];
   grade = '';
   result: TradeOutcome | null = null; // null = auto from the prices
+  stop_price: number | string | null = null;
+  target_price: number | string | null = null;
 
   readonly sessions = SESSIONS;
   readonly grades = GRADES;
@@ -84,6 +103,8 @@ export class NewTrade implements OnInit {
   checkedRuleIds = signal<Set<number>>(new Set());
   mistakes = signal<Mistake[]>([]);
   selectedMistakeIds = signal<Set<number>>(new Set());
+  tagGroups = signal<TagGroup[]>([]);
+  selectedTagIds = signal<Set<number>>(new Set());
 
   private authHeaders() {
     const token = localStorage.getItem('token');
@@ -98,6 +119,48 @@ export class NewTrade implements OnInit {
     this.http
       .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
       .subscribe((response) => this.mistakes.set(response.mistakes));
+    this.http
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .subscribe((response) => this.tagGroups.set(response.groups));
+  }
+
+  get rPreview() {
+    return estimateR({
+      ...this,
+      stop_price: blankPrice(this.stop_price),
+      target_price: blankPrice(this.target_price),
+    });
+  }
+
+  get riskDollars(): number {
+    const r = this.rPreview;
+    return r ? r.riskPoints * (POINT_VALUES[this.symbol] || 0) * Number(this.contracts) : 0;
+  }
+
+  // Same check as the API, so the form explains it before saving
+  get stopProblem(): string {
+    const long = this.direction === 'long';
+    const entry = Number(this.entry_price);
+    const stop = blankPrice(this.stop_price);
+    const target = blankPrice(this.target_price);
+    if (stop !== null && (long ? stop >= entry : stop <= entry)) {
+      return `The stop for a ${long ? 'long' : 'short'} goes ${long ? 'below' : 'above'} the entry.`;
+    }
+    if (target !== null && (long ? target <= entry : target >= entry)) {
+      return `The target for a ${long ? 'long' : 'short'} goes ${long ? 'above' : 'below'} the entry.`;
+    }
+    return '';
+  }
+
+  readonly formatR = formatR;
+
+  toggleTag(id: number) {
+    this.selectedTagIds.update((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   }
 
   toggleMistake(id: number) {
@@ -139,6 +202,10 @@ export class NewTrade implements OnInit {
       this.errorMessage.set('Please select a date.');
       return;
     }
+    if (this.stopProblem) {
+      this.errorMessage.set(this.stopProblem);
+      return;
+    }
 
     this.saving.set(true);
 
@@ -162,6 +229,8 @@ export class NewTrade implements OnInit {
           emotions: this.emotions,
           grade: this.grade || null,
           result: this.result,
+          stop_price: blankPrice(this.stop_price),
+          target_price: blankPrice(this.target_price),
           mode: this.mode,
         },
         this.authHeaders(),
@@ -177,7 +246,7 @@ export class NewTrade implements OnInit {
 
   // Rules, mistakes and screenshots are saved in parallel; done() runs once all finish
   private linkExtras(tradeId: number, done: () => void) {
-    let pending = 3;
+    let pending = 4;
     const oneDone = () => {
       pending -= 1;
       if (pending === 0) done();
@@ -185,6 +254,18 @@ export class NewTrade implements OnInit {
     this.linkRules(tradeId, oneDone);
     this.saveMistakes(tradeId, oneDone);
     this.uploadScreenshots(tradeId, oneDone);
+    this.saveTags(tradeId, oneDone);
+  }
+
+  private saveTags(tradeId: number, done: () => void) {
+    const ids = [...this.selectedTagIds()];
+    if (ids.length === 0) {
+      done();
+      return;
+    }
+    this.http
+      .put(`${environment.apiUrl}/trades/${tradeId}/tags`, { tag_ids: ids }, this.authHeaders())
+      .subscribe({ next: done, error: done });
   }
 
   private uploadScreenshots(tradeId: number, done: () => void) {
@@ -276,6 +357,8 @@ export class NewTrade implements OnInit {
     this.emotions = [];
     this.grade = '';
     this.result = null;
+    this.stop_price = null;
+    this.target_price = null;
     this.gallery()?.clearQueued();
     this.notes = '';
     this.screenshot_link = '';
