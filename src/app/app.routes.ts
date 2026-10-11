@@ -63,6 +63,10 @@ export const routes: Routes = [
         path: 'reports',
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
       },
+      {
+        path: 'insights',
+        loadComponent: () => import('./insights/insights').then((m) => m.Insights),
+      },
       { path: 'playbook', component: Playbook },
       {
         path: 'account',
