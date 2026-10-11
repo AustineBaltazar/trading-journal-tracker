@@ -54,7 +54,7 @@ import { Tag, TagGroup } from './tags';
         <p class="px-4 pb-2 text-xs text-rose-400" role="alert">{{ error() }}</p>
       }
 
-      <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+      <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-14">
         @for (group of groups(); track group.id) {
           <div class="group py-2 border-t border-[#1F293D]/60 first:border-t-0 space-y-1.5">
             <div class="flex items-center justify-between gap-2">
