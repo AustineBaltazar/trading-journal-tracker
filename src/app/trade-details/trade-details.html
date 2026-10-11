@@ -1,4 +1,5 @@
-<div class="bg-[#070A10] min-h-screen text-slate-200 font-sans">
+<!-- On wide screens the page fits the window: only the side columns scroll -->
+<div class="bg-[#070A10] min-h-full xl:h-full xl:flex xl:flex-col text-slate-200 font-sans">
   @if (showEditModal() && trade()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div class="w-full max-w-5xl max-h-[94vh] overflow-y-auto">
@@ -39,9 +40,9 @@
     <p class="text-slate-500 p-6">Loading...</p>
   } @else {
     <header
-      class="sticky top-0 z-20 flex items-center justify-between px-6 sm:px-8 py-4 border-b border-white/10 bg-[#070A10]/80 backdrop-blur-xl flex-wrap gap-3"
+      class="sticky xl:static top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-white/10 bg-[#070A10]/80 backdrop-blur-xl flex-wrap gap-3 shrink-0"
     >
-      <div class="flex items-center gap-3 min-w-0">
+      <div class="flex items-center gap-3 min-w-0 flex-wrap">
         <a
           routerLink="/trades"
           class="text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1.5"
@@ -52,62 +53,83 @@
             stroke="currentColor"
             stroke-width="2"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path d="M15.75 19.5L8.25 12l7.5-7.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           Trades
         </a>
-        <span class="text-slate-600">/</span>
-        <div class="flex items-center gap-2 flex-wrap">
-          <span
-            class="w-2 h-2 rounded-full"
-            [class.bg-emerald-500]="outcome() === 'win'"
-            [class.bg-rose-500]="outcome() === 'loss'"
-            [class.bg-slate-400]="outcome() === 'be'"
-          ></span>
-          <h2 class="text-base font-bold text-white tracking-tight">
-            {{ trade().symbol }} {{ trade().direction }} · {{ trade().trade_date | slice: 0 : 10 }}
-          </h2>
-          @if (outcome(); as o) {
-            <span
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
-              [class]="
-                o === 'win'
-                  ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/40'
-                  : o === 'loss'
-                    ? 'text-rose-300 bg-rose-500/10 border-rose-500/40'
-                    : 'text-slate-300 bg-slate-400/10 border-slate-400/45'
-              "
-              >{{ outcomeLabel[o] }}{{ trade().result ? '' : ' · auto' }}</span
-            >
-          }
-          @if (trade().rMultiple !== null) {
-            <span
-              class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border"
-              [class]="
-                trade().rMultiple > 0
-                  ? 'text-emerald-300 border-emerald-500/40'
-                  : trade().rMultiple < 0
-                    ? 'text-rose-300 border-rose-500/40'
-                    : 'text-slate-300 border-slate-400/45'
-              "
-              >{{ formatR(trade().rMultiple) }}</span
-            >
-          }
-          @if (trade().mode === 'backtest') {
-            <span
-              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
-              >BACKTEST</span
-            >
-          }
-          <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-white/5 border border-white/10 uppercase"
-            [class.text-emerald-400]="trade().direction === 'long'"
-            [class.text-rose-400]="trade().direction === 'short'"
+        <div class="flex gap-1">
+          <button
+            type="button"
+            (click)="goTo(neighbours().prev)"
+            [disabled]="neighbours().prev === null"
+            aria-label="Previous trade"
+            title="Previous trade"
+            class="w-7 h-7 grid place-items-center rounded-md border border-white/10 text-slate-400 hover:text-white hover:border-white/25 disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:border-white/10"
           >
-            {{ trade().direction }}
-          </span>
+            ‹
+          </button>
+          <button
+            type="button"
+            (click)="goTo(neighbours().next)"
+            [disabled]="neighbours().next === null"
+            aria-label="Next trade"
+            title="Next trade"
+            class="w-7 h-7 grid place-items-center rounded-md border border-white/10 text-slate-400 hover:text-white hover:border-white/25 disabled:opacity-30 disabled:hover:text-slate-400 disabled:hover:border-white/10"
+          >
+            ›
+          </button>
         </div>
+        <h2 class="text-base font-bold text-white tracking-tight">
+          {{ trade().symbol }} {{ trade().direction }}
+          <span class="ml-1 text-sm font-normal text-slate-400"
+            >{{ trade().trade_date.substring(0, 10) + 'T00:00:00' | date: 'EEE, MMM d, y'
+            }}{{ trade().entry_time ? ' · ' + trade().entry_time.substring(0, 5) : '' }}</span
+          >
+        </h2>
+        @if (outcome(); as o) {
+          <span
+            class="px-2 py-0.5 rounded-full text-[10px] font-bold border"
+            [class]="
+              o === 'win'
+                ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/40'
+                : o === 'loss'
+                  ? 'text-rose-300 bg-rose-500/10 border-rose-500/40'
+                  : 'text-slate-300 bg-slate-400/10 border-slate-400/45'
+            "
+            >{{ outcomeLabel[o] }}{{ trade().result ? '' : ' · auto' }}</span
+          >
+        }
+        @if (trade().rMultiple !== null) {
+          <span
+            class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border"
+            [class]="
+              trade().rMultiple > 0
+                ? 'text-emerald-300 border-emerald-500/40'
+                : trade().rMultiple < 0
+                  ? 'text-rose-300 border-rose-500/40'
+                  : 'text-slate-300 border-slate-400/45'
+            "
+            >{{ formatR(trade().rMultiple) }}</span
+          >
+        }
+        @if (trade().mode === 'backtest') {
+          <span
+            class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
+            >BACKTEST</span
+          >
+        }
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase border"
+          [class]="
+            trade().direction === 'long'
+              ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
+              : 'text-rose-300 border-rose-500/40 bg-rose-500/10'
+          "
+        >
+          {{ trade().direction }}
+        </span>
       </div>
 
       <div class="flex items-center gap-2.5">
@@ -115,108 +137,85 @@
           (click)="openEdit()"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-[#131B2E] hover:bg-[#182239] border border-white/10 transition-all"
         >
-          <svg
-            class="w-3.5 h-3.5 text-slate-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
           Edit
         </button>
         <button
           (click)="openDeleteConfirm()"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-rose-300 hover:text-rose-200 bg-rose-500/10 hover:bg-rose-500/15 border border-rose-500/20 transition-all"
         >
-          <svg
-            class="w-3.5 h-3.5 text-rose-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
           Delete
         </button>
       </div>
     </header>
 
     <div
-      class="p-6 sm:p-8 max-w-[1400px] w-full mx-auto grid grid-cols-1 xl:grid-cols-[400px_minmax(0,1fr)] gap-6 items-start"
+      class="p-4 grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)_320px] gap-4 xl:flex-1 xl:min-h-0"
     >
-      <!-- Every field in one compact list -->
+      <!-- Left: every field, scrolls on its own -->
       <aside
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 px-5 py-2 divide-y divide-white/10 text-sm"
+        class="rounded-xl border border-white/10 bg-[#131B2E]/50 px-4 py-1 divide-y divide-white/10 text-[13px] xl:overflow-y-auto xl:min-h-0"
       >
-        <div class="py-4 space-y-2.5">
+        <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Trade</h3>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Mode</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
               >{{ trade().mode === 'backtest' ? 'Backtest' : 'Live' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Strategy</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
               >{{ trade().strategy || '—' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Session</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100 font-sans"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
               >{{ trade().session || '—' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Contracts</span>
             <span
               class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
               >{{ trade().contracts }} {{ trade().symbol }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-            <span class="text-slate-400">Entry / exit time</span>
-            <span class="flex items-center gap-2"
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
+            <span class="text-slate-400">Entry → exit</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap"
               ><span
-                class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
-                >{{ trade().entry_time || '—' }} → {{ trade().exit_time || '—' }}</span
-              ><span class="text-xs text-slate-500 font-mono">{{ duration() ?? '' }}</span></span
+                class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                >{{ trade().entry_time?.substring(0, 5) || '—' }} →
+                {{ trade().exit_time?.substring(0, 5) || '—' }}</span
+              ><span class="text-[11px] text-slate-500 font-mono">{{
+                duration() ?? ''
+              }}</span></span
             >
           </div>
         </div>
 
-        <div class="py-4 space-y-2.5">
+        <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Prices</h3>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-            <span class="text-slate-400">Entry price</span>
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
+            <span class="text-slate-400">Entry</span>
             <span
               class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
               >{{ trade().entry_price | number: '1.2-2' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Stop loss</span>
             @if (trade().stop_price !== null) {
-              <span class="flex items-center gap-2"
+              <span class="flex items-center gap-1.5 whitespace-nowrap"
                 ><span
-                  class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-rose-300"
+                  class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-rose-300"
                   >{{ trade().stop_price | number: '1.2-2' }}</span
-                ><span class="text-xs text-slate-500 font-mono"
+                ><span class="text-[11px] text-slate-500 font-mono"
                   >{{ priceGap(trade().stop_price) }} pts</span
                 ></span
               >
@@ -224,14 +223,14 @@
               <span class="text-slate-500">Not set</span>
             }
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Take profit</span>
             @if (trade().target_price !== null) {
-              <span class="flex items-center gap-2"
+              <span class="flex items-center gap-1.5 whitespace-nowrap"
                 ><span
-                  class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-emerald-300"
+                  class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-emerald-300"
                   >{{ trade().target_price | number: '1.2-2' }}</span
-                ><span class="text-xs text-slate-500 font-mono"
+                ><span class="text-[11px] text-slate-500 font-mono"
                   >{{ priceGap(trade().target_price) }} pts</span
                 ></span
               >
@@ -239,14 +238,14 @@
               <span class="text-slate-500">Not set</span>
             }
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-            <span class="text-slate-400">Exit price</span>
-            <span class="flex items-center gap-2"
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
+            <span class="text-slate-400">Exit</span>
+            <span class="flex items-center gap-1.5 whitespace-nowrap"
               ><span
-                class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
                 >{{ trade().exit_price | number: '1.2-2' }}</span
               ><span
-                class="text-xs font-mono"
+                class="text-[11px] font-mono"
                 [class.text-emerald-400]="pointDifference() > 0"
                 [class.text-rose-400]="pointDifference() < 0"
                 [class.text-slate-500]="pointDifference() === 0"
@@ -255,18 +254,18 @@
             >
           </div>
           @if (trade().rMultiple !== null) {
-            <div class="grid grid-cols-3 gap-2 pt-1 font-mono">
-              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+            <div class="grid grid-cols-3 gap-1.5 pt-1 font-mono">
+              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Risk</span>
                 <b class="text-rose-300">${{ riskDollars() | number: '1.0-0' }}</b>
               </div>
-              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Planned</span>
                 <b class="text-slate-100">{{
                   trade().plannedR !== null ? '1 : ' + trade().plannedR : '—'
                 }}</b>
               </div>
-              <div class="rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Result</span>
                 <b
                   [class.text-emerald-400]="trade().rMultiple > 0"
@@ -281,10 +280,10 @@
           }
         </div>
 
-        <div class="py-4 space-y-2.5">
+        <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Result</h3>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-            <span class="text-slate-400">Gross P/L</span>
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
+            <span class="text-slate-400">Gross</span>
             <span
               class="font-mono"
               [class.text-emerald-400]="grossPnl() > 0"
@@ -292,11 +291,11 @@
               >{{ grossPnl() > 0 ? '+' : '' }}{{ grossPnl() | number: '1.2-2' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Fees</span>
             <span class="font-mono text-rose-400">-{{ trade().fees | number: '1.2-2' }}</span>
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Net P/L</span>
             <span
               class="font-mono text-base font-bold"
@@ -308,14 +307,14 @@
           </div>
         </div>
 
-        <div class="py-4 space-y-2.5">
+        <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Review</h3>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Emotions</span>
             <span class="flex flex-wrap gap-1">
               @for (e of emotions(); track e) {
                 <span
-                  class="text-xs px-2.5 py-0.5 rounded-full border border-blue-400/45 bg-blue-600/10 text-blue-100"
+                  class="text-xs px-2 py-0.5 rounded-full border border-blue-400/45 bg-blue-600/10 text-blue-100"
                   >{{ e }}</span
                 >
               } @empty {
@@ -323,14 +322,14 @@
               }
             </span>
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Grade</span>
             <span
               class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
               >{{ trade().grade || '—' }}</span
             >
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
+          <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Mistakes</span>
             @if (mistakeNames().length === 0) {
               <span class="text-xs font-medium text-emerald-400">✓ Clean trade</span>
@@ -338,35 +337,24 @@
               <span class="flex flex-wrap gap-1">
                 @for (name of mistakeNames(); track name) {
                   <span
-                    class="text-xs px-2.5 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
+                    class="text-xs px-2 py-0.5 rounded-full border border-rose-500/40 bg-rose-500/10 text-rose-100"
                     >{{ name }}</span
                   >
                 }
               </span>
             }
           </div>
-          <div class="grid grid-cols-[120px_minmax(0,1fr)] items-center gap-3">
-            <span class="text-slate-400">Rules</span>
-            <span class="text-slate-200">{{
-              linkedRules().length ? ruleAdherenceLabel() : '—'
-            }}</span>
-          </div>
-          @if (
-            followedRulesOnly().length > 0 && followedRulesOnly().length < linkedRules().length
-          ) {
-            <p class="text-[11px] text-slate-500">Followed: {{ followedRuleNames() }}</p>
-          }
         </div>
 
-        <div class="py-4 space-y-2.5">
+        <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Tags</h3>
           @for (group of tradeTags(); track group.name) {
-            <div class="grid grid-cols-[120px_minmax(0,1fr)] items-start gap-3">
+            <div class="grid grid-cols-[92px_minmax(0,1fr)] items-start gap-2">
               <span class="text-slate-400">{{ group.name }}</span>
               <span class="flex flex-wrap gap-1">
                 @for (tag of group.tags; track tag.id) {
                   <span
-                    class="text-xs px-2.5 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
+                    class="text-xs px-2 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
                     >{{ tag.name }}</span
                   >
                 } @empty {
@@ -380,11 +368,11 @@
         </div>
       </aside>
 
-      <!-- Note and charts first: what you look at when reviewing -->
-      <div class="space-y-6 min-w-0">
+      <!-- Middle: the note and the charts -->
+      <div class="space-y-4 min-w-0 xl:overflow-y-auto xl:min-h-0">
         <div>
           @if (trade().notes) {
-            <p class="text-lg text-slate-100 leading-snug">{{ trade().notes }}</p>
+            <p class="text-base text-slate-100 leading-snug">{{ trade().notes }}</p>
             <span class="text-xs text-slate-500">Trade notes</span>
           } @else {
             <p class="text-sm text-slate-500">No notes for this trade. Add them in Edit.</p>
@@ -392,7 +380,7 @@
         </div>
 
         <section>
-          <div class="flex items-baseline justify-between mb-3">
+          <div class="flex items-baseline justify-between mb-2">
             <h3 class="text-xs uppercase tracking-wider font-semibold text-slate-400">
               Screenshots
               @if (trade().images?.length) {
@@ -421,37 +409,86 @@
             (captioned)="onCaptioned($event)"
           />
         </section>
+      </div>
 
-        <section
-          class="rounded-xl border border-white/10 bg-[#131B2E]/50 backdrop-blur-sm p-6 space-y-6"
-        >
-          <h3
-            class="text-xs uppercase tracking-wider font-semibold text-slate-400 flex items-center gap-2"
+      <!-- Right: the review, always in view -->
+      <aside
+        class="rounded-xl border border-white/10 bg-[#131B2E]/50 p-4 space-y-4 xl:overflow-y-auto xl:min-h-0"
+      >
+        @if (score(); as q) {
+          <div
+            class="grid grid-cols-[64px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-white/10 bg-black/20 p-3"
           >
             <svg
-              class="w-4 h-4 text-indigo-400"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              viewBox="0 0 24 24"
+              viewBox="0 0 80 80"
+              class="w-16 h-16"
+              role="img"
+              [attr.aria-label]="'Trade quality ' + q.score + ' out of 100'"
             >
-              <path
-                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712M12 17.25h.008v.008H12v-.008zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#1e293b" stroke-width="7" />
+              <circle
+                cx="40"
+                cy="40"
+                r="34"
+                fill="none"
+                stroke-width="7"
                 stroke-linecap="round"
-                stroke-linejoin="round"
+                transform="rotate(-90 40 40)"
+                [attr.stroke]="q.score >= 65 ? '#10b981' : q.score >= 45 ? '#3b82f6' : '#f43f5e'"
+                [attr.stroke-dasharray]="(213.6 * q.score) / 100 + ' 213.6'"
               />
+              <text
+                x="40"
+                y="47"
+                text-anchor="middle"
+                font-size="20"
+                font-weight="700"
+                fill="#f1f5f9"
+                font-family="ui-monospace, monospace"
+              >
+                {{ q.score }}
+              </text>
             </svg>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-white">Trade quality</p>
+              <p
+                class="text-xs"
+                [class.text-emerald-400]="q.score >= 65"
+                [class.text-blue-300]="q.score >= 45 && q.score < 65"
+                [class.text-rose-400]="q.score < 45"
+              >
+                {{ q.label }}
+              </p>
+              <p class="text-[10.5px] text-slate-500 mt-0.5">
+                @for (p of q.parts; track p.label) {
+                  {{ p.label }} {{ p.earned }}/{{ p.max }}{{ $last ? '' : ' · ' }}
+                }
+              </p>
+            </div>
+          </div>
+        }
+
+        <section>
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-2">
             Review questions
           </h3>
-
           @if (allQuestions().length === 0) {
-            <p class="text-slate-500 text-sm">No questions in your Playbook yet.</p>
+            <p class="text-slate-500 text-xs">
+              No questions yet. Add them in the
+              <a routerLink="/playbook" class="text-blue-400 hover:text-blue-300">Playbook</a>.
+            </p>
           } @else {
-            <div class="space-y-5">
+            <div class="space-y-2">
               @for (q of allQuestions(); track q.id) {
-                <div class="rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
-                  <p class="text-sm font-medium text-slate-100">{{ q.question_text }}</p>
-                  <div class="flex flex-wrap items-center gap-6">
+                <div class="rounded-lg border border-white/10 bg-black/20 p-2.5">
+                  <p class="text-[13px] text-slate-100 mb-2" [id]="'q-label-' + q.id">
+                    {{ q.question_text }}
+                  </p>
+                  <div
+                    role="radiogroup"
+                    [attr.aria-labelledby]="'q-label-' + q.id"
+                    class="grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-[#141c2c] border border-[#24334d] text-[11px] font-semibold"
+                  >
                     @for (
                       option of [
                         { v: 'yes', l: 'Yes' },
@@ -460,73 +497,88 @@
                       ];
                       track option.v
                     ) {
-                      <label class="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          [name]="'q' + q.id"
-                          [checked]="getDraftChoice(q.id) === option.v"
-                          (change)="setDraftChoice(q.id, option.v)"
-                          class="w-4 h-4 text-blue-600 bg-transparent border-slate-700 focus:ring-blue-500"
-                        />
-                        <span
-                          class="text-xs font-medium"
-                          [class.text-white]="getDraftChoice(q.id) === option.v"
-                          [class.text-slate-400]="getDraftChoice(q.id) !== option.v"
-                          >{{ option.l }}</span
-                        >
-                      </label>
+                      @let on = getDraftChoice(q.id) === option.v;
+                      <button
+                        type="button"
+                        role="radio"
+                        [attr.aria-checked]="on"
+                        (click)="setDraftChoice(q.id, option.v)"
+                        class="py-1 rounded-md border transition-colors"
+                        [class]="
+                          !on
+                            ? 'border-transparent text-slate-400 hover:text-slate-200'
+                            : option.v === 'yes'
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/45'
+                              : option.v === 'no'
+                                ? 'bg-rose-500/15 text-rose-300 border-rose-500/45'
+                                : 'bg-slate-400/15 text-slate-100 border-slate-400/50'
+                        "
+                      >
+                        {{ option.l }}
+                      </button>
                     }
                   </div>
-
                   @if (getDraftChoice(q.id) === 'other') {
-                    <div class="pt-1">
-                      <textarea
-                        [ngModel]="getDraftComment(q.id)"
-                        (ngModelChange)="setDraftComment(q.id, $event)"
-                        name="comment-{{ q.id }}"
-                        rows="2"
-                        maxlength="200"
-                        placeholder="Provide additional details..."
-                        class="w-full rounded-md border border-white/10 bg-[#0F1523]/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-y p-3"
-                      ></textarea>
-                      <div class="flex justify-end mt-1.5">
-                        <span class="text-[11px] font-mono text-slate-500"
-                          >{{ getDraftComment(q.id).length }} / 200 chars</span
-                        >
-                      </div>
-                    </div>
+                    <textarea
+                      [ngModel]="getDraftComment(q.id)"
+                      (ngModelChange)="setDraftComment(q.id, $event)"
+                      name="comment-{{ q.id }}"
+                      rows="2"
+                      maxlength="200"
+                      [attr.aria-label]="'Details for: ' + q.question_text"
+                      placeholder="Add a short note…"
+                      class="mt-2 w-full rounded-md border border-white/10 bg-[#0F1523]/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y p-2"
+                    ></textarea>
                   }
                 </div>
               }
             </div>
-
-            <div class="flex items-center justify-end gap-3 pt-2">
-              @if (saveStatus() === 'success') {
-                <span class="text-emerald-400 text-xs">Saved</span>
-              }
-              @if (saveStatus() === 'error') {
-                <span class="text-rose-400 text-xs">Something went wrong</span>
-              }
+            <div class="flex items-center justify-end gap-3 mt-2">
+              <span class="text-xs" role="status">
+                @if (saveStatus() === 'success') {
+                  <span class="text-emerald-400">✓ Saved</span>
+                }
+                @if (saveStatus() === 'error') {
+                  <span class="text-rose-400">Something went wrong</span>
+                }
+              </span>
               <button
                 (click)="saveAllAnswers()"
                 [disabled]="saveStatus() === 'saving'"
-                class="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-lg transition-all active:scale-[0.98] disabled:opacity-60"
+                class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs disabled:opacity-60"
               >
-                <svg
-                  class="w-3.5 h-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M4.5 12.75l6 6 9-13.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                {{ saveStatus() === 'saving' ? 'Saving...' : 'Save answers' }}
+                {{ saveStatus() === 'saving' ? 'Saving…' : 'Save answers' }}
               </button>
             </div>
           }
         </section>
-      </div>
+
+        <section>
+          <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500 mb-2">
+            Rules
+            @if (linkedRules().length) {
+              <span class="normal-case tracking-normal font-normal"
+                >· {{ ruleAdherenceLabel() }}</span
+              >
+            }
+          </h3>
+          <div class="flex flex-wrap gap-1.5">
+            @for (rule of linkedRules(); track rule.id) {
+              <span
+                class="text-[11.5px] px-2 py-0.5 rounded-md border"
+                [class]="
+                  rule.followed
+                    ? 'border-emerald-500/35 text-emerald-300 bg-emerald-500/5'
+                    : 'border-rose-500/35 text-rose-300 bg-rose-500/5'
+                "
+                >{{ rule.followed ? '✓' : '✗' }} {{ rule.name }}</span
+              >
+            } @empty {
+              <span class="text-xs text-slate-500">No rules checked for this trade.</span>
+            }
+          </div>
+        </section>
+      </aside>
     </div>
   }
 </div>

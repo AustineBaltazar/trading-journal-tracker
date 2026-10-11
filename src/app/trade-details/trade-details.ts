@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { DecimalPipe, SlicePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EditTrade } from '../edit-trade/edit-trade';
 import { environment } from '../../environments/environment';
@@ -10,6 +10,17 @@ import { emotionsOf, outcomeOf } from '../outcome';
 import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-gallery';
 import { TagGroup, tagsByGroup } from '../tags/tags';
 import { formatR } from '../outcome';
+import { qualityScore } from '../trade-form/trade-form-logic';
+
+// The trades just before and after one trade, oldest to newest
+export function neighboursOf(trades: { id: number; trade_date: string }[], id: number) {
+  const ordered = [...trades].sort(
+    (a, b) => a.trade_date.localeCompare(b.trade_date) || a.id - b.id,
+  );
+  const i = ordered.findIndex((t) => t.id === id);
+  if (i < 0) return { prev: null, next: null };
+  return { prev: ordered[i - 1]?.id ?? null, next: ordered[i + 1]?.id ?? null };
+}
 
 interface DraftAnswer {
   choice: string;
@@ -17,7 +28,7 @@ interface DraftAnswer {
 }
 
 @Component({
-  imports: [FormsModule, RouterLink, DecimalPipe, SlicePipe, EditTrade, ImageGallery],
+  imports: [FormsModule, RouterLink, DecimalPipe, DatePipe, EditTrade, ImageGallery],
   selector: 'app-trade-details',
   styleUrl: './trade-details.css',
   templateUrl: './trade-details.html',
@@ -78,17 +89,53 @@ export class TradeDetails implements OnInit {
   showEditModal = signal(false);
   showDeleteConfirm = signal(false);
 
+  // How well the trade was executed (same score as the trade form), from what's saved
+  score = computed(() => {
+    const t = this.trade();
+    if (!t) return null;
+    const saved = this.answers().filter((a) => a.choice);
+    return qualityScore({
+      rulesFollowed: this.followedRulesOnly().length,
+      rulesTotal: this.linkedRules().length,
+      mistakes: (t.mistakeIds || []).length,
+      rMultiple: t.rMultiple,
+      answersYes: saved.filter((a) => a.choice === 'yes').length,
+      answersTotal: saved.length,
+      grade: t.grade || '',
+    });
+  });
+
+  // The trades either side of this one, in date order, for the ‹ › arrows
+  neighbours = signal<{ prev: number | null; next: number | null }>({ prev: null, next: null });
+
   ngOnInit() {
-    this.tradeId = this.route.snapshot.paramMap.get('id')!;
-    this.loadTrade();
+    // The page is reused when the arrows change the id, so reload on every change
+    this.route.paramMap.subscribe((params) => {
+      this.tradeId = params.get('id')!;
+      this.trade.set(null);
+      this.showEditModal.set(false);
+      this.loadTrade();
+      this.loadRules();
+      this.loadQuestions();
+    });
     this.http
       .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.allMistakes.set(response.mistakes));
-    this.loadRules();
-    this.loadQuestions();
     this.http
       .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`)
       .subscribe((response) => this.tagGroups.set(response.groups));
+  }
+
+  private loadNeighbours(mode: string) {
+    this.http
+      .get<any>(`${environment.apiUrl}/trades`, { params: { mode } })
+      .subscribe((response) =>
+        this.neighbours.set(neighboursOf(response.trades, Number(this.tradeId))),
+      );
+  }
+
+  goTo(id: number | null) {
+    if (id !== null) this.router.navigate(['/trades', id]);
   }
 
   onImageAdded(image: GalleryImage) {
@@ -107,9 +154,10 @@ export class TradeDetails implements OnInit {
   }
 
   loadTrade() {
-    this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`)
-      .subscribe((trade) => this.trade.set(trade));
+    this.http.get<any>(`${environment.apiUrl}/trades/${this.tradeId}`).subscribe((trade) => {
+      this.trade.set(trade);
+      this.loadNeighbours(trade.mode === 'backtest' ? 'backtest' : 'live');
+    });
   }
 
   loadRules() {
