@@ -5,12 +5,12 @@ import { NewTrade } from './new-trade/new-trade';
 import { TradeDetails } from './trade-details/trade-details';
 import { Dashboard } from './dashboard/dashboard';
 import { Layout } from './layout/layout';
-import { authGuard } from './auth-guard';
+import { authGuard, guestGuard } from './auth/auth';
 import { Playbook } from './playbook/playbook';
 import { Register } from './register/register';
 export const routes: Routes = [
-  { path: 'login', component: Login },
-  { path: 'register', component: Register },
+  { path: 'login', component: Login, canActivate: [guestGuard] },
+  { path: 'register', component: Register, canActivate: [guestGuard] },
   {
     path: '',
     component: Layout,

@@ -134,22 +134,17 @@ export class Reports {
     effect(() => this.loadTrades(this.tradeMode.mode()));
     effect(() => this.loadRules(this.tradeMode.mode(), this.dates()));
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.mistakes.set(response.mistakes));
     this.http
-      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`)
       .subscribe((response) => this.tagGroups.set(response.groups));
-  }
-
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
   }
 
   private loadTrades(mode: TradeMode) {
     this.loaded.set(false);
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params: { mode } })
+      .get<any>(`${environment.apiUrl}/trades`, { params: { mode } })
       .subscribe((response) => {
         // ignore a response for a mode the user has already switched away from
         if (this.tradeMode.mode() !== mode) return;
@@ -163,18 +158,12 @@ export class Reports {
     const params: Record<string, string> = { mode };
     if (dates.from) params['from'] = dates.from;
     if (dates.to) params['to'] = dates.to;
-    this.http
-      .get<any>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params })
-      .subscribe((response) => {
-        const current = this.dates();
-        if (
-          this.tradeMode.mode() !== mode ||
-          current.from !== dates.from ||
-          current.to !== dates.to
-        )
-          return;
-        this.ruleStats.set(response);
-      });
+    this.http.get<any>(`${environment.apiUrl}/rule-adherence`, { params }).subscribe((response) => {
+      const current = this.dates();
+      if (this.tradeMode.mode() !== mode || current.from !== dates.from || current.to !== dates.to)
+        return;
+      this.ruleStats.set(response);
+    });
   }
 
   setTab(tab: ReportTab) {

@@ -38,16 +38,11 @@ export class Dashboard {
   monthLabel = computed(() => formatMonth(this.calendarMonth()));
   tradeMonths = computed(() => monthsWithTrades(this.trades()));
 
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  }
-
   // Loads on start and again whenever the live/backtest switch changes
   constructor() {
     effect(() => this.load(this.tradeMode.mode()));
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.mistakes.set(response.mistakes));
   }
 
@@ -58,19 +53,17 @@ export class Dashboard {
     this.summary.set(null);
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades/summary`, { ...this.authHeaders(), params })
+      .get<any>(`${environment.apiUrl}/trades/summary`, { params })
       .subscribe((response) => current() && this.summary.set(response));
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params })
+      .get<any>(`${environment.apiUrl}/trades`, { params })
       .subscribe((response) => current() && this.trades.set(response.trades));
 
-    this.http
-      .get<any>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params })
-      .subscribe((response) => {
-        if (!current()) return;
-        this.ruleStats.set(response);
-      });
+    this.http.get<any>(`${environment.apiUrl}/rule-adherence`, { params }).subscribe((response) => {
+      if (!current()) return;
+      this.ruleStats.set(response);
+    });
   }
 
   dailyPnl = computed(() => {
@@ -175,7 +168,6 @@ export class Dashboard {
     const mode = this.tradeMode.mode();
     this.http
       .get<any>(`${environment.apiUrl}/journal/${date}`, {
-        ...this.authHeaders(),
         params: { mode },
       })
       .subscribe((r) => {

@@ -85,11 +85,6 @@ export class Playbook implements OnInit {
   editingQuestionId = signal<number | null>(null);
   editQuestionText = '';
 
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  }
-
   ngOnInit() {
     this.loadRules();
     this.loadQuestions();
@@ -119,19 +114,19 @@ export class Playbook implements OnInit {
 
   loadRules() {
     this.http
-      .get<any>(`${environment.apiUrl}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rules`)
       .subscribe((response) => this.rules.set(response.rules));
   }
 
   loadQuestions() {
     this.http
-      .get<any>(`${environment.apiUrl}/questions`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/questions`)
       .subscribe((response) => this.questions.set(response.questions));
   }
 
   private loadTrades(mode: TradeMode) {
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params: { mode } })
+      .get<any>(`${environment.apiUrl}/trades`, { params: { mode } })
       .subscribe((response) => {
         if (this.tradeMode.mode() === mode) this.trades.set(response.trades);
       });
@@ -140,11 +135,10 @@ export class Playbook implements OnInit {
   private loadStats(mode: TradeMode, dates: DateRange) {
     const params = this.rangeParams(mode, dates);
     this.http
-      .get<RuleStats>(`${environment.apiUrl}/rule-adherence`, { ...this.authHeaders(), params })
+      .get<RuleStats>(`${environment.apiUrl}/rule-adherence`, { params })
       .subscribe((response) => this.isCurrent(mode, dates) && this.ruleStats.set(response));
     this.http
       .get<QuestionStats>(`${environment.apiUrl}/question-stats`, {
-        ...this.authHeaders(),
         params,
       })
       .subscribe((response) => this.isCurrent(mode, dates) && this.questionStats.set(response));
@@ -164,15 +158,11 @@ export class Playbook implements OnInit {
     if (!this.newRuleName.trim()) return;
 
     this.http
-      .post<any>(
-        `${environment.apiUrl}/rules`,
-        {
-          name: this.newRuleName,
-          description: this.newRuleDescription,
-          category: this.newRuleCategory || null,
-        },
-        this.authHeaders(),
-      )
+      .post<any>(`${environment.apiUrl}/rules`, {
+        name: this.newRuleName,
+        description: this.newRuleDescription,
+        category: this.newRuleCategory || null,
+      })
       .subscribe({
         next: (newRule) => {
           this.rules.update((current) => [...current, newRule]);
@@ -188,7 +178,7 @@ export class Playbook implements OnInit {
 
   deleteRule(id: number) {
     if (!confirm('Delete this rule? Any trades linked to it will lose that link.')) return;
-    this.http.delete<any>(`${environment.apiUrl}/rules/${id}`, this.authHeaders()).subscribe(() => {
+    this.http.delete<any>(`${environment.apiUrl}/rules/${id}`).subscribe(() => {
       this.rules.update((current) => current.filter((r) => r.id !== id));
       this.refreshStats();
     });
@@ -208,15 +198,11 @@ export class Playbook implements OnInit {
   saveEditRule(id: number) {
     if (!this.editRuleName.trim()) return;
     this.http
-      .put<any>(
-        `${environment.apiUrl}/rules/${id}`,
-        {
-          name: this.editRuleName,
-          description: this.editRuleDescription,
-          category: this.editRuleCategory || null,
-        },
-        this.authHeaders(),
-      )
+      .put<any>(`${environment.apiUrl}/rules/${id}`, {
+        name: this.editRuleName,
+        description: this.editRuleDescription,
+        category: this.editRuleCategory || null,
+      })
       .subscribe({
         next: (saved) => {
           this.rules.update((current) => current.map((r) => (r.id === id ? saved : r)));
@@ -232,7 +218,7 @@ export class Playbook implements OnInit {
   // Counts are trades in the current live/backtest mode
   loadMistakes(mode: TradeMode) {
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, { ...this.authHeaders(), params: { mode } })
+      .get<any>(`${environment.apiUrl}/mistakes`, { params: { mode } })
       .subscribe((response) => {
         if (this.tradeMode.mode() === mode) this.mistakes.set(response.mistakes);
       });
@@ -242,11 +228,7 @@ export class Playbook implements OnInit {
     this.errorMessage.set('');
     if (!this.newMistakeName.trim()) return;
     this.http
-      .post<Mistake>(
-        `${environment.apiUrl}/mistakes`,
-        { name: this.newMistakeName },
-        this.authHeaders(),
-      )
+      .post<Mistake>(`${environment.apiUrl}/mistakes`, { name: this.newMistakeName })
       .subscribe({
         next: (created) => {
           this.mistakes.update((current) => [...current, created]);
@@ -264,7 +246,7 @@ export class Playbook implements OnInit {
       : '';
     if (!confirm(`Delete "${mistake.name}"?${used}`)) return;
     this.http
-      .delete(`${environment.apiUrl}/mistakes/${mistake.id}`, this.authHeaders())
+      .delete(`${environment.apiUrl}/mistakes/${mistake.id}`)
       .subscribe(() =>
         this.mistakes.update((current) => current.filter((m) => m.id !== mistake.id)),
       );
@@ -283,11 +265,7 @@ export class Playbook implements OnInit {
     this.errorMessage.set('');
     if (!this.editMistakeName.trim()) return;
     this.http
-      .put<Mistake>(
-        `${environment.apiUrl}/mistakes/${id}`,
-        { name: this.editMistakeName },
-        this.authHeaders(),
-      )
+      .put<Mistake>(`${environment.apiUrl}/mistakes/${id}`, { name: this.editMistakeName })
       .subscribe({
         next: (updated) => {
           this.mistakes.update((current) =>
@@ -306,11 +284,7 @@ export class Playbook implements OnInit {
     if (!this.newQuestionText.trim()) return;
 
     this.http
-      .post<any>(
-        `${environment.apiUrl}/questions`,
-        { question_text: this.newQuestionText },
-        this.authHeaders(),
-      )
+      .post<any>(`${environment.apiUrl}/questions`, { question_text: this.newQuestionText })
       .subscribe({
         next: (newQuestion) => {
           this.questions.update((current) => [...current, newQuestion]);
@@ -330,12 +304,10 @@ export class Playbook implements OnInit {
       )
     )
       return;
-    this.http
-      .delete<any>(`${environment.apiUrl}/questions/${id}`, this.authHeaders())
-      .subscribe(() => {
-        this.questions.update((current) => current.filter((q) => q.id !== id));
-        this.refreshStats();
-      });
+    this.http.delete<any>(`${environment.apiUrl}/questions/${id}`).subscribe(() => {
+      this.questions.update((current) => current.filter((q) => q.id !== id));
+      this.refreshStats();
+    });
   }
 
   startEditQuestion(q: any) {
@@ -350,11 +322,7 @@ export class Playbook implements OnInit {
   saveEditQuestion(id: number) {
     if (!this.editQuestionText.trim()) return;
     this.http
-      .put<any>(
-        `${environment.apiUrl}/questions/${id}`,
-        { question_text: this.editQuestionText },
-        this.authHeaders(),
-      )
+      .put<any>(`${environment.apiUrl}/questions/${id}`, { question_text: this.editQuestionText })
       .subscribe({
         next: () => {
           this.questions.update((current) =>

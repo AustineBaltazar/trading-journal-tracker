@@ -48,7 +48,7 @@ export class NewTrade extends TradeFormBase implements OnInit {
   private gallery = viewChild(ImageGallery);
 
   ngOnInit() {
-    this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
+    this.http.get<any>(`${environment.apiUrl}/rules`).subscribe((response) => {
       this.allRules.set(response.rules);
       this.checkedRuleIds.set(new Set(response.rules.map((r: any) => r.id)));
     });
@@ -61,15 +61,13 @@ export class NewTrade extends TradeFormBase implements OnInit {
     this.saving.set(true);
     this.rememberFees();
 
-    this.http
-      .post<any>(`${environment.apiUrl}/trades`, this.payload(), this.authHeaders())
-      .subscribe({
-        next: (newTrade) => this.linkExtras(newTrade.id, () => this.finish(addAnother)),
-        error: (err) => {
-          this.saving.set(false);
-          this.errorMessage.set(err.error?.error || 'Something went wrong saving the trade.');
-        },
-      });
+    this.http.post<any>(`${environment.apiUrl}/trades`, this.payload()).subscribe({
+      next: (newTrade) => this.linkExtras(newTrade.id, () => this.finish(addAnother)),
+      error: (err) => {
+        this.saving.set(false);
+        this.errorMessage.set(err.error?.error || 'Something went wrong saving the trade.');
+      },
+    });
   }
 
   // Rules, mistakes, tags, answers and screenshots are saved in parallel; done() runs once all finish
@@ -96,9 +94,7 @@ export class NewTrade extends TradeFormBase implements OnInit {
       done();
       return;
     }
-    this.http
-      .put(`${environment.apiUrl}/${path}`, body, this.authHeaders())
-      .subscribe({ next: done, error: done });
+    this.http.put(`${environment.apiUrl}/${path}`, body).subscribe({ next: done, error: done });
   }
 
   private saveAnswers(tradeId: number, done: () => void) {
@@ -114,11 +110,12 @@ export class NewTrade extends TradeFormBase implements OnInit {
     };
     for (const [questionId, choice] of entries) {
       this.http
-        .post(
-          `${environment.apiUrl}/trade-answers`,
-          { trade_id: tradeId, question_id: questionId, choice, comment: null },
-          this.authHeaders(),
-        )
+        .post(`${environment.apiUrl}/trade-answers`, {
+          trade_id: tradeId,
+          question_id: questionId,
+          choice,
+          comment: null,
+        })
         .subscribe({ next: one, error: one });
     }
   }
@@ -159,11 +156,11 @@ export class NewTrade extends TradeFormBase implements OnInit {
     };
     for (const rule of allRules) {
       this.http
-        .post<any>(
-          `${environment.apiUrl}/trade-rules`,
-          { trade_id: tradeId, rule_id: rule.id, followed: this.checkedRuleIds().has(rule.id) },
-          this.authHeaders(),
-        )
+        .post<any>(`${environment.apiUrl}/trade-rules`, {
+          trade_id: tradeId,
+          rule_id: rule.id,
+          followed: this.checkedRuleIds().has(rule.id),
+        })
         .subscribe({ next: one, error: one });
     }
   }

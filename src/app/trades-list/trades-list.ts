@@ -88,18 +88,13 @@ export class TradesList {
   constructor() {
     effect(() => this.loadTrades(this.tradeMode.mode()));
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.mistakes.set(response.mistakes));
-  }
-
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
   }
 
   loadTrades(mode = this.tradeMode.mode()) {
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params: { mode } })
+      .get<any>(`${environment.apiUrl}/trades`, { params: { mode } })
       .subscribe((response) => {
         // ignore a response for a mode the user has already switched away from
         if (this.tradeMode.mode() === mode) this.trades.set(response.trades);

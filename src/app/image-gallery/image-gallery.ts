@@ -95,11 +95,6 @@ export class ImageGallery implements OnDestroy {
     return i === null ? null : (this.shown()[i] ?? null);
   });
 
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { Authorization: `Bearer ${token}` };
-  }
-
   onPick(event: Event) {
     const input = event.target as HTMLInputElement;
     this.addFiles([...(input.files ?? [])]);
@@ -178,7 +173,7 @@ export class ImageGallery implements OnDestroy {
       };
       const failed = (err: any) =>
         finish(null, err?.error?.error || `${file.name} couldn't be uploaded.`);
-      const options = { headers: this.authHeaders(), params: target.params ?? {} };
+      const options = { params: target.params ?? {} };
 
       this.http
         .post<{ key: string; uploadUrl: string }>(
@@ -234,11 +229,7 @@ export class ImageGallery implements OnDestroy {
     const target = this.target();
     if (!target) return;
     this.http
-      .patch(
-        `${target.item}/${image.id}`,
-        { caption },
-        { headers: this.authHeaders(), params: target.params ?? {} },
-      )
+      .patch(`${target.item}/${image.id}`, { caption }, { params: target.params ?? {} })
       .subscribe({
         next: () => this.captioned.emit({ id: image.id, caption }),
         error: () => this.error.set("The caption couldn't be saved."),
@@ -256,7 +247,6 @@ export class ImageGallery implements OnDestroy {
     if (!target) return;
     this.http
       .delete(`${target.item}/${image.id}`, {
-        headers: this.authHeaders(),
         params: target.params ?? {},
       })
       .subscribe({

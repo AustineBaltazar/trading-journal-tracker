@@ -172,10 +172,6 @@ export class TagGroupsEditor {
     effect(() => this.load(this.tradeMode.mode()));
   }
 
-  private headers() {
-    return { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
-  }
-
   private fail(fallback: string) {
     return (err: any) => this.error.set(err.error?.error || fallback);
   }
@@ -183,7 +179,6 @@ export class TagGroupsEditor {
   private load(mode: string) {
     this.http
       .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, {
-        ...this.headers(),
         params: { mode },
       })
       .subscribe((response) => {
@@ -203,11 +198,7 @@ export class TagGroupsEditor {
     this.error.set('');
     if (!this.newGroupName.trim()) return;
     this.http
-      .post<TagGroup>(
-        `${environment.apiUrl}/tag-groups`,
-        { name: this.newGroupName },
-        this.headers(),
-      )
+      .post<TagGroup>(`${environment.apiUrl}/tag-groups`, { name: this.newGroupName })
       .subscribe({
         next: (group) => {
           this.groups.update((list) => [...list, group]);
@@ -226,11 +217,7 @@ export class TagGroupsEditor {
     this.error.set('');
     if (!this.editGroupName.trim()) return;
     this.http
-      .put<TagGroup>(
-        `${environment.apiUrl}/tag-groups/${group.id}`,
-        { name: this.editGroupName },
-        this.headers(),
-      )
+      .put<TagGroup>(`${environment.apiUrl}/tag-groups/${group.id}`, { name: this.editGroupName })
       .subscribe({
         next: (saved) => {
           this.updateGroup(group.id, (g) => ({ ...g, name: saved.name }));
@@ -245,7 +232,7 @@ export class TagGroupsEditor {
     const note = used ? ` Its tags will be removed from your trades.` : '';
     if (!confirm(`Delete the "${group.name}" group and its ${group.tags.length} tags?${note}`))
       return;
-    this.http.delete(`${environment.apiUrl}/tag-groups/${group.id}`, this.headers()).subscribe({
+    this.http.delete(`${environment.apiUrl}/tag-groups/${group.id}`).subscribe({
       next: () => this.groups.update((list) => list.filter((g) => g.id !== group.id)),
       error: this.fail('Something went wrong deleting the group.'),
     });
@@ -255,15 +242,13 @@ export class TagGroupsEditor {
     this.error.set('');
     const name = (this.newTagNames()[group.id] ?? '').trim();
     if (!name) return;
-    this.http
-      .post<Tag>(`${environment.apiUrl}/tag-groups/${group.id}/tags`, { name }, this.headers())
-      .subscribe({
-        next: (tag) => {
-          this.updateGroup(group.id, (g) => ({ ...g, tags: [...g.tags, tag] }));
-          this.setNewTagName(group.id, '');
-        },
-        error: this.fail('Something went wrong adding the tag.'),
-      });
+    this.http.post<Tag>(`${environment.apiUrl}/tag-groups/${group.id}/tags`, { name }).subscribe({
+      next: (tag) => {
+        this.updateGroup(group.id, (g) => ({ ...g, tags: [...g.tags, tag] }));
+        this.setNewTagName(group.id, '');
+      },
+      error: this.fail('Something went wrong adding the tag.'),
+    });
   }
 
   deleteTag(group: TagGroup, tag: Tag) {
@@ -271,7 +256,7 @@ export class TagGroupsEditor {
       ? ` It will be removed from ${tag.count} ${tag.count === 1 ? 'trade' : 'trades'}.`
       : '';
     if (!confirm(`Delete the tag "${tag.name}"?${used}`)) return;
-    this.http.delete(`${environment.apiUrl}/tags/${tag.id}`, this.headers()).subscribe({
+    this.http.delete(`${environment.apiUrl}/tags/${tag.id}`).subscribe({
       next: () =>
         this.updateGroup(group.id, (g) => ({ ...g, tags: g.tags.filter((t) => t.id !== tag.id) })),
       error: this.fail('Something went wrong deleting the tag.'),
