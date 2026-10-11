@@ -27,6 +27,8 @@ import {
   ReportTab,
   tradesInRange,
 } from './report-logic';
+import { buildFindings, tagExtremes } from './overview';
+import { MistakeRow } from '../mistakes/mistakes';
 
 const RANGE_STORAGE_KEY = 'reportsRange';
 
@@ -70,9 +72,9 @@ export class Reports {
 
   tab = signal<ReportTab>('all');
 
-  // A section is shown on its own tab and on "All"
+  // "All" is an overview; each section's full detail is on its own tab
   show(section: ReportTab) {
-    return this.tab() === section || this.tab() === 'all';
+    return this.tab() === section;
   }
 
   sectionTab(section: ReportTab) {
@@ -112,6 +114,53 @@ export class Reports {
   readonly rBucketMax = computed(() => Math.max(1, ...this.rStats().buckets.map((b) => b.count)));
   readonly tagReport = computed(() => buildTagReport(this.rangeTrades(), this.tagGroups()));
   readonly formatR = formatR;
+  readonly Math = Math;
+
+  // ---- the "All" overview ----
+  readonly findings = computed(() =>
+    buildFindings({
+      days: this.byDay(),
+      edge: this.edge(),
+      tags: this.tagReport(),
+      mistakes: this.mistakeCost(),
+    }),
+  );
+  readonly tagRows = computed(() => tagExtremes(this.tagReport()));
+  // Emotions by net P/L: all of them, or the best 3 and worst 2 when there are more
+  readonly emotionRows = computed(() => {
+    const rows = [...this.edge().emotions].sort((a, b) => b.net - a.net);
+    return rows.length <= 5 ? rows : [...rows.slice(0, 3), ...rows.slice(-2)];
+  });
+  private readonly dayMax = computed(() =>
+    Math.max(1, ...this.byDay().map((d) => Math.abs(d.net))),
+  );
+
+  dayBarHeight(net: number) {
+    return Math.max(6, Math.round((Math.abs(net) / this.dayMax()) * 100));
+  }
+
+  // Net P/L of the mistakes past the first three
+  restNet(rows: MistakeRow[]) {
+    return Math.round(rows.slice(3).reduce((s, r) => s + r.net, 0) * 100) / 100;
+  }
+
+  // "+$1,234.50" / "−$56.00"
+  money(n: number) {
+    const abs = Math.abs(n).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return `${n > 0 ? '+' : n < 0 ? '−' : ''}$${abs}`;
+  }
+
+  signClass(n: number) {
+    return n > 0 ? 'text-emerald-400' : n < 0 ? 'text-rose-400' : 'text-slate-300';
+  }
+
+  // "Past −1R" → "<−1", "+2.5R+" → "2.5+"
+  shortBucket(label: string) {
+    return label.replace('Past ', '<').replace('+2.5R+', '2.5+').replace('R', '');
+  }
 
   readonly minSample = MIN_SAMPLE;
   readonly winRateTier = winRateTier;

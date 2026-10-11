@@ -102,15 +102,405 @@
     </p>
   } @else {
     @let e = edge();
+    @if (tab() === 'all') {
+      @let s = scope();
+      @let r = rStats();
+      @let mc = mistakeCost();
+      @let f = findings();
+      <!-- Overview: the headline numbers, what's working and hurting, then one card per report -->
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-3">
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">Net P/L</div>
+          <div
+            class="text-xl font-bold font-mono"
+            [class]="s.net >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+          >
+            {{ money(s.net) }}
+          </div>
+          <div class="text-[11px] text-slate-500">
+            {{ s.count }} {{ s.count === 1 ? 'trade' : 'trades' }}
+          </div>
+        </div>
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">Win rate</div>
+          <div class="text-xl font-bold font-mono text-white">{{ s.winRate }}%</div>
+          <div class="text-[11px] text-slate-500">
+            {{ s.wins }} W · {{ s.losses }} L · {{ s.breakEvens }} BE
+          </div>
+        </div>
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">Expectancy</div>
+          @if (r.expectancy !== null) {
+            <div
+              class="text-xl font-bold font-mono"
+              [class]="r.expectancy >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+            >
+              {{ formatR(r.expectancy) }}
+            </div>
+            <div class="text-[11px] text-slate-500">{{ r.withStop }} trades with a stop</div>
+          } @else {
+            <div class="text-xl font-bold font-mono text-slate-600">—</div>
+            <div class="text-[11px] text-slate-500">add stops to see R</div>
+          }
+        </div>
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">Avg win / loss</div>
+          <div
+            class="text-lg 2xl:text-xl leading-7 font-bold font-mono whitespace-nowrap tracking-tight"
+          >
+            <span class="text-emerald-400">{{
+              r.avgWinR !== null ? formatR(r.avgWinR) : '—'
+            }}</span>
+            <span class="text-slate-600"> / </span>
+            <span class="text-rose-400">{{ r.avgLossR !== null ? formatR(r.avgLossR) : '—' }}</span>
+          </div>
+          <div class="text-[11px] text-slate-500">
+            @if (r.avgPlannedR !== null) {
+              planned 1 : {{ r.avgPlannedR | number: '1.0-2' }}
+            } @else {
+              in R
+            }
+          </div>
+        </div>
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">
+            Followed all rules
+          </div>
+          @if (ruleStats()?.totalTradesWithRules) {
+            <div class="text-xl font-bold font-mono text-white">
+              {{ ruleStats().followedAllPercentage }}%
+            </div>
+            <div class="text-[11px] text-slate-500">
+              {{ ruleStats().followedTradesCount }} of {{ ruleStats().totalTradesWithRules }} trades
+            </div>
+          } @else {
+            <div class="text-xl font-bold font-mono text-slate-600">—</div>
+            <div class="text-[11px] text-slate-500">no rules linked yet</div>
+          }
+        </div>
+        <div class="surface-card border border-slate-800/80 rounded-xl px-4 py-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-slate-500">Mistakes cost</div>
+          <div
+            class="text-xl font-bold font-mono"
+            [class]="mc.withMistakes.net < 0 ? 'text-rose-400' : 'text-slate-300'"
+          >
+            {{ mc.withMistakes.count ? money(mc.withMistakes.net) : '$0' }}
+          </div>
+          <div class="text-[11px] text-slate-500">
+            {{ mc.withMistakes.count }}
+            {{ mc.withMistakes.count === 1 ? 'trade' : 'trades' }} with a mistake
+          </div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-3 mb-3">
+        <section class="rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] px-4 py-3">
+          <h2 class="text-sm font-semibold text-emerald-400 mb-1">What's working</h2>
+          @for (item of f.working; track item.source) {
+            <button
+              type="button"
+              (click)="setTab(item.tab)"
+              class="w-full flex items-baseline justify-between gap-3 py-1 text-left text-[13px] hover:text-white"
+            >
+              <span class="min-w-0 truncate"
+                >{{ item.label }}
+                <span class="text-[11px] text-slate-500">{{ item.source }}</span></span
+              >
+              <span class="font-mono text-xs text-emerald-400 whitespace-nowrap"
+                >{{ item.total }} trades · {{ item.winRate }}% · {{ money(item.net) }}</span
+              >
+            </button>
+          } @empty {
+            <p class="text-xs text-slate-500 py-1">
+              Nothing with {{ minSample }}+ trades is in profit yet.
+            </p>
+          }
+        </section>
+        <section class="rounded-xl border border-rose-500/30 bg-rose-500/[0.06] px-4 py-3">
+          <h2 class="text-sm font-semibold text-rose-400 mb-1">What's hurting</h2>
+          @for (item of f.hurting; track item.source) {
+            <button
+              type="button"
+              (click)="setTab(item.tab)"
+              class="w-full flex items-baseline justify-between gap-3 py-1 text-left text-[13px] hover:text-white"
+            >
+              <span class="min-w-0 truncate"
+                >{{ item.label }}
+                <span class="text-[11px] text-slate-500">{{ item.source }}</span></span
+              >
+              <span class="font-mono text-xs text-rose-400 whitespace-nowrap">
+                @if (item.winRate === null) {
+                  {{ item.total }} times · {{ money(item.net) }}
+                } @else {
+                  {{ item.total }} trades · {{ item.winRate }}% · {{ money(item.net) }}
+                }
+              </span>
+            </button>
+          } @empty {
+            <p class="text-xs text-slate-500 py-1">
+              Nothing with {{ minSample }}+ trades is losing money.
+            </p>
+          }
+        </section>
+      </div>
+
+      <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <!-- Timing: net by weekday -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Timing · by day</h2>
+            <button
+              type="button"
+              (click)="setTab('timing')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Timing ›
+            </button>
+          </div>
+          <div class="grid grid-cols-5 gap-2 items-end h-28">
+            @for (day of byDay(); track day.name) {
+              <div
+                class="flex flex-col items-center justify-end h-full text-[10.5px] text-slate-500"
+              >
+                @if (day.total) {
+                  <span
+                    class="font-mono"
+                    [class]="day.net >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+                    >{{ day.net >= 0 ? '+' : '−' }}{{ absValue(day.net) | number: '1.0-0' }}</span
+                  >
+                }
+                <span
+                  class="block w-3/4 rounded-t my-1"
+                  [class]="day.net >= 0 ? 'bg-emerald-600' : 'bg-rose-700'"
+                  [style.height.%]="day.total ? dayBarHeight(day.net) : 2"
+                ></span>
+                {{ day.name.slice(0, 3) }}
+              </div>
+            }
+          </div>
+          @if (e.bestSession || e.bestHour) {
+            <p class="mt-2 text-[11px] text-slate-500">
+              @if (e.bestSession) {
+                Best session <b class="text-slate-300">{{ e.bestSession.key }}</b>
+                {{ e.bestSession.winRate }}%
+              }
+              @if (e.bestSession && e.bestHour) {
+                ·
+              }
+              @if (e.bestHour) {
+                best hour <b class="text-slate-300">{{ e.bestHour.key }}:00</b>
+                {{ e.bestHour.winRate }}%
+              }
+            </p>
+          }
+        </section>
+
+        <!-- Psychology: emotions by net -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Psychology · emotions</h2>
+            <button
+              type="button"
+              (click)="setTab('psychology')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Psychology ›
+            </button>
+          </div>
+          @for (row of emotionRows(); track row.key) {
+            <div class="grid grid-cols-[80px_1fr_40px_64px] items-center gap-2 py-0.5 text-xs">
+              <span class="truncate">{{ row.key }}</span>
+              <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  class="h-full rounded-full"
+                  [class]="tierBar[winRateTier(row.winRate)]"
+                  [style.width.%]="Math.max(2, row.winRate)"
+                ></div>
+              </div>
+              <span class="font-mono text-slate-300">{{ row.winRate }}%</span>
+              <span
+                class="font-mono text-right"
+                [class]="row.net >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+                >{{ row.net >= 0 ? '+' : '−' }}{{ absValue(row.net) | number: '1.0-0' }}</span
+              >
+            </div>
+          } @empty {
+            <p class="text-xs text-slate-500">Tag emotions on your trades to see this.</p>
+          }
+          @if (e.aGradeShare !== null) {
+            <p class="mt-2 text-[11px] text-slate-500">
+              A-grade setups {{ e.aGradeShare }}% of graded trades · most taken
+              <b class="text-slate-300">{{ e.mostTakenGrade }}</b>
+            </p>
+          }
+        </section>
+
+        <!-- Discipline: R spread -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Discipline · where trades land</h2>
+            <button
+              type="button"
+              (click)="setTab('discipline')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Discipline ›
+            </button>
+          </div>
+          @if (r.withStop) {
+            <div class="grid grid-cols-9 gap-1 items-end h-24">
+              @for (b of r.buckets; track b.label) {
+                <span
+                  class="block rounded-t"
+                  [class]="
+                    b.tone === 'win'
+                      ? 'bg-emerald-600'
+                      : b.tone === 'loss'
+                        ? 'bg-rose-700'
+                        : 'bg-slate-600'
+                  "
+                  [style.height.%]="b.count ? (b.count / rBucketMax()) * 100 : 2"
+                  [attr.title]="b.label + ': ' + b.count"
+                ></span>
+              }
+            </div>
+            <div class="grid grid-cols-9 gap-1 mt-1 text-[9.5px] text-slate-500 text-center">
+              @for (b of r.buckets; track b.label) {
+                <span class="truncate">{{ shortBucket(b.label) }}</span>
+              }
+            </div>
+            <p class="mt-2 text-[11px] text-slate-500">
+              @if (r.pastStop) {
+                {{ r.pastStop }} {{ r.pastStop === 1 ? 'trade' : 'trades' }} lost more than 1R (stop
+                moved or slipped)
+              } @else {
+                No loss went past −1R
+              }
+            </p>
+          } @else {
+            <p class="text-xs text-slate-500">Add a stop to your trades to see R.</p>
+          }
+        </section>
+
+        <!-- Discipline: cost of mistakes -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Discipline · cost of mistakes</h2>
+            <button
+              type="button"
+              (click)="setTab('discipline')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Discipline ›
+            </button>
+          </div>
+          @for (row of mc.rows.slice(0, 3); track row.id) {
+            <div class="grid grid-cols-[1fr_80px_76px] items-center gap-2 py-0.5 text-xs">
+              <span class="truncate">{{ row.name }}</span>
+              <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  class="h-full rounded-full bg-rose-500"
+                  [style.width.%]="costBarWidth(row.net)"
+                ></div>
+              </div>
+              <span
+                class="font-mono text-right"
+                [class]="row.net < 0 ? 'text-rose-400' : 'text-emerald-400'"
+                >{{ money(row.net) }}</span
+              >
+            </div>
+          } @empty {
+            <p class="text-xs text-slate-500">No mistakes tagged in this range.</p>
+          }
+          @if (mc.rows.length > 3) {
+            <div class="grid grid-cols-[1fr_76px] gap-2 py-0.5 text-xs text-slate-500">
+              <span>+ {{ mc.rows.length - 3 }} more</span>
+              <span class="font-mono text-right">{{ money(restNet(mc.rows)) }}</span>
+            </div>
+          }
+          <p class="mt-2 text-[11px] text-slate-500">
+            Clean trades: {{ mc.clean.count }} · {{ mc.clean.winRate }}% win ·
+            <span [class]="mc.clean.net >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{
+              money(mc.clean.net)
+            }}</span>
+          </p>
+        </section>
+
+        <!-- Discipline: rules -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Discipline · rules followed</h2>
+            <button
+              type="button"
+              (click)="setTab('discipline')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Discipline ›
+            </button>
+          </div>
+          @for (rule of (ruleStats()?.adherence ?? []).slice(0, 4); track rule.name) {
+            <div class="grid grid-cols-[110px_1fr_56px] items-center gap-2 py-0.5 text-xs">
+              <span class="truncate">{{ rule.name }}</span>
+              <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div
+                  class="h-full rounded-full"
+                  [class]="tierBar[winRateTier(rule.percentage)]"
+                  [style.width.%]="rule.percentage"
+                ></div>
+              </div>
+              <span class="font-mono text-right text-slate-300"
+                >{{ rule.followedCount }}/{{ rule.total }}</span
+              >
+            </div>
+          } @empty {
+            <p class="text-xs text-slate-500">No rules linked to trades yet.</p>
+          }
+          @if (ruleStats()?.totalTradesWithRules) {
+            <p class="mt-2 text-[11px] text-slate-500">
+              Avg P/L rules followed
+              <span [class]="signClass(ruleStats().avgPnlRulesFollowed)">{{
+                money(ruleStats().avgPnlRulesFollowed)
+              }}</span>
+              vs broken
+              <span [class]="signClass(ruleStats().avgPnlRuleBroken)">{{
+                money(ruleStats().avgPnlRuleBroken)
+              }}</span>
+            </p>
+          }
+        </section>
+
+        <!-- Tags: best and worst -->
+        <section class="surface-card border border-slate-800/80 rounded-xl p-4">
+          <div class="flex items-baseline justify-between mb-3">
+            <h2 class="text-[13px] font-semibold text-white">Tags · best and worst</h2>
+            <button
+              type="button"
+              (click)="setTab('tags')"
+              class="text-[11px] text-blue-300 hover:text-blue-200"
+            >
+              Tags ›
+            </button>
+          </div>
+          @for (row of tagRows(); track row.group + row.id) {
+            <div class="grid grid-cols-[1fr_44px_80px] items-center gap-2 py-0.5 text-xs">
+              <span class="truncate"
+                >{{ row.name }}
+                <span class="text-[10.5px] text-slate-500">{{ row.group }}</span></span
+              >
+              <span class="font-mono text-slate-300 text-right">{{ row.winRate }}%</span>
+              <span
+                class="font-mono text-right"
+                [class]="row.net >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+                >{{ money(row.net) }}</span
+              >
+            </div>
+          } @empty {
+            <p class="text-xs text-slate-500">Tag your trades to compare setups.</p>
+          }
+        </section>
+      </div>
+    }
     @if (show('timing')) {
-      @if (tab() === 'all') {
-        <h2 class="flex items-baseline gap-2 mb-3 text-base font-semibold text-white">
-          {{ sectionTab('timing').label }}
-          <span class="text-xs font-normal text-slate-400">{{
-            sectionTab('timing').question
-          }}</span>
-        </h2>
-      }
       <!-- Performance by day of week -->
       <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
         <div class="flex items-baseline gap-2 mb-4">
@@ -276,14 +666,6 @@
       </section>
     }
     @if (show('psychology')) {
-      @if (tab() === 'all') {
-        <h2 class="flex items-baseline gap-2 mb-3 mt-10 text-base font-semibold text-white">
-          {{ sectionTab('psychology').label }}
-          <span class="text-xs font-normal text-slate-400">{{
-            sectionTab('psychology').question
-          }}</span>
-        </h2>
-      }
       <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
         <div class="flex flex-wrap items-baseline gap-2 mb-4">
           <h2 class="text-sm font-semibold text-white tracking-wide">Emotions and grades</h2>
@@ -393,14 +775,6 @@
       </section>
     }
     @if (show('discipline')) {
-      @if (tab() === 'all') {
-        <h2 class="flex items-baseline gap-2 mb-3 mt-10 text-base font-semibold text-white">
-          {{ sectionTab('discipline').label }}
-          <span class="text-xs font-normal text-slate-400">{{
-            sectionTab('discipline').question
-          }}</span>
-        </h2>
-      }
       <!-- Risk in R (trades with a stop) -->
       @let rs = rStats();
       <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
@@ -697,12 +1071,6 @@
       </section>
     }
     @if (show('tags')) {
-      @if (tab() === 'all') {
-        <h2 class="flex items-baseline gap-2 mb-3 mt-10 text-base font-semibold text-white">
-          {{ sectionTab('tags').label }}
-          <span class="text-xs font-normal text-slate-400">{{ sectionTab('tags').question }}</span>
-        </h2>
-      }
       @for (group of tagReport(); track group.name) {
         <section class="surface-card border border-slate-800/80 rounded-xl p-6 mb-6">
           <div class="flex flex-wrap items-baseline gap-2 mb-4">

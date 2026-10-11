@@ -80,7 +80,7 @@ describe('Reports', () => {
     ).toBe(true);
   });
 
-  it('opens on "All", which shows every section; a tab shows just its own', async () => {
+  it('opens on "All", an overview with a card per report; a tab shows its full detail', async () => {
     const fixture = await create();
     const c = fixture.componentInstance;
     http.expectOne((r) => r.url.endsWith('/rule-adherence')).flush({ rules: [] });
@@ -91,15 +91,36 @@ describe('Reports', () => {
       [...fixture.nativeElement.querySelectorAll('h2')].map((h: HTMLElement) =>
         h.textContent!.trim(),
       );
-    for (const label of ['Timing', 'Psychology', 'Discipline', 'Tags']) {
-      expect(headings().some((h) => h.startsWith(label))).toBe(true);
-    }
+    expect(headings()).toEqual(
+      expect.arrayContaining([
+        "What's working",
+        "What's hurting",
+        'Timing · by day',
+        'Psychology · emotions',
+        'Tags · best and worst',
+      ]),
+    );
+    expect(headings()).not.toContain('Performance by day');
+    expect(fixture.nativeElement.textContent).toContain('+$58.76'); // net P/L card
+
     vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    c.setTab('psychology');
+    const link = [...fixture.nativeElement.querySelectorAll('button')].find(
+      (b: HTMLElement) => b.textContent!.trim() === 'Timing ›',
+    ) as HTMLButtonElement;
+    link.click();
     await fixture.whenStable();
-    expect(c.show('psychology')).toBe(true);
-    expect(c.show('timing')).toBe(false);
-    expect(headings().some((h) => h.startsWith('Psychology'))).toBe(false); // no section heading on its own tab
+    expect(c.tab()).toBe('timing');
+    expect(c.show('timing')).toBe(true);
+    expect(c.show('psychology')).toBe(false);
+    expect(headings()).toContain('Performance by day');
+    expect(headings()).not.toContain("What's working");
+  });
+
+  it('formats money with a sign', async () => {
+    const c = (await create()).componentInstance;
+    expect([c.money(1234.5), c.money(-56), c.money(0)]).toEqual(['+$1,234.50', '−$56.00', '$0.00']);
+    expect(c.shortBucket('Past −1R')).toBe('<−1');
+    expect(c.shortBucket('+2.5R+')).toBe('2.5+');
   });
 
   it('switching to custom starts from the dates on screen', async () => {
