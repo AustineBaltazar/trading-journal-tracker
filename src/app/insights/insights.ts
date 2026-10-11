@@ -22,9 +22,9 @@ import {
   PatternGroup,
 } from './insights-logic';
 
-// "top" = the 3 biggest leaks and edges; "all" = every pattern; or one group
+// "top" = the 5 biggest leaks and edges; "all" = every pattern; or one group
 export type InsightFilter = 'top' | 'all' | PatternGroup;
-const TOP_COUNT = 3;
+export const TOP_COUNT = 5;
 
 const RANGE_KEY = 'insightsRange';
 const RANGES: { key: RangeKey; label: string }[] = [
@@ -90,7 +90,11 @@ export class Insights {
     const { leaks, edges } = this.patterns();
     const all = [...leaks, ...edges];
     return [
-      { key: 'top' as InsightFilter, label: 'Top', count: Math.min(all.length, TOP_COUNT * 2) },
+      {
+        key: 'top' as InsightFilter,
+        label: `Top ${TOP_COUNT}`,
+        count: Math.min(all.length, TOP_COUNT * 2),
+      },
       { key: 'all' as InsightFilter, label: 'All', count: all.length },
       ...PATTERN_GROUPS.map((g) => ({
         key: g.key as InsightFilter,
@@ -106,7 +110,7 @@ export class Insights {
     if (f === 'all') return { leaks, edges };
     return { leaks: leaks.filter((p) => p.group === f), edges: edges.filter((p) => p.group === f) };
   });
-  // "3 of 15 · costing you money"
+  // "5 of 15 · costing you money"
   readonly leakNote = computed(() =>
     this.note(this.shown().leaks.length, this.patterns().leaks.length, 'costing you money'),
   );
