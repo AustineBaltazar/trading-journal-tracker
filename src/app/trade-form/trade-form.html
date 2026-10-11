@@ -108,7 +108,7 @@
 
       <form
         (ngSubmit)="onSubmit()"
-        class="px-6 py-5 space-y-4 max-h-[68vh] overflow-y-auto min-w-0"
+        class="px-6 py-5 space-y-4 max-h-[68vh] overflow-y-auto quiet-scroll min-w-0"
       >
         @if (errorMessage()) {
           <p class="text-rose-400 text-xs" role="alert">{{ errorMessage() }}</p>
