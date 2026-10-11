@@ -69,6 +69,28 @@ describe('Login', () => {
     backend.expectNone(`${environment.apiUrl}/login`);
   });
 
+  it('an unconfirmed email can ask for a new link', async () => {
+    component.password = 'correct-horse-candle';
+    component.onSubmit();
+    backend
+      .expectOne(`${environment.apiUrl}/login`)
+      .flush(
+        { error: 'Please confirm your email first.', unverified: true },
+        { status: 403, statusText: 'x' },
+      );
+    await fixture.whenStable();
+    expect(text()).toContain('Please confirm your email first.');
+    component.resendLink();
+    expect(backend.expectOne(`${environment.apiUrl}/resend-verification`).request.body).toEqual({
+      email: 'bob@gmail.com',
+    });
+  });
+
+  it('links to forgot password', () => {
+    const link = fixture.nativeElement.querySelector('a[href="/forgot-password"]');
+    expect(link?.textContent).toContain('Forgot password?');
+  });
+
   it('the password can be shown', async () => {
     const input = fixture.nativeElement.querySelector('#login-password') as HTMLInputElement;
     expect(input.type).toBe('password');

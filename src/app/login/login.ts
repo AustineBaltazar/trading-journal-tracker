@@ -5,9 +5,10 @@ import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { AuthService, formatWait } from '../auth/auth';
 import { Turnstile, turnstileOn } from '../auth/turnstile';
+import { AuthShell } from '../auth/auth-ui';
 
 @Component({
-  imports: [FormsModule, RouterLink, Turnstile],
+  imports: [FormsModule, RouterLink, Turnstile, AuthShell],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',
@@ -30,6 +31,9 @@ export class Login implements OnDestroy {
   captchaRequired = signal(false);
   turnstileToken = signal<string | null>(null);
   waitSeconds = signal(0);
+  // Right password, but the email isn't confirmed yet
+  unverified = signal(false);
+  resent = signal(false);
   private countdown: ReturnType<typeof setInterval> | null = null;
 
   readonly turnstileOn = turnstileOn();
@@ -42,6 +46,7 @@ export class Login implements OnDestroy {
       return;
     }
     this.errorMessage.set('');
+    this.unverified.set(false);
     this.submitting.set(true);
 
     this.http
@@ -63,9 +68,19 @@ export class Login implements OnDestroy {
           this.attemptsLeft.set(err.status === 401 ? (body.attemptsLeft ?? null) : null);
           if (body.captchaRequired) this.captchaRequired.set(true);
           if (err.status === 429 && body.retryAfter) this.startWait(body.retryAfter);
+          if (body.unverified) {
+            this.unverified.set(true);
+            this.resent.set(false);
+          }
           this.turnstile()?.reset();
         },
       });
+  }
+
+  resendLink() {
+    this.http
+      .post(`${environment.apiUrl}/resend-verification`, { email: this.email })
+      .subscribe({ next: () => this.resent.set(true), error: () => this.resent.set(true) });
   }
 
   private startWait(seconds: number) {

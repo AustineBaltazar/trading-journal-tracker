@@ -1,133 +1,84 @@
-<div class="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4">
-  <div class="w-full max-w-sm">
-    <div class="flex flex-col items-center gap-3 mb-8">
-      <div
-        class="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-400 p-[1.5px] flex items-center justify-center shadow-lg shadow-blue-500/20"
+<app-auth-shell>
+  <form (ngSubmit)="onSubmit()">
+    <h1 class="text-lg font-semibold text-white mb-1">Create your account</h1>
+    <p class="text-xs text-slate-400 mb-6">Start journaling your trades</p>
+
+    @if (errorMessage()) {
+      <p
+        role="alert"
+        class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
       >
-        <div class="h-full w-full bg-[#0B0E14] rounded-[14px] flex items-center justify-center">
-          <svg
-            class="w-6 h-6 text-emerald-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
-          >
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-        </div>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <span class="font-extrabold tracking-tight text-white text-lg">MNQ</span>
-        <span class="text-sm text-slate-500 font-mono">/</span>
-        <span class="text-sm font-semibold text-slate-300 tracking-wider">JOURNAL</span>
-      </div>
-    </div>
-
-    <form
-      (ngSubmit)="onSubmit()"
-      class="bg-[#121722] border border-[#1F293D] rounded-2xl p-6 shadow-xl"
-    >
-      <h1 class="text-lg font-semibold text-white mb-1">Create your account</h1>
-      <p class="text-xs text-slate-400 mb-6">Start journaling your trades</p>
-
-      @if (errorMessage()) {
-        <p
-          role="alert"
-          class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
-        >
-          {{ errorMessage() }}
-        </p>
-      }
-
-      <label for="reg-name" class="block text-xs font-medium text-slate-300 mb-1.5">Name</label>
-      <input
-        id="reg-name"
-        type="text"
-        autocomplete="name"
-        maxlength="60"
-        [(ngModel)]="name"
-        name="name"
-        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
-      />
-
-      <label for="reg-email" class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
-      <input
-        id="reg-email"
-        type="email"
-        autocomplete="email"
-        [(ngModel)]="email"
-        name="email"
-        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
-      />
-
-      <div class="flex items-baseline justify-between mb-1.5">
-        <label for="reg-password" class="text-xs font-medium text-slate-300">Password</label>
-        <span class="text-[11px] text-slate-400">{{ strength.label }}</span>
-      </div>
-      <div class="relative">
-        <input
-          id="reg-password"
-          [type]="showPassword() ? 'text' : 'password'"
-          autocomplete="new-password"
-          maxlength="128"
-          [(ngModel)]="password"
-          name="password"
-          aria-describedby="reg-password-rules"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
-        />
-        <button
-          type="button"
-          (click)="showPassword.set(!showPassword())"
-          [attr.aria-pressed]="showPassword()"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1"
-        >
-          {{ showPassword() ? 'Hide' : 'Show' }}
-        </button>
-      </div>
-      <div class="grid grid-cols-4 gap-1 mt-2" aria-hidden="true">
-        @for (bar of bars; track bar) {
-          <span
-            class="h-1 rounded-full"
-            [class]="
-              bar > strength.score
-                ? 'bg-slate-800'
-                : strength.score <= 1
-                  ? 'bg-rose-500'
-                  : strength.score === 2
-                    ? 'bg-amber-400'
-                    : 'bg-emerald-400'
-            "
-          ></span>
-        }
-      </div>
-      <ul id="reg-password-rules" class="text-[11.5px] mt-2 mb-4 space-y-0.5">
-        <li [class]="longEnough ? 'text-emerald-300' : 'text-slate-500'">
-          {{ longEnough ? '✓' : '○' }} At least 12 characters
-        </li>
-        <li [class]="notEmail ? 'text-emerald-300' : 'text-slate-500'">
-          {{ notEmail ? '✓' : '○' }} Different from your email
-        </li>
-        <li class="text-slate-500">○ Not found in known data leaks (checked when you sign up)</li>
-      </ul>
-
-      @if (turnstileOn) {
-        <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
-      }
-
-      <button
-        type="submit"
-        [disabled]="!canSubmit"
-        class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {{ submitting() ? 'Creating account…' : 'Create account' }}
-      </button>
-
-      <p class="text-center text-xs text-slate-500 mt-5">
-        Already have an account?
-        <a routerLink="/login" class="text-blue-400 hover:text-blue-300 font-medium">Log in</a>
+        {{ errorMessage() }}
       </p>
-    </form>
-  </div>
-</div>
+    }
+
+    <label for="reg-name" class="block text-xs font-medium text-slate-300 mb-1.5">Name</label>
+    <input
+      id="reg-name"
+      type="text"
+      autocomplete="name"
+      maxlength="60"
+      [(ngModel)]="name"
+      name="name"
+      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+    />
+
+    <label for="reg-email" class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
+    <input
+      id="reg-email"
+      type="email"
+      autocomplete="email"
+      [(ngModel)]="email"
+      name="email"
+      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+    />
+
+    <div class="flex items-baseline justify-between mb-1.5">
+      <label for="reg-password" class="text-xs font-medium text-slate-300">Password</label>
+      <span class="text-[11px] text-slate-400">{{ strength.label }}</span>
+    </div>
+    <div class="relative">
+      <input
+        id="reg-password"
+        [type]="showPassword() ? 'text' : 'password'"
+        autocomplete="new-password"
+        maxlength="128"
+        [(ngModel)]="password"
+        name="password"
+        aria-describedby="reg-password-rules"
+        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
+      />
+      <button
+        type="button"
+        (click)="showPassword.set(!showPassword())"
+        [attr.aria-pressed]="showPassword()"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1"
+      >
+        {{ showPassword() ? 'Hide' : 'Show' }}
+      </button>
+    </div>
+    <app-password-strength
+      class="mb-4"
+      rulesId="reg-password-rules"
+      [password]="password"
+      [email]="email"
+    />
+
+    @if (turnstileOn) {
+      <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
+    }
+
+    <button
+      type="submit"
+      [disabled]="!canSubmit"
+      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {{ submitting() ? 'Creating account…' : 'Create account' }}
+    </button>
+
+    <p class="text-center text-xs text-slate-500 mt-5">
+      Already have an account?
+      <a routerLink="/login" class="text-blue-400 hover:text-blue-300 font-medium">Log in</a>
+    </p>
+  </form>
+</app-auth-shell>

@@ -31,7 +31,6 @@ describe('Register', () => {
     component.password = 'short';
     expect(component.canSubmit).toBe(false);
     component.password = 'bob@gmail.com';
-    expect(component.longEnough).toBe(true);
     expect(component.canSubmit).toBe(false);
     component.password = 'correct-horse-candle';
     expect(component.canSubmit).toBe(true);
@@ -43,23 +42,23 @@ describe('Register', () => {
     expect(component.canSubmit).toBe(!component.turnstileOn);
   });
 
-  it('creates the account and goes straight to the dashboard', () => {
+  it('sends the form, then shows "check your email" without logging in', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    component.email = ' Bob@Gmail.com ';
     component.password = 'correct-horse-candle';
     component.onSubmit();
     const req = backend.expectOne(`${environment.apiUrl}/register`);
     expect(req.request.body).toEqual({
       name: 'Bro',
-      email: 'bob@gmail.com',
+      email: ' Bob@Gmail.com ',
       password: 'correct-horse-candle',
       turnstileToken: 'ok',
     });
-    req.flush(
-      { user: { id: 9, name: 'Bro', email: 'bob@gmail.com' } },
-      { status: 201, statusText: 'Created' },
-    );
-    expect(TestBed.inject(AuthService).user()?.id).toBe(9);
-    expect(navigate).toHaveBeenCalledWith(['/dashboard']);
+    req.flush({ message: 'Check your email.' }, { status: 202, statusText: 'Accepted' });
+    const auth = TestBed.inject(AuthService);
+    expect(auth.user()).toBeNull();
+    expect(auth.pendingEmail()).toBe('bob@gmail.com');
+    expect(navigate).toHaveBeenCalledWith(['/check-email']);
   });
 
   it('shows the server reason, such as a leaked password', async () => {

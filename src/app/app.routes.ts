@@ -12,6 +12,25 @@ export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [guestGuard] },
   { path: 'register', component: Register, canActivate: [guestGuard] },
   {
+    path: 'check-email',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./auth/check-email').then((m) => m.CheckEmail),
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./auth/forgot-password').then((m) => m.ForgotPassword),
+  },
+  // Email links open these whether or not someone is logged in
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./auth/verify-email').then((m) => m.VerifyEmail),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./auth/reset-password').then((m) => m.ResetPassword),
+  },
+  {
     path: '',
     component: Layout,
     canActivate: [authGuard],
