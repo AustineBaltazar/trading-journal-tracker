@@ -54,3 +54,13 @@ body {
   background-color: var(--color-border-default);
   border-radius: 3px;
 }
+
+/* A thin scrollbar that stays out of sight until the pointer is over the area */
+.quiet-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.quiet-scroll:hover,
+.quiet-scroll:focus-within {
+  scrollbar-color: #334155 transparent;
+}
