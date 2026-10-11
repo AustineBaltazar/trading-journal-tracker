@@ -4,5 +4,5 @@ export const environment = {
   // Cloudflare's test key: shows the widget and always passes
   turnstileSiteKey: '1x00000000000000000000AA',
   // Google OAuth client ID (public; its origins include http://localhost:4300)
-  googleClientId: '',
+  googleClientId: '771929534193-shcvjun7k4vc58psv168m6m29k646nv4.apps.googleusercontent.com',
 };
