@@ -10,7 +10,8 @@ export const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
   { key: 'custom', label: 'Custom' },
 ];
 
-export const REPORT_TABS = ['timing', 'psychology', 'discipline', 'tags'] as const;
+// 'all' shows every section on one page
+export const REPORT_TABS = ['all', 'timing', 'psychology', 'discipline', 'tags'] as const;
 export type ReportTab = (typeof REPORT_TABS)[number];
 
 // Inclusive YYYY-MM-DD bounds; null = open-ended

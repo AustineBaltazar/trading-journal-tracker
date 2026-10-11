@@ -53,6 +53,7 @@ export class Reports {
 
   readonly rangeOptions = RANGE_OPTIONS;
   readonly tabs: { key: ReportTab; label: string; question: string }[] = [
+    { key: 'all', label: 'All', question: 'Every report on one page' },
     { key: 'timing', label: 'Timing', question: 'When you trade best' },
     {
       key: 'psychology',
@@ -67,7 +68,16 @@ export class Reports {
     { key: 'tags', label: 'Tags', question: 'Results by setup, news and market' },
   ];
 
-  tab = signal<ReportTab>('timing');
+  tab = signal<ReportTab>('all');
+
+  // A section is shown on its own tab and on "All"
+  show(section: ReportTab) {
+    return this.tab() === section || this.tab() === 'all';
+  }
+
+  sectionTab(section: ReportTab) {
+    return this.tabs.find((t) => t.key === section)!;
+  }
   range = signal<RangeKey>(storedRange());
   custom = signal<DateRange>({ from: null, to: null });
 

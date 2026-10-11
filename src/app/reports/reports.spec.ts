@@ -71,13 +71,35 @@ describe('Reports', () => {
     await fixture.whenStable();
     expect(localStorage.getItem('reportsRange')).toBe('30d');
     expect(navigate.mock.calls.at(-1)?.[1]?.queryParams).toMatchObject({
-      tab: 'timing',
+      tab: 'all',
       range: '30d',
       from: null,
     });
     expect(
       http.expectOne((r) => r.url.endsWith('/rule-adherence')).request.params.has('from'),
     ).toBe(true);
+  });
+
+  it('opens on "All", which shows every section; a tab shows just its own', async () => {
+    const fixture = await create();
+    const c = fixture.componentInstance;
+    http.expectOne((r) => r.url.endsWith('/rule-adherence')).flush({ rules: [] });
+    http.expectOne((r) => r.url.endsWith('/trades')).flush({ trades });
+    await fixture.whenStable();
+    expect(c.tab()).toBe('all');
+    const headings = () =>
+      [...fixture.nativeElement.querySelectorAll('h2')].map((h: HTMLElement) =>
+        h.textContent!.trim(),
+      );
+    for (const label of ['Timing', 'Psychology', 'Discipline', 'Tags']) {
+      expect(headings().some((h) => h.startsWith(label))).toBe(true);
+    }
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    c.setTab('psychology');
+    await fixture.whenStable();
+    expect(c.show('psychology')).toBe(true);
+    expect(c.show('timing')).toBe(false);
+    expect(headings().some((h) => h.startsWith('Psychology'))).toBe(false); // no section heading on its own tab
   });
 
   it('switching to custom starts from the dates on screen', async () => {
