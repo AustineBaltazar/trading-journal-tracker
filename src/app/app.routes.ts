@@ -21,7 +21,17 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/forgot-password').then((m) => m.ForgotPassword),
   },
-  // Email links open these whether or not someone is logged in
+  // Public pages, and email links, open whether or not someone is logged in
+  {
+    path: 'privacy',
+    data: { page: 'privacy' },
+    loadComponent: () => import('./legal/legal').then((m) => m.Legal),
+  },
+  {
+    path: 'terms',
+    data: { page: 'terms' },
+    loadComponent: () => import('./legal/legal').then((m) => m.Legal),
+  },
   {
     path: 'verify-email',
     loadComponent: () => import('./auth/verify-email').then((m) => m.VerifyEmail),
@@ -48,6 +58,10 @@ export const routes: Routes = [
         loadComponent: () => import('./reports/reports').then((m) => m.Reports),
       },
       { path: 'playbook', component: Playbook },
+      {
+        path: 'account',
+        loadComponent: () => import('./account/account').then((m) => m.Account),
+      },
     ],
   },
   { path: '', redirectTo: '/login', pathMatch: 'full' },

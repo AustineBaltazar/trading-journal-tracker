@@ -26,6 +26,7 @@ export class Register {
   submitting = signal(false);
   errorMessage = signal('');
   turnstileToken = signal<string | null>(null);
+  acceptTerms = false;
 
   readonly turnstileOn = turnstileOn();
 
@@ -36,6 +37,7 @@ export class Register {
   get canSubmit() {
     return (
       !this.submitting() &&
+      this.acceptTerms &&
       newPasswordOk(this.password, this.email) &&
       (!this.turnstileOn || !!this.turnstileToken())
     );
@@ -51,6 +53,7 @@ export class Register {
         name: this.name,
         email: this.email,
         password: this.password,
+        acceptTerms: this.acceptTerms,
         turnstileToken: this.turnstileToken() ?? undefined,
       })
       .subscribe({

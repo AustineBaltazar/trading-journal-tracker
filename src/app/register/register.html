@@ -68,6 +68,23 @@
       <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
     }
 
+    <label class="flex items-start gap-2 text-xs text-slate-400 mb-5 cursor-pointer">
+      <input
+        type="checkbox"
+        [(ngModel)]="acceptTerms"
+        name="acceptTerms"
+        class="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
+      />
+      <span
+        >I agree to the
+        <a routerLink="/terms" target="_blank" class="text-blue-400 hover:text-blue-300">Terms</a>
+        and
+        <a routerLink="/privacy" target="_blank" class="text-blue-400 hover:text-blue-300"
+          >Privacy policy</a
+        >. MNQ Journal is a journal, not financial advice.</span
+      >
+    </label>
+
     <button
       type="submit"
       [disabled]="!canSubmit"

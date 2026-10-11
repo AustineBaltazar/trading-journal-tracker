@@ -8,6 +8,8 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  // The shared demo account, which is read-only
+  demo?: boolean;
 }
 
 // Who is logged in. The session itself lives in an HttpOnly cookie the page can't read,
