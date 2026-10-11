@@ -35,7 +35,7 @@
       <app-month-picker
         [value]="viewedMonth()"
         [marked]="tradeMonths()"
-        (valueChange)="viewedMonth.set($event)"
+        (valueChange)="setMonth($event)"
       />
 
       <button
@@ -345,7 +345,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-[#131d2e] font-mono">
-              @for (trade of filteredTrades(); track trade.id) {
+              @for (trade of pageTrades(); track trade.id) {
                 <tr
                   (click)="viewTrade(trade.id)"
                   class="hover:bg-[#11192b]/80 transition-colors group cursor-pointer"
@@ -446,15 +446,39 @@
         </div>
 
         <div
-          class="p-4 border-t border-[#162136] bg-[#0a0f1a] flex flex-wrap justify-between gap-2 text-xs text-slate-400 font-medium"
+          class="px-4 py-3 border-t border-[#162136] bg-[#0a0f1a] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-slate-400 font-medium"
         >
           <span>
             Showing
-            <span class="text-slate-200 font-semibold">{{ filteredTrades().length }}</span> of
-            <span class="text-slate-200 font-semibold">{{ monthTrades().length }}</span> trades in
-            {{ monthLabel() }}
+            <span class="text-slate-200 font-semibold font-mono"
+              >{{ firstShown() }}–{{ lastShown() }}</span
+            >
+            of
+            <span class="text-slate-200 font-semibold">{{ filteredTrades().length }}</span>
+            @if (filteredTrades().length !== monthTrades().length) {
+              (filtered from {{ monthTrades().length }})
+            }
+            trades in {{ monthLabel() }}
           </span>
-          <span class="text-slate-500">Click Date, Grade or Net P/L to sort</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-1.5 text-slate-500">
+              Rows
+              <select
+                [ngModel]="pageSize()"
+                (ngModelChange)="setPageSize(+$event)"
+                name="pageSize"
+                aria-label="Rows per page"
+                class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              >
+                @for (n of pageSizes; track n) {
+                  <option [ngValue]="n">{{ n }}</option>
+                }
+              </select>
+            </label>
+            @if (pages() > 1) {
+              <app-pager [page]="currentPage()" [pages]="pages()" (pageChange)="setPage($event)" />
+            }
+          </div>
         </div>
       }
     </section>
@@ -465,6 +489,7 @@
         Red edge = broke a rule
       </span>
       <span>Click a row to open its full details.</span>
+      <span>Click Date, Grade or Net P/L to sort.</span>
     </div>
   </div>
 </div>

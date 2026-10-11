@@ -35,4 +35,24 @@ describe('TradesList', () => {
     expect(modeOf()).toEqual(['backtest']);
     localStorage.removeItem('tradeMode');
   });
+
+  it('shows 10 trades a page, and filters or sorting go back to page 1', () => {
+    const month = component.viewedMonth();
+    const day = (d: number) =>
+      `${month.year}-${String(month.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    component.trades.set(
+      Array.from({ length: 23 }, (_, i) => ({ id: i + 1, trade_date: day((i % 28) + 1), pnl: i })),
+    );
+    expect(component.pages()).toBe(3);
+    expect(component.pageTrades().length).toBe(10);
+    component.setPage(3);
+    expect(component.pageTrades().length).toBe(3);
+    expect([component.firstShown(), component.lastShown()]).toEqual([21, 23]);
+    component.sortBy('pnl');
+    expect(component.currentPage()).toBe(1);
+    component.setPageSize(25);
+    expect(component.pages()).toBe(1);
+    expect(localStorage.getItem('tradesPageSize')).toBe('25');
+    localStorage.removeItem('tradesPageSize');
+  });
 });
