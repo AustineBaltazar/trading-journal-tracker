@@ -74,6 +74,10 @@ export class Playbook implements OnInit {
   errorMessage = signal('');
 
   editingRuleId = signal<number | null>(null);
+  // The "+ Add" forms open in place, so the page fits on one screen
+  addingRule = signal(false);
+  addingMistake = signal(false);
+  addingQuestion = signal(false);
   editRuleName = '';
   editRuleDescription = '';
   editRuleCategory = '';

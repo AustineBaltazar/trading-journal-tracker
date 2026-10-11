@@ -1,14 +1,11 @@
-<div class="bg-[#0B0E14] min-h-screen text-slate-200 font-sans">
-  <header
-    class="px-6 md:px-10 py-6 border-b border-[#1F293D]/40 flex flex-wrap items-start justify-between gap-4"
-  >
+<!-- On wide screens the whole Playbook fits the window: panels scroll inside themselves -->
+<div class="bg-[#0B0E14] min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
+  <header class="px-6 pt-4 pb-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+      <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
         Playbook <app-mode-badge />
       </h1>
-      <p class="text-sm text-slate-400 mt-0.5">
-        Your rules, the mistakes you track, your tags and the questions you ask after each trade.
-      </p>
+      <p class="text-xs text-slate-400">Your rules, mistakes, review questions and tags.</p>
     </div>
     <label class="flex items-center gap-2 text-xs text-slate-400">
       Stats for
@@ -25,404 +22,372 @@
     </label>
   </header>
 
-  <div class="px-6 md:px-10 py-8 max-w-[1400px] mx-auto space-y-6">
+  <div class="px-6 pb-4 flex flex-col gap-3 xl:flex-1 xl:min-h-0">
     @if (errorMessage()) {
       <p class="text-rose-400 text-sm" role="alert">{{ errorMessage() }}</p>
     }
 
-    <!-- Four plain-language findings -->
+    <!-- Four findings, one slim strip -->
     @let rs = ruleStats();
     @let qs = questionStats();
     @let c = cost();
-    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="flex gap-3 rounded-xl border border-[#1F293D] bg-[#0D1322] p-4">
-        <span
-          class="shrink-0 w-10 h-10 rounded-xl grid place-items-center bg-blue-500/15 text-blue-300"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
-            <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </span>
-        <div class="min-w-0">
-          <div class="text-xs text-slate-400">Followed every rule</div>
-          @if (rs && rs.totalTradesWithRules > 0) {
-            <div class="text-2xl font-bold font-mono text-white">
-              {{ rs.followedAllPercentage }}%
-            </div>
-            <p class="text-xs text-slate-300">
-              on {{ rs.followedTradesCount }} of {{ rs.totalTradesWithRules }} trades
-            </p>
-            <p class="text-[11px] text-slate-500 mt-0.5">
-              those averaged
+    <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
+      <div class="rounded-xl border border-[#1F293D] bg-[#0D1322] px-4 py-2.5 min-w-0">
+        <div class="text-[11px] text-slate-400">Followed every rule</div>
+        @if (rs && rs.totalTradesWithRules > 0) {
+          <div class="flex items-baseline gap-2.5 min-w-0">
+            <span class="text-xl font-bold font-mono text-white"
+              >{{ rs.followedAllPercentage }}%</span
+            >
+            <span class="text-[11px] text-slate-500 truncate"
+              >{{ rs.followedTradesCount }} of {{ rs.totalTradesWithRules }} ·
               <span
                 [class.text-emerald-400]="rs.avgPnlRulesFollowed >= 0"
                 [class.text-rose-400]="rs.avgPnlRulesFollowed < 0"
                 >{{ rs.avgPnlRulesFollowed >= 0 ? '+' : '-' }}${{
-                  absValue(rs.avgPnlRulesFollowed) | number: '1.2-2'
+                  absValue(rs.avgPnlRulesFollowed) | number: '1.0-0'
                 }}</span
-              >, others
+              >
+              vs
               <span
                 [class.text-emerald-400]="rs.avgPnlRuleBroken >= 0"
                 [class.text-rose-400]="rs.avgPnlRuleBroken < 0"
                 >{{ rs.avgPnlRuleBroken >= 0 ? '+' : '-' }}${{
-                  absValue(rs.avgPnlRuleBroken) | number: '1.2-2'
+                  absValue(rs.avgPnlRuleBroken) | number: '1.0-0'
                 }}</span
-              >
-            </p>
-          } @else {
-            <div class="text-2xl font-bold text-slate-600">—</div>
-            <p class="text-xs text-slate-500">No trades with rules in this range</p>
-          }
-        </div>
+              ></span
+            >
+          </div>
+        } @else {
+          <div class="text-xl font-bold text-slate-600">—</div>
+        }
       </div>
 
-      <div class="flex gap-3 rounded-xl border border-[#1F293D] bg-[#0D1322] p-4">
-        <span
-          class="shrink-0 w-10 h-10 rounded-xl grid place-items-center bg-amber-500/12 text-amber-300"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="12" cy="12" r="8" />
-            <circle cx="12" cy="12" r="4" />
-          </svg>
-        </span>
-        <div class="min-w-0">
-          <div class="text-xs text-slate-400">Rule you break most</div>
-          @if (weakest(); as w) {
-            <div class="text-2xl font-bold text-white truncate">{{ w.name }}</div>
-            <p class="text-xs text-slate-300">
-              followed on {{ w.followedCount }} of {{ w.total }} trades ({{ w.percentage }}%)
-            </p>
-            @if (w.avgPnlBroken !== null) {
-              <p class="text-[11px] text-slate-500 mt-0.5">
-                broken trades averaged
+      <div class="rounded-xl border border-[#1F293D] bg-[#0D1322] px-4 py-2.5 min-w-0">
+        <div class="text-[11px] text-slate-400">Rule you break most</div>
+        @if (weakest(); as w) {
+          <div class="flex items-baseline gap-2.5 min-w-0">
+            <span class="text-xl font-bold text-white truncate max-w-[50%]">{{ w.name }}</span>
+            <span class="text-[11px] text-slate-500 truncate"
+              >followed {{ w.percentage }}%
+              @if (w.avgPnlBroken !== null) {
+                · broken
                 <span
                   [class.text-emerald-400]="w.avgPnlBroken >= 0"
                   [class.text-rose-400]="w.avgPnlBroken < 0"
                   >{{ w.avgPnlBroken >= 0 ? '+' : '-' }}${{
-                    absValue(w.avgPnlBroken) | number: '1.2-2'
+                    absValue(w.avgPnlBroken) | number: '1.0-0'
                   }}</span
                 >
-              </p>
-            }
-          } @else {
-            <div class="text-2xl font-bold text-slate-600">—</div>
-            <p class="text-xs text-slate-500">No rules checked off yet</p>
-          }
-        </div>
+              }
+            </span>
+          </div>
+        } @else {
+          <div class="text-xl font-bold text-slate-600">—</div>
+        }
       </div>
 
-      <div class="flex gap-3 rounded-xl border border-[#1F293D] bg-[#0D1322] p-4">
-        <span
-          class="shrink-0 w-10 h-10 rounded-xl grid place-items-center bg-rose-500/12 text-rose-300"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <path d="M12 4l9 16H3l9-16z" stroke-linejoin="round" />
-            <path d="M12 10v4M12 17h.01" stroke-linecap="round" />
-          </svg>
-        </span>
-        <div class="min-w-0">
-          <div class="text-xs text-slate-400">Mistakes cost you</div>
-          @if (c.withMistakes.count > 0) {
-            <div
-              class="text-2xl font-bold font-mono"
+      <div class="rounded-xl border border-[#1F293D] bg-[#0D1322] px-4 py-2.5 min-w-0">
+        <div class="text-[11px] text-slate-400">Mistakes cost you</div>
+        @if (c.withMistakes.count > 0) {
+          <div class="flex items-baseline gap-2.5 min-w-0">
+            <span
+              class="text-xl font-bold font-mono"
               [class.text-rose-400]="c.withMistakes.net < 0"
               [class.text-emerald-400]="c.withMistakes.net >= 0"
-            >
-              {{ c.withMistakes.net >= 0 ? '+' : '-' }}${{
+              >{{ c.withMistakes.net >= 0 ? '+' : '-' }}${{
                 absValue(c.withMistakes.net) | number: '1.2-2'
-              }}
-            </div>
-            <p class="text-xs text-slate-300">
-              on {{ c.withMistakes.count }}
-              {{ c.withMistakes.count === 1 ? 'trade' : 'trades' }} with a mistake
-            </p>
-            <p class="text-[11px] text-slate-500 mt-0.5">
-              clean trades made
+              }}</span
+            >
+            <span class="text-[11px] text-slate-500 truncate"
+              >{{ c.withMistakes.count }} trades · clean
               <span
                 [class.text-emerald-400]="c.clean.net >= 0"
                 [class.text-rose-400]="c.clean.net < 0"
                 >{{ c.clean.net >= 0 ? '+' : '-' }}${{
-                  absValue(c.clean.net) | number: '1.2-2'
+                  absValue(c.clean.net) | number: '1.0-0'
                 }}</span
-              >
-            </p>
-          } @else {
-            <div class="text-2xl font-bold font-mono text-emerald-400">$0.00</div>
-            <p class="text-xs text-slate-300">no mistakes tagged in this range</p>
-          }
-        </div>
+              ></span
+            >
+          </div>
+        } @else {
+          <div class="text-xl font-bold font-mono text-emerald-400">$0.00</div>
+        }
       </div>
 
-      <div class="flex gap-3 rounded-xl border border-[#1F293D] bg-[#0D1322] p-4">
-        <span
-          class="shrink-0 w-10 h-10 rounded-xl grid place-items-center bg-emerald-500/12 text-emerald-300"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            viewBox="0 0 24 24"
-          >
-            <rect x="5" y="4" width="14" height="17" rx="2" />
-            <path d="M9 13l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </span>
-        <div class="min-w-0">
-          <div class="text-xs text-slate-400">Passed your review</div>
-          @if (qs && qs.tradesAnswered > 0) {
-            <div class="text-2xl font-bold font-mono text-white">
-              {{ qs.tradesAllYes }} of {{ qs.tradesAnswered }}
-            </div>
-            <p class="text-xs text-slate-300">trades with Yes to every question</p>
+      <div class="rounded-xl border border-[#1F293D] bg-[#0D1322] px-4 py-2.5 min-w-0">
+        <div class="text-[11px] text-slate-400">Passed your review</div>
+        @if (qs && qs.tradesAnswered > 0) {
+          <div class="flex items-baseline gap-2.5 min-w-0">
+            <span class="text-xl font-bold font-mono text-white whitespace-nowrap"
+              >{{ qs.tradesAllYes }} of {{ qs.tradesAnswered }}</span
+            >
             @if (weakQuestion(); as wq) {
-              <p class="text-[11px] text-slate-500 mt-0.5">
-                weakest: “{{ wq.question_text }}” {{ pct(wq.yes, wq.total) }}% Yes
-              </p>
+              <span class="text-[11px] text-slate-500 truncate" [title]="wq.question_text"
+                >weakest: “{{ wq.question_text }}” {{ pct(wq.yes, wq.total) }}%</span
+              >
             }
-          } @else {
-            <div class="text-2xl font-bold text-slate-600">—</div>
-            <p class="text-xs text-slate-500">No review answers in this range</p>
-          }
-        </div>
+          </div>
+        } @else {
+          <div class="text-xl font-bold text-slate-600">—</div>
+        }
       </div>
     </section>
 
-    <!-- Trading rules -->
-    <section class="bg-[#0D1322] border border-[#1F293D] rounded-xl overflow-hidden">
-      <div class="px-5 py-4 border-b border-[#1F293D]">
-        <h2 class="text-sm font-semibold text-white">Trading rules</h2>
-        <p class="text-xs text-slate-500 mt-0.5">
-          Checked off on every trade. Each rule shows how often you follow it and what it's worth.
-        </p>
-      </div>
-
-      @for (rule of rules(); track rule.id) {
-        @let s = ruleStat(rule.id);
-        @if (editingRuleId() === rule.id) {
-          <form
-            (ngSubmit)="saveEditRule(rule.id)"
-            class="px-5 py-3 border-b border-[#1F293D]/60 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_140px_auto] gap-2 items-center"
+    <div
+      class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_minmax(0,1fr)] gap-3 xl:flex-1 xl:min-h-0"
+    >
+      <!-- Trading rules -->
+      <section
+        class="bg-[#0D1322] border border-[#1F293D] rounded-xl flex flex-col min-h-0 overflow-hidden"
+      >
+        <div class="px-4 pt-3 pb-2 flex items-baseline justify-between gap-2 shrink-0">
+          <h2 class="text-sm font-semibold text-white">
+            Trading rules
+            <span class="ml-1 text-[11px] font-normal text-slate-500"
+              >followed · avg P/L followed / broken</span
+            >
+          </h2>
+          <button
+            type="button"
+            (click)="addingRule.set(!addingRule())"
+            [attr.aria-expanded]="addingRule()"
+            class="shrink-0 text-xs text-blue-300 hover:text-blue-200 border border-dashed border-[#26354f] rounded-lg px-2.5 py-1"
           >
+            {{ addingRule() ? 'Close' : '+ Add rule' }}
+          </button>
+        </div>
+
+        @if (addingRule()) {
+          <form (ngSubmit)="addRule()" class="px-4 pb-3 grid grid-cols-2 gap-2 shrink-0">
             <input
               type="text"
-              [(ngModel)]="editRuleName"
-              name="editRuleName"
-              aria-label="Rule name"
-              class="bg-[#0E131C] border border-blue-500 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none"
+              [(ngModel)]="newRuleName"
+              name="newRuleName"
+              placeholder="New rule, e.g. Wait for a retest"
+              aria-label="New rule name"
+              class="col-span-2 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
             <input
               type="text"
-              [(ngModel)]="editRuleDescription"
-              name="editRuleDescription"
+              [(ngModel)]="newRuleDescription"
+              name="newRuleDescription"
               maxlength="160"
-              placeholder="One-line description (optional)"
-              aria-label="Rule description"
-              class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              placeholder="Description (optional)"
+              aria-label="New rule description"
+              class="col-span-2 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
             <select
-              [(ngModel)]="editRuleCategory"
-              name="editRuleCategory"
-              aria-label="Rule type"
+              [(ngModel)]="newRuleCategory"
+              name="newRuleCategory"
+              aria-label="New rule type"
               class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-2 py-1.5 text-sm text-slate-200"
             >
-              <option value="">No type</option>
+              <option value="">Type (optional)</option>
               @for (cat of categories; track cat) {
                 <option [value]="cat">{{ cat }}</option>
               }
             </select>
-            <div class="flex gap-3 text-xs">
-              <button type="submit" class="text-blue-300 hover:text-blue-200">Save</button>
-              <button
-                type="button"
-                (click)="cancelEditRule()"
-                class="text-slate-400 hover:text-white"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        } @else {
-          <div
-            class="group px-5 py-3 border-b border-[#1F293D]/60 grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_90px_minmax(0,1fr)_minmax(0,1fr)_96px] gap-x-5 gap-y-2 items-center"
-          >
-            <div class="min-w-0">
-              <div class="text-sm font-semibold text-white">{{ rule.name }}</div>
-              <div class="text-xs text-slate-500 truncate">
-                {{ rule.description || 'No description' }}
-              </div>
-            </div>
-            <div>
-              @if (rule.category) {
-                <span
-                  class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                  [class]="
-                    rule.category === 'Entry'
-                      ? 'text-blue-300 border-blue-500/40 bg-blue-500/10'
-                      : rule.category === 'Setup'
-                        ? 'text-violet-300 border-violet-500/40 bg-violet-500/10'
-                        : rule.category === 'Risk'
-                          ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
-                          : 'text-amber-300 border-amber-500/40 bg-amber-500/10'
-                  "
-                  >{{ rule.category }}</span
-                >
-              }
-            </div>
-            <div class="text-xs text-slate-400">
-              @if (s && s.total > 0) {
-                Followed
-                <span class="font-mono text-slate-100">{{ s.followedCount }}/{{ s.total }}</span>
-                · <span class="font-mono text-slate-100">{{ s.percentage }}%</span>
-                <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden mt-1.5">
-                  <div
-                    class="h-full rounded-full"
-                    [class]="
-                      s.percentage >= 65
-                        ? 'bg-emerald-500'
-                        : s.percentage >= 45
-                          ? 'bg-blue-500'
-                          : 'bg-rose-500'
-                    "
-                    [style.width.%]="s.percentage"
-                  ></div>
-                </div>
-              } @else {
-                Not checked off on any trade in this range
-              }
-            </div>
-            <div class="text-xs text-slate-400 leading-relaxed">
-              @if (s && s.total > 0) {
-                Avg P/L when followed
-                <span
-                  class="font-mono"
-                  [class.text-emerald-400]="(s.avgPnlFollowed ?? 0) >= 0"
-                  [class.text-rose-400]="(s.avgPnlFollowed ?? 0) < 0"
-                  >{{
-                    s.avgPnlFollowed === null
-                      ? '—'
-                      : (s.avgPnlFollowed >= 0 ? '+' : '-') +
-                        '$' +
-                        (absValue(s.avgPnlFollowed) | number: '1.2-2')
-                  }}</span
-                >
-                <br />when broken
-                <span
-                  class="font-mono"
-                  [class.text-emerald-400]="(s.avgPnlBroken ?? 0) >= 0"
-                  [class.text-rose-400]="(s.avgPnlBroken ?? 0) < 0"
-                  >{{
-                    s.avgPnlBroken === null
-                      ? '—'
-                      : (s.avgPnlBroken >= 0 ? '+' : '-') +
-                        '$' +
-                        (absValue(s.avgPnlBroken) | number: '1.2-2')
-                  }}</span
-                >
-              }
-            </div>
-            <div
-              class="flex gap-3 text-xs justify-end opacity-60 group-hover:opacity-100 focus-within:opacity-100"
+            <button
+              type="submit"
+              class="rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500"
             >
-              <button
-                type="button"
-                (click)="startEditRule(rule)"
-                class="text-slate-300 hover:text-white"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                (click)="deleteRule(rule.id)"
-                class="text-rose-400 hover:text-rose-300"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+              Add rule
+            </button>
+          </form>
         }
-      } @empty {
-        <p class="px-5 py-4 text-sm text-slate-500">No rules yet. Add your first one below.</p>
-      }
 
-      <form
-        (ngSubmit)="addRule()"
-        class="px-5 py-3 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_140px_auto] gap-2 bg-[#0E131C]/40"
-      >
-        <input
-          type="text"
-          [(ngModel)]="newRuleName"
-          name="newRuleName"
-          placeholder="New rule, e.g. Wait for a retest"
-          aria-label="New rule name"
-          class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
-        />
-        <input
-          type="text"
-          [(ngModel)]="newRuleDescription"
-          name="newRuleDescription"
-          maxlength="160"
-          placeholder="Description (optional)"
-          aria-label="New rule description"
-          class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
-        />
-        <select
-          [(ngModel)]="newRuleCategory"
-          name="newRuleCategory"
-          aria-label="New rule type"
-          class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-2 py-2 text-sm text-slate-200"
-        >
-          <option value="">Type (optional)</option>
-          @for (cat of categories; track cat) {
-            <option [value]="cat">{{ cat }}</option>
+        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+          @for (rule of rules(); track rule.id) {
+            @let s = ruleStat(rule.id);
+            @if (editingRuleId() === rule.id) {
+              <form
+                (ngSubmit)="saveEditRule(rule.id)"
+                class="py-2.5 border-t border-[#1F293D]/60 first:border-t-0 grid grid-cols-2 gap-2"
+              >
+                <input
+                  type="text"
+                  [(ngModel)]="editRuleName"
+                  name="editRuleName"
+                  aria-label="Rule name"
+                  class="col-span-2 bg-[#0E131C] border border-blue-500 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  [(ngModel)]="editRuleDescription"
+                  name="editRuleDescription"
+                  maxlength="160"
+                  placeholder="One-line description (optional)"
+                  aria-label="Rule description"
+                  class="col-span-2 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                />
+                <select
+                  [(ngModel)]="editRuleCategory"
+                  name="editRuleCategory"
+                  aria-label="Rule type"
+                  class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-2 py-1.5 text-sm text-slate-200"
+                >
+                  <option value="">No type</option>
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
+                </select>
+                <div class="flex gap-3 text-xs justify-end">
+                  <button type="submit" class="text-blue-300 hover:text-blue-200">Save</button>
+                  <button
+                    type="button"
+                    (click)="cancelEditRule()"
+                    class="text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <div class="group py-2.5 border-t border-[#1F293D]/60 first:border-t-0">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-semibold text-white truncate">{{ rule.name }}</span>
+                  <span class="flex items-center gap-2 shrink-0">
+                    <span
+                      class="flex gap-2 text-[11px] opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                    >
+                      <button
+                        type="button"
+                        (click)="startEditRule(rule)"
+                        class="text-slate-300 hover:text-white"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteRule(rule.id)"
+                        class="text-rose-400 hover:text-rose-300"
+                      >
+                        Delete
+                      </button>
+                    </span>
+                    @if (rule.category) {
+                      <span
+                        class="text-[10.5px] font-semibold px-2 py-px rounded-full border"
+                        [class]="
+                          rule.category === 'Entry'
+                            ? 'text-blue-300 border-blue-500/40 bg-blue-500/10'
+                            : rule.category === 'Setup'
+                              ? 'text-violet-300 border-violet-500/40 bg-violet-500/10'
+                              : rule.category === 'Risk'
+                                ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10'
+                                : 'text-amber-300 border-amber-500/40 bg-amber-500/10'
+                        "
+                        >{{ rule.category }}</span
+                      >
+                    }
+                  </span>
+                </div>
+                @if (rule.description) {
+                  <p class="text-[11.5px] text-slate-500 truncate" [title]="rule.description">
+                    {{ rule.description }}
+                  </p>
+                }
+                @if (s && s.total > 0) {
+                  <div class="h-1.5 rounded-full bg-slate-800 overflow-hidden mt-1.5">
+                    <div
+                      class="h-full rounded-full"
+                      [class]="
+                        s.percentage >= 65
+                          ? 'bg-emerald-500'
+                          : s.percentage >= 45
+                            ? 'bg-blue-500'
+                            : 'bg-rose-500'
+                      "
+                      [style.width.%]="s.percentage"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-[11.5px] font-mono mt-1 text-slate-400">
+                    <span>{{ s.followedCount }}/{{ s.total }} · {{ s.percentage }}%</span>
+                    <span>
+                      <span
+                        [class.text-emerald-400]="(s.avgPnlFollowed ?? 0) >= 0"
+                        [class.text-rose-400]="(s.avgPnlFollowed ?? 0) < 0"
+                        [title]="'Avg P/L when followed'"
+                        >{{
+                          s.avgPnlFollowed === null
+                            ? '—'
+                            : (s.avgPnlFollowed >= 0 ? '+' : '-') +
+                              '$' +
+                              (absValue(s.avgPnlFollowed) | number: '1.2-2')
+                        }}</span
+                      >
+                      /
+                      <span
+                        [class.text-emerald-400]="(s.avgPnlBroken ?? 0) >= 0"
+                        [class.text-rose-400]="(s.avgPnlBroken ?? 0) < 0"
+                        [title]="'Avg P/L when broken'"
+                        >{{
+                          s.avgPnlBroken === null
+                            ? '—'
+                            : (s.avgPnlBroken >= 0 ? '+' : '-') +
+                              '$' +
+                              (absValue(s.avgPnlBroken) | number: '1.2-2')
+                        }}</span
+                      >
+                    </span>
+                  </div>
+                } @else {
+                  <p class="text-[11px] text-slate-500 mt-1">Not checked off in this range</p>
+                }
+              </div>
+            }
+          } @empty {
+            <p class="py-3 text-sm text-slate-500">No rules yet. Use + Add rule.</p>
           }
-        </select>
-        <button
-          type="submit"
-          class="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors"
-        >
-          + Add rule
-        </button>
-      </form>
-    </section>
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-      <!-- Mistakes -->
-      <section class="bg-[#0D1322] border border-[#1F293D] rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-b border-[#1F293D]">
-          <h2 class="text-sm font-semibold text-white">Mistakes</h2>
-          <p class="text-xs text-slate-500 mt-0.5">
-            What you tag on trades, most expensive first. Impact = share of what mistakes cost you.
-          </p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+      </section>
+
+      <!-- Mistakes -->
+      <section
+        class="bg-[#0D1322] border border-[#1F293D] rounded-xl flex flex-col min-h-0 overflow-hidden"
+      >
+        <div class="px-4 pt-3 pb-2 flex items-baseline justify-between gap-2 shrink-0">
+          <h2 class="text-sm font-semibold text-white">
+            Mistakes
+            <span class="ml-1 text-[11px] font-normal text-slate-500">most expensive first</span>
+          </h2>
+          <button
+            type="button"
+            (click)="addingMistake.set(!addingMistake())"
+            [attr.aria-expanded]="addingMistake()"
+            class="shrink-0 text-xs text-blue-300 hover:text-blue-200 border border-dashed border-[#26354f] rounded-lg px-2.5 py-1"
+          >
+            {{ addingMistake() ? 'Close' : '+ Add' }}
+          </button>
+        </div>
+        @if (addingMistake()) {
+          <form (ngSubmit)="addMistake()" class="px-4 pb-3 flex gap-2 shrink-0">
+            <input
+              type="text"
+              [(ngModel)]="newMistakeName"
+              name="newMistakeName"
+              maxlength="80"
+              placeholder="New mistake, e.g. Didn't wait for SMT"
+              aria-label="New mistake"
+              class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            />
+            <button
+              type="submit"
+              class="px-3 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500"
+            >
+              Add
+            </button>
+          </form>
+        }
+        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+          <table class="w-full text-[13px]">
             <thead>
               <tr class="text-[10px] uppercase tracking-wider text-slate-500 text-left">
-                <th class="font-semibold px-5 pt-3 pb-2">Mistake</th>
-                <th class="font-semibold px-3 pt-3 pb-2 text-right">Trades</th>
-                <th class="font-semibold px-3 pt-3 pb-2 text-right">Cost</th>
-                <th class="font-semibold px-3 pt-3 pb-2">Impact</th>
-                <th class="pt-3 pb-2 pr-5"><span class="sr-only">Actions</span></th>
+                <th class="font-semibold pb-1.5">Mistake</th>
+                <th class="font-semibold pb-1.5 text-right">Trades</th>
+                <th class="font-semibold pb-1.5 text-right">Cost</th>
+                <th class="font-semibold pb-1.5 text-right">Impact</th>
               </tr>
             </thead>
             <tbody>
@@ -431,7 +396,7 @@
                   class="group border-t border-[#1F293D]/60"
                   [class.text-slate-500]="m.impact === 'unused'"
                 >
-                  <td class="px-5 py-2.5">
+                  <td class="py-2 pr-2 relative max-w-0 w-full">
                     @if (editingMistakeId() === m.id) {
                       <form (ngSubmit)="saveEditMistake(m.id)" class="flex gap-2">
                         <input
@@ -440,7 +405,7 @@
                           name="editMistakeName"
                           maxlength="80"
                           aria-label="Mistake name"
-                          class="flex-1 bg-[#0E131C] border border-blue-500 rounded-md px-2 py-1 text-sm text-slate-200 focus:outline-none"
+                          class="flex-1 min-w-0 bg-[#0E131C] border border-blue-500 rounded-md px-2 py-0.5 text-sm text-slate-200 focus:outline-none"
                         />
                         <button type="submit" class="text-xs text-blue-300">Save</button>
                         <button
@@ -452,45 +417,14 @@
                         </button>
                       </form>
                     } @else {
-                      {{ m.name }}
-                    }
-                  </td>
-                  <td class="px-3 py-2.5 text-right font-mono">{{ m.count }}</td>
-                  <td
-                    class="px-3 py-2.5 text-right font-mono"
-                    [class.text-rose-400]="m.count > 0 && m.net < 0"
-                    [class.text-emerald-400]="m.count > 0 && m.net > 0"
-                  >
-                    {{
-                      m.count === 0
-                        ? '—'
-                        : (m.net >= 0 ? '+' : '-') + '$' + (absValue(m.net) | number: '1.2-2')
-                    }}
-                  </td>
-                  <td class="px-3 py-2.5">
-                    <span
-                      class="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                      [class]="
-                        m.impact === 'high'
-                          ? 'text-rose-300 bg-rose-500/15'
-                          : m.impact === 'medium'
-                            ? 'text-amber-300 bg-amber-500/12'
-                            : m.impact === 'low'
-                              ? 'text-emerald-300 bg-emerald-500/12'
-                              : 'text-slate-500 bg-slate-800/60'
-                      "
-                      >{{ impactLabel[m.impact] }}</span
-                    >
-                  </td>
-                  <td class="pr-5 py-2.5 text-right whitespace-nowrap text-xs">
-                    @if (editingMistakeId() !== m.id) {
+                      <span class="block truncate" [title]="m.name">{{ m.name }}</span>
                       <span
-                        class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                        class="absolute right-1 top-1/2 -translate-y-1/2 pl-3 text-[11px] bg-gradient-to-l from-[#0D1322] from-70% to-transparent opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
                       >
                         <button
                           type="button"
                           (click)="startEditMistake(m)"
-                          class="text-slate-400 hover:text-white mr-2"
+                          class="text-slate-400 hover:text-white mr-1.5"
                         >
                           Rename
                         </button>
@@ -504,129 +438,153 @@
                       </span>
                     }
                   </td>
+                  <td class="py-2 text-right font-mono">{{ m.count }}</td>
+                  <td
+                    class="py-2 pl-2 text-right font-mono whitespace-nowrap"
+                    [class.text-rose-400]="m.count > 0 && m.net < 0"
+                    [class.text-emerald-400]="m.count > 0 && m.net > 0"
+                  >
+                    {{
+                      m.count === 0
+                        ? '—'
+                        : (m.net >= 0 ? '+' : '-') + '$' + (absValue(m.net) | number: '1.2-2')
+                    }}
+                  </td>
+                  <td class="py-2 pl-2 text-right">
+                    <span
+                      class="text-[10.5px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                      [class]="
+                        m.impact === 'high'
+                          ? 'text-rose-300 bg-rose-500/15'
+                          : m.impact === 'medium'
+                            ? 'text-amber-300 bg-amber-500/12'
+                            : m.impact === 'low'
+                              ? 'text-emerald-300 bg-emerald-500/12'
+                              : 'text-slate-500 bg-slate-800/60'
+                      "
+                      >{{ impactLabel[m.impact] }}</span
+                    >
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="px-5 py-4 text-slate-500">
-                    No mistakes on your list yet.
-                  </td>
+                  <td colspan="4" class="py-3 text-slate-500">No mistakes on your list yet.</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
-        <form
-          (ngSubmit)="addMistake()"
-          class="px-5 py-3 border-t border-[#1F293D] flex gap-2 bg-[#0E131C]/40"
-        >
-          <input
-            type="text"
-            [(ngModel)]="newMistakeName"
-            name="newMistakeName"
-            maxlength="80"
-            placeholder="New mistake, e.g. Didn't wait for SMT"
-            aria-label="New mistake"
-            class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="submit"
-            class="px-3 py-2 rounded-lg text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700"
-          >
-            + Add
-          </button>
-        </form>
       </section>
 
-      <!-- Review questions -->
-      <section class="bg-[#0D1322] border border-[#1F293D] rounded-xl overflow-hidden">
-        <div class="px-5 py-4 border-b border-[#1F293D]">
-          <h2 class="text-sm font-semibold text-white">Review questions</h2>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Answered on every trade. Bars show how you've answered in this range.
-          </p>
-        </div>
-        @for (q of questions(); track q.id; let i = $index) {
-          @let st = questionStatById().get(q.id);
-          <div class="group px-5 py-3 border-b border-[#1F293D]/60 space-y-1.5">
-            @if (editingQuestionId() === q.id) {
-              <form (ngSubmit)="saveEditQuestion(q.id)" class="flex gap-2">
-                <input
-                  type="text"
-                  [(ngModel)]="editQuestionText"
-                  name="editQuestionText"
-                  aria-label="Question"
-                  class="flex-1 bg-[#0E131C] border border-blue-500 rounded-md px-2 py-1 text-sm text-slate-200 focus:outline-none"
-                />
-                <button type="submit" class="text-xs text-blue-300">Save</button>
-                <button type="button" (click)="cancelEditQuestion()" class="text-xs text-slate-400">
-                  Cancel
-                </button>
-              </form>
-            } @else {
-              <div class="flex items-start justify-between gap-3 text-sm">
-                <span class="text-slate-200">{{ i + 1 }}. {{ q.question_text }}</span>
-                <span class="flex items-center gap-3 shrink-0 text-xs">
-                  <span
-                    class="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
-                  >
+      <!-- Review questions, then tags -->
+      <div class="grid grid-rows-[auto_minmax(0,1fr)] gap-3 min-h-0">
+        <section
+          class="bg-[#0D1322] border border-[#1F293D] rounded-xl flex flex-col min-h-0 overflow-hidden xl:max-h-[52vh]"
+        >
+          <div class="px-4 pt-3 pb-2 flex items-baseline justify-between gap-2 shrink-0">
+            <h2 class="text-sm font-semibold text-white">Review questions</h2>
+            <button
+              type="button"
+              (click)="addingQuestion.set(!addingQuestion())"
+              [attr.aria-expanded]="addingQuestion()"
+              class="shrink-0 text-xs text-blue-300 hover:text-blue-200 border border-dashed border-[#26354f] rounded-lg px-2.5 py-1"
+            >
+              {{ addingQuestion() ? 'Close' : '+ Add' }}
+            </button>
+          </div>
+          @if (addingQuestion()) {
+            <form (ngSubmit)="addQuestion()" class="px-4 pb-3 flex gap-2 shrink-0">
+              <input
+                type="text"
+                [(ngModel)]="newQuestionText"
+                name="newQuestionText"
+                placeholder="e.g. Was this an A+ setup?"
+                aria-label="New question"
+                class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="submit"
+                class="px-3 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500"
+              >
+                Add
+              </button>
+            </form>
+          }
+          <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+            @for (q of questions(); track q.id; let i = $index) {
+              @let st = questionStatById().get(q.id);
+              <div class="group py-2 border-t border-[#1F293D]/60 first:border-t-0">
+                @if (editingQuestionId() === q.id) {
+                  <form (ngSubmit)="saveEditQuestion(q.id)" class="flex gap-2">
+                    <input
+                      type="text"
+                      [(ngModel)]="editQuestionText"
+                      name="editQuestionText"
+                      aria-label="Question"
+                      class="flex-1 min-w-0 bg-[#0E131C] border border-blue-500 rounded-md px-2 py-0.5 text-sm text-slate-200 focus:outline-none"
+                    />
+                    <button type="submit" class="text-xs text-blue-300">Save</button>
                     <button
                       type="button"
-                      (click)="startEditQuestion(q)"
-                      class="text-slate-400 hover:text-white mr-2"
+                      (click)="cancelEditQuestion()"
+                      class="text-xs text-slate-400"
                     >
-                      Edit
+                      Cancel
                     </button>
-                    <button
-                      type="button"
-                      (click)="deleteQuestion(q.id)"
-                      class="text-rose-400/80 hover:text-rose-300"
-                    >
-                      Delete
-                    </button>
-                  </span>
-                  @if (st && st.total > 0) {
-                    <span class="font-mono text-slate-400">{{ pct(st.yes, st.total) }}% Yes</span>
-                  }
-                </span>
+                  </form>
+                } @else {
+                  <div class="relative flex items-start justify-between gap-2 text-[13px]">
+                    <span class="text-slate-200">{{ q.question_text }}</span>
+                    <span class="flex items-center gap-2 shrink-0 text-[11px]">
+                      <span
+                        class="absolute right-0 -top-0.5 pl-4 py-0.5 bg-gradient-to-l from-[#0D1322] from-70% to-transparent opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                      >
+                        <button
+                          type="button"
+                          (click)="startEditQuestion(q)"
+                          class="text-slate-400 hover:text-white mr-1.5"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          (click)="deleteQuestion(q.id)"
+                          class="text-rose-400/80 hover:text-rose-300"
+                        >
+                          Delete
+                        </button>
+                      </span>
+                      @if (st && st.total > 0) {
+                        <span class="font-mono text-slate-400 whitespace-nowrap"
+                          >{{ pct(st.yes, st.total) }}% Yes</span
+                        >
+                      }
+                    </span>
+                  </div>
+                }
+                @if (st && st.total > 0) {
+                  <div class="flex h-1.5 rounded-full overflow-hidden bg-slate-800 mt-1.5">
+                    <div class="bg-emerald-500" [style.width.%]="pct(st.yes, st.total)"></div>
+                    <div class="bg-rose-500" [style.width.%]="pct(st.no, st.total)"></div>
+                    <div class="bg-slate-500" [style.width.%]="pct(st.other, st.total)"></div>
+                  </div>
+                  <div class="text-[10.5px] text-slate-500 mt-0.5">
+                    <span class="text-emerald-400">{{ st.yes }} yes</span> ·
+                    <span class="text-rose-400">{{ st.no }} no</span> · {{ st.other }} other
+                  </div>
+                } @else {
+                  <div class="text-[10.5px] text-slate-500 mt-0.5">No answers in this range</div>
+                }
               </div>
-            }
-            @if (st && st.total > 0) {
-              <div class="flex h-2 rounded-full overflow-hidden bg-slate-800">
-                <div class="bg-emerald-500" [style.width.%]="pct(st.yes, st.total)"></div>
-                <div class="bg-rose-500" [style.width.%]="pct(st.no, st.total)"></div>
-                <div class="bg-slate-500" [style.width.%]="pct(st.other, st.total)"></div>
-              </div>
-              <div class="text-[11px] text-slate-500">
-                <span class="text-emerald-400">{{ st.yes }} yes</span> ·
-                <span class="text-rose-400">{{ st.no }} no</span> · {{ st.other }} other
-              </div>
-            } @else {
-              <div class="text-[11px] text-slate-500">No answers in this range yet</div>
+            } @empty {
+              <p class="py-3 text-sm text-slate-500">No review questions yet.</p>
             }
           </div>
-        } @empty {
-          <p class="px-5 py-4 text-sm text-slate-500">No review questions yet.</p>
-        }
-        <form (ngSubmit)="addQuestion()" class="px-5 py-3 flex gap-2 bg-[#0E131C]/40">
-          <input
-            type="text"
-            [(ngModel)]="newQuestionText"
-            name="newQuestionText"
-            placeholder="New question, e.g. Was this an A+ setup?"
-            aria-label="New question"
-            class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
-          />
-          <button
-            type="submit"
-            class="px-3 py-2 rounded-lg text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700"
-          >
-            + Add question
-          </button>
-        </form>
-      </section>
-    </div>
+        </section>
 
-    <!-- Tag groups, with trades and net P/L per tag in this range -->
-    <app-tag-groups-editor [trades]="rangeTrades()" />
+        <!-- Tag groups, with trades and net P/L per tag in this range -->
+        <app-tag-groups-editor class="min-h-0" [trades]="rangeTrades()" />
+      </div>
+    </div>
   </div>
 </div>
