@@ -128,6 +128,7 @@ export class Dashboard {
 
   mistakes = signal<Mistake[]>([]);
   readonly tabLabels = {
+    all: 'All',
     timing: 'Timing',
     psychology: 'Psychology',
     discipline: 'Discipline',
