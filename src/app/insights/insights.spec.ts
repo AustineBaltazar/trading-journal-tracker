@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
-import { Insights } from './insights';
+import { Insights, TOP_COUNT } from './insights';
 
 describe('Insights', () => {
   beforeEach(() => localStorage.removeItem('insightsRange'));
@@ -59,7 +59,7 @@ describe('Insights', () => {
     });
   });
 
-  it('shows the top 3 each side, everything under All, or one group', async () => {
+  it('shows the top 5 each side, everything under All, or one group', async () => {
     const { fixture, http } = await open();
     const trades = [];
     let id = 1;
@@ -85,9 +85,10 @@ describe('Insights', () => {
     await fixture.whenStable();
     const c = fixture.componentInstance;
     const total = c.patterns().leaks.length;
-    expect(total).toBeGreaterThan(3);
-    expect(c.shown().leaks).toHaveLength(3);
-    expect(c.leakNote()).toBe(`3 of ${total} · costing you money`);
+    expect(TOP_COUNT).toBe(5);
+    expect(total).toBeGreaterThan(TOP_COUNT);
+    expect(c.shown().leaks).toHaveLength(5);
+    expect(c.leakNote()).toBe(`5 of ${total} · costing you money`);
 
     c.setFilter('all');
     expect(c.shown().leaks).toHaveLength(total);
