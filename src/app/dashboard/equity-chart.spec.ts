@@ -1,4 +1,4 @@
-import { buildEquityChart, CHART, niceStep } from './equity-chart';
+import { buildEquityChart, CHART, CHART_HEIGHT, niceStep } from './equity-chart';
 
 const trade = (id: number, trade_date: string, netPnl: number) => ({ id, trade_date, netPnl });
 
@@ -56,13 +56,10 @@ describe('buildEquityChart', () => {
     }
   });
 
-  it('draws winning bars up and losing bars down from the bar baseline', () => {
+  it('is short: date labels sit just under the curve', () => {
     const chart = buildEquityChart([trade(1, '2026-10-01', 100), trade(2, '2026-10-02', -50)])!;
-    const [win, loss] = chart.bars;
-    expect(win.positive).toBe(true);
-    expect(win.y + win.height).toBeCloseTo(chart.barsZeroY);
-    expect(loss.positive).toBe(false);
-    expect(loss.y).toBeCloseTo(chart.barsZeroY);
-    expect(loss.height).toBeCloseTo(win.height / 2);
+    expect(chart.labelY).toBeGreaterThan(CHART.top + CHART.curveHeight);
+    expect(chart.labelY).toBeLessThanOrEqual(CHART_HEIGHT);
+    expect(CHART.width / CHART_HEIGHT).toBeGreaterThan(6);
   });
 });

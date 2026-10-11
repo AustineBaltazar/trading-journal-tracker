@@ -1,16 +1,14 @@
-// SVG layout (viewBox units). The curve and the per-trade bars share the x axis.
+// SVG layout (viewBox units): wide and short, so the curve doesn't crowd the dashboard.
+// Per-trade P/L bars live on the Reports page.
 export const CHART = {
-  width: 720,
-  left: 60,
+  width: 1200,
+  left: 56,
   right: 12,
-  top: 12,
-  curveHeight: 170,
-  gap: 16,
-  barsHeight: 48,
+  top: 10,
+  curveHeight: 150,
   bottom: 24,
 };
-export const CHART_HEIGHT =
-  CHART.top + CHART.curveHeight + CHART.gap + CHART.barsHeight + CHART.bottom;
+export const CHART_HEIGHT = CHART.top + CHART.curveHeight + CHART.bottom;
 
 export interface EquityPoint {
   x: number;
@@ -26,8 +24,6 @@ export interface EquityChart {
   areaPath: string;
   zeroY: number;
   ticks: { y: number; label: string }[];
-  bars: { x: number; y: number; width: number; height: number; positive: boolean }[];
-  barsZeroY: number;
   dateLabels: { x: number; label: string; anchor: 'start' | 'middle' | 'end' }[];
   labelY: number;
   drawdown: { x: number; width: number } | null;
@@ -98,22 +94,6 @@ export function buildEquityChart(trades: any[]): EquityChart | null {
     ticks.push({ y: yAt(v), label: formatAxis(v) });
   }
 
-  // Per-trade P/L bars, scaled to the largest single win or loss
-  const barsTop = CHART.top + CHART.curveHeight + CHART.gap;
-  const barsZeroY = barsTop + CHART.barsHeight / 2;
-  const maxAbs = Math.max(...raw.slice(1).map((p) => Math.abs(p.pnl)), 1);
-  const barWidth = Math.max(2, Math.min(14, (plotWidth / sorted.length) * 0.6));
-  const bars = points.slice(1).map((p) => {
-    const height = Math.max(1, (Math.abs(p.pnl) / maxAbs) * (CHART.barsHeight / 2));
-    return {
-      x: p.x - barWidth / 2,
-      y: p.pnl >= 0 ? barsZeroY - height : barsZeroY,
-      width: barWidth,
-      height,
-      positive: p.pnl >= 0,
-    };
-  });
-
   // Largest peak-to-trough drop in the running total
   let peakIndex = 0;
   let maxDrawdown = 0;
@@ -129,7 +109,7 @@ export function buildEquityChart(trades: any[]): EquityChart | null {
     }
   }
 
-  const labelY = barsTop + CHART.barsHeight + 18;
+  const labelY = CHART.top + CHART.curveHeight + 18;
   const dateLabels: EquityChart['dateLabels'] = [
     { x: points[1].x, label: points[1].date, anchor: 'start' },
   ];
@@ -146,8 +126,6 @@ export function buildEquityChart(trades: any[]): EquityChart | null {
     areaPath,
     zeroY,
     ticks,
-    bars,
-    barsZeroY,
     dateLabels,
     labelY,
     drawdown:
