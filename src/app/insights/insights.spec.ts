@@ -59,6 +59,48 @@ describe('Insights', () => {
     });
   });
 
+  it('shows the top 3 each side, everything under All, or one group', async () => {
+    const { fixture, http } = await open();
+    const trades = [];
+    let id = 1;
+    // 4 losing hours (timing) and 4 losing emotions (behavior), 3 trades each
+    for (const [hour, emotion, net] of [
+      ['03', 'FOMO', -400],
+      ['04', 'Revenge', -300],
+      ['05', 'Anxious', -200],
+      ['06', 'Hesitant', -100],
+    ] as const) {
+      for (const day of [1, 2, 3]) {
+        trades.push({
+          id: id++,
+          trade_date: `2026-09-0${day}`,
+          entry_time: `${hour}:${String(id).padStart(2, '0')}`,
+          netPnl: net / 3,
+          outcome: 'loss',
+          emotions: [emotion],
+        });
+      }
+    }
+    http.expectOne((r) => r.url.endsWith('/trades')).flush({ trades });
+    await fixture.whenStable();
+    const c = fixture.componentInstance;
+    const total = c.patterns().leaks.length;
+    expect(total).toBeGreaterThan(3);
+    expect(c.shown().leaks).toHaveLength(3);
+    expect(c.leakNote()).toBe(`3 of ${total} · costing you money`);
+
+    c.setFilter('all');
+    expect(c.shown().leaks).toHaveLength(total);
+    expect(c.leakNote()).toBe('costing you money');
+
+    c.setFilter('behavior');
+    expect(c.shown().leaks.every((p) => p.group === 'behavior')).toBe(true);
+    expect(c.shown().leaks.map((p) => p.category)).toContain('Behavior');
+    const chip = c.chips().find((x) => x.key === 'timing')!;
+    expect(chip.count).toBe(c.patterns().leaks.filter((p) => p.group === 'timing').length);
+    expect(c.chips().find((x) => x.key === 'grades')!.count).toBe(0);
+  });
+
   it('remembers the range and asks for rule stats in it', async () => {
     const { fixture, http } = await open();
     http.expectOne((r) => r.url.endsWith('/trades')).flush({ trades: [] });

@@ -14,7 +14,17 @@ import {
   rangeDates,
   tradesInRange,
 } from '../reports/report-logic';
-import { buildPatterns, buildRecords, Pattern } from './insights-logic';
+import {
+  buildPatterns,
+  buildRecords,
+  Pattern,
+  PATTERN_GROUPS,
+  PatternGroup,
+} from './insights-logic';
+
+// "top" = the 3 biggest leaks and edges; "all" = every pattern; or one group
+export type InsightFilter = 'top' | 'all' | PatternGroup;
+const TOP_COUNT = 3;
 
 const RANGE_KEY = 'insightsRange';
 const RANGES: { key: RangeKey; label: string }[] = [
@@ -73,6 +83,44 @@ export class Insights {
     }),
   );
   readonly records = computed(() => buildRecords(this.rangeTrades()));
+
+  filter = signal<InsightFilter>('top');
+  // Chips with how many patterns each would show (leaks + edges)
+  readonly chips = computed(() => {
+    const { leaks, edges } = this.patterns();
+    const all = [...leaks, ...edges];
+    return [
+      { key: 'top' as InsightFilter, label: 'Top', count: Math.min(all.length, TOP_COUNT * 2) },
+      { key: 'all' as InsightFilter, label: 'All', count: all.length },
+      ...PATTERN_GROUPS.map((g) => ({
+        key: g.key as InsightFilter,
+        label: g.label,
+        count: all.filter((p) => p.group === g.key).length,
+      })),
+    ];
+  });
+  readonly shown = computed(() => {
+    const { leaks, edges } = this.patterns();
+    const f = this.filter();
+    if (f === 'top') return { leaks: leaks.slice(0, TOP_COUNT), edges: edges.slice(0, TOP_COUNT) };
+    if (f === 'all') return { leaks, edges };
+    return { leaks: leaks.filter((p) => p.group === f), edges: edges.filter((p) => p.group === f) };
+  });
+  // "3 of 15 · costing you money"
+  readonly leakNote = computed(() =>
+    this.note(this.shown().leaks.length, this.patterns().leaks.length, 'costing you money'),
+  );
+  readonly edgeNote = computed(() =>
+    this.note(this.shown().edges.length, this.patterns().edges.length, 'keep doing these'),
+  );
+
+  private note(shown: number, total: number, words: string) {
+    return shown < total ? `${shown} of ${total} · ${words}` : words;
+  }
+
+  setFilter(f: InsightFilter) {
+    this.filter.set(f);
+  }
 
   constructor() {
     effect(() => this.loadTrades(this.tradeMode.mode()));
