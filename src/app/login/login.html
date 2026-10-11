@@ -1,117 +1,109 @@
-<div class="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4">
-  <div class="w-full max-w-sm">
-    <div class="flex flex-col items-center gap-3 mb-8">
-      <div
-        class="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-400 p-[1.5px] flex items-center justify-center shadow-lg shadow-blue-500/20"
+<app-auth-shell>
+  <form (ngSubmit)="onSubmit()">
+    <h1 class="text-lg font-semibold text-white mb-1">Welcome back</h1>
+    <p class="text-xs text-slate-400 mb-6">Log in to your trading journal</p>
+
+    @if (waitSeconds() > 0) {
+      <p
+        role="alert"
+        class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
       >
-        <div class="h-full w-full bg-[#0B0E14] rounded-[14px] flex items-center justify-center">
-          <svg
-            class="w-6 h-6 text-emerald-400"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2.5"
-            viewBox="0 0 24 24"
+        Too many attempts. Try again in <b class="font-mono">{{ formatWait(waitSeconds()) }}</b
+        >, or
+        <a routerLink="/forgot-password" class="underline underline-offset-2">reset your password</a
+        >.
+      </p>
+    } @else if (unverified()) {
+      <div
+        role="alert"
+        class="text-xs text-amber-100 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-4"
+      >
+        <p>Please confirm your email first. We sent you a link when you signed up.</p>
+        @if (resent()) {
+          <p class="mt-1 text-emerald-300">Sent. Check your inbox (and Spam).</p>
+        } @else {
+          <button
+            type="button"
+            (click)="resendLink()"
+            class="mt-1 text-blue-300 hover:text-blue-200 underline underline-offset-2"
           >
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-          </svg>
-        </div>
+            Send a new confirmation link
+          </button>
+        }
       </div>
-      <div class="flex items-center gap-1.5">
-        <span class="font-extrabold tracking-tight text-white text-lg">TEST MNQ</span>
-        <span class="text-sm text-slate-500 font-mono">/</span>
-        <span class="text-sm font-semibold text-slate-300 tracking-wider">JOURNAL</span>
-      </div>
+    } @else if (errorMessage()) {
+      <p
+        role="alert"
+        class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
+      >
+        {{ errorMessage() }}
+        @if (attemptsLeft() !== null && attemptsLeft()! <= 2) {
+          <b>{{ attemptsLeft() }} {{ attemptsLeft() === 1 ? 'try' : 'tries' }} left</b> before a
+          short wait.
+        }
+      </p>
+    }
+
+    <label for="login-email" class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
+    <input
+      id="login-email"
+      type="email"
+      autocomplete="username"
+      [(ngModel)]="email"
+      name="email"
+      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+    />
+
+    <div class="flex items-baseline justify-between mb-1.5">
+      <label for="login-password" class="text-xs font-medium text-slate-300">Password</label>
+      <a routerLink="/forgot-password" class="text-[11px] text-blue-400 hover:text-blue-300"
+        >Forgot password?</a
+      >
+    </div>
+    <div class="relative mb-4">
+      <input
+        id="login-password"
+        [type]="showPassword() ? 'text' : 'password'"
+        autocomplete="current-password"
+        [(ngModel)]="password"
+        name="password"
+        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
+      />
+      <button
+        type="button"
+        (click)="showPassword.set(!showPassword())"
+        [attr.aria-pressed]="showPassword()"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1"
+      >
+        {{ showPassword() ? 'Hide' : 'Show' }}
+      </button>
     </div>
 
-    <form
-      (ngSubmit)="onSubmit()"
-      class="bg-[#121722] border border-[#1F293D] rounded-2xl p-6 shadow-xl"
-    >
-      <h1 class="text-lg font-semibold text-white mb-1">Welcome back</h1>
-      <p class="text-xs text-slate-400 mb-6">Log in to your trading journal</p>
-
-      @if (waitSeconds() > 0) {
-        <p
-          role="alert"
-          class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
-        >
-          Too many attempts. Try again in
-          <b class="font-mono">{{ formatWait(waitSeconds()) }}</b
-          >.
-        </p>
-      } @else if (errorMessage()) {
-        <p
-          role="alert"
-          class="text-rose-300 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2 mb-4"
-        >
-          {{ errorMessage() }}
-          @if (attemptsLeft() !== null && attemptsLeft()! <= 2) {
-            <b>{{ attemptsLeft() }} {{ attemptsLeft() === 1 ? 'try' : 'tries' }} left</b> before a
-            short wait.
-          }
-        </p>
-      }
-
-      <label for="login-email" class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
+    <label class="flex items-center gap-2 text-xs text-slate-400 mb-5 cursor-pointer">
       <input
-        id="login-email"
-        type="email"
-        autocomplete="username"
-        [(ngModel)]="email"
-        name="email"
-        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+        type="checkbox"
+        [(ngModel)]="remember"
+        name="remember"
+        class="h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
       />
+      Keep me logged in for 30 days
+    </label>
 
-      <label for="login-password" class="block text-xs font-medium text-slate-300 mb-1.5"
-        >Password</label
-      >
-      <div class="relative mb-4">
-        <input
-          id="login-password"
-          [type]="showPassword() ? 'text' : 'password'"
-          autocomplete="current-password"
-          [(ngModel)]="password"
-          name="password"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
-        />
-        <button
-          type="button"
-          (click)="showPassword.set(!showPassword())"
-          [attr.aria-pressed]="showPassword()"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1"
-        >
-          {{ showPassword() ? 'Hide' : 'Show' }}
-        </button>
-      </div>
+    @if (captchaRequired() && turnstileOn) {
+      <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
+    }
 
-      <label class="flex items-center gap-2 text-xs text-slate-400 mb-5 cursor-pointer">
-        <input
-          type="checkbox"
-          [(ngModel)]="remember"
-          name="remember"
-          class="h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
-        />
-        Keep me logged in for 30 days
-      </label>
+    <button
+      type="submit"
+      [disabled]="submitting() || waitSeconds() > 0"
+      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {{ submitting() ? 'Logging in…' : 'Log in' }}
+    </button>
 
-      @if (captchaRequired() && turnstileOn) {
-        <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
-      }
-
-      <button
-        type="submit"
-        [disabled]="submitting() || waitSeconds() > 0"
-        class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {{ submitting() ? 'Logging in…' : 'Log in' }}
-      </button>
-
-      <p class="text-center text-xs text-slate-500 mt-5">
-        Don't have an account?
-        <a routerLink="/register" class="text-blue-400 hover:text-blue-300 font-medium">Sign up</a>
-      </p>
-    </form>
-  </div>
-</div>
+    <p class="text-center text-xs text-slate-500 mt-5">
+      Don't have an account?
+      <a routerLink="/register" class="text-blue-400 hover:text-blue-300 font-medium">Sign up</a>
+    </p>
+  </form>
+</app-auth-shell>

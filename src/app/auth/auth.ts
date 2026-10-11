@@ -16,6 +16,8 @@ export interface AuthUser {
 export class AuthService {
   private http = inject(HttpClient);
   readonly user = signal<AuthUser | null>(null);
+  // The address a link was just sent to, for the "check your email" page
+  readonly pendingEmail = signal('');
 
   constructor() {
     // Left over from before the cookie switch
@@ -51,7 +53,9 @@ export class AuthService {
   }
 }
 
-const AUTH_PATHS = /\/(me|login|register|logout)$/;
+// Answers from these are about the form itself, never "your session ended"
+const AUTH_PATHS =
+  /\/(me|login|register|logout|verify-email|resend-verification|forgot-password|reset-password(\/check)?)$/;
 
 // Sends the session cookie with API calls (needed in dev, where the API is on another port),
 // and goes to the login page when the session has ended.
