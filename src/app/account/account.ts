@@ -6,6 +6,7 @@ import { DatePipe } from '@angular/common';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth';
 import { PasswordStrength, newPasswordOk } from '../auth/auth-ui';
+import { GoogleButton, googleOn } from '../auth/google-button';
 
 interface Device {
   id: number;
@@ -40,7 +41,7 @@ export function formatBytes(bytes: number) {
 
 @Component({
   selector: 'app-account',
-  imports: [FormsModule, RouterLink, DatePipe, PasswordStrength],
+  imports: [FormsModule, RouterLink, DatePipe, PasswordStrength, GoogleButton],
   templateUrl: './account.html',
 })
 export class Account implements OnInit {
@@ -74,6 +75,13 @@ export class Account implements OnInit {
 
   devicesNote = signal('');
 
+  // How this account can sign in. Google-only accounts confirm with Google instead of
+  // a password to set a password or delete the account.
+  readonly googleOn = googleOn();
+  hasPassword = signal(true);
+  googleEmail = signal<string | null>(null);
+  signInNote = signal('');
+
   deleteConfirm = '';
   deletePassword = '';
   deleteError = signal('');
@@ -83,14 +91,17 @@ export class Account implements OnInit {
     return (
       !this.demo() &&
       !this.changingPassword() &&
-      !!this.currentPassword &&
+      (!!this.currentPassword || !this.hasPassword()) &&
       newPasswordOk(this.newPassword, this.email())
     );
   }
 
   get canDelete() {
     return (
-      !this.demo() && !this.deleting() && this.deleteConfirm === 'DELETE' && !!this.deletePassword
+      !this.demo() &&
+      !this.deleting() &&
+      this.deleteConfirm === 'DELETE' &&
+      (!!this.deletePassword || !this.hasPassword())
     );
   }
 
@@ -102,6 +113,8 @@ export class Account implements OnInit {
       this.emailConfirmed.set(r.emailConfirmed);
       this.createdAt.set(r.createdAt);
       this.storage.set(r.storage);
+      this.hasPassword.set(r.signIn?.password ?? true);
+      this.googleEmail.set(r.signIn?.google ?? null);
       this.loaded.set(true);
     });
     this.loadDevices();
@@ -127,22 +140,29 @@ export class Account implements OnInit {
     });
   }
 
-  changePassword() {
+  // googleCredential: a Google-only account setting its first password
+  changePassword(googleCredential?: string) {
     if (!this.canChangePassword) return;
     this.changingPassword.set(true);
     this.passwordError.set('');
     this.passwordNote.set('');
     this.http
       .post(`${this.api}/account/password`, {
-        currentPassword: this.currentPassword,
+        currentPassword: this.hasPassword() ? this.currentPassword : undefined,
         newPassword: this.newPassword,
+        googleCredential,
       })
       .subscribe({
         next: () => {
           this.changingPassword.set(false);
           this.currentPassword = '';
           this.newPassword = '';
-          this.passwordNote.set('Password changed. Your other devices were logged out.');
+          this.passwordNote.set(
+            this.hasPassword()
+              ? 'Password changed. Your other devices were logged out.'
+              : 'Password set. You can now log in with your email and password too.',
+          );
+          this.hasPassword.set(true);
           this.loadDevices();
         },
         error: (err) => {
@@ -175,13 +195,40 @@ export class Account implements OnInit {
       });
   }
 
-  deleteAccount() {
+  connectGoogle(credential: string) {
+    this.signInNote.set('');
+    this.http.post<{ google: string }>(`${this.api}/account/google`, { credential }).subscribe({
+      next: (r) => {
+        this.googleEmail.set(r.google);
+        this.signInNote.set('Google connected. You can now use Continue with Google.');
+      },
+      error: (err) => this.signInNote.set(err.error?.error || 'Something went wrong.'),
+    });
+  }
+
+  disconnectGoogle() {
+    this.signInNote.set('');
+    this.http.delete(`${this.api}/account/google`).subscribe({
+      next: () => {
+        this.googleEmail.set(null);
+        this.signInNote.set('Google disconnected. Log in with your email and password.');
+      },
+      error: (err) => this.signInNote.set(err.error?.error || 'Something went wrong.'),
+    });
+  }
+
+  // googleCredential: a Google-only account confirming with Google
+  deleteAccount(googleCredential?: string) {
     if (!this.canDelete) return;
     this.deleting.set(true);
     this.deleteError.set('');
     this.http
       .delete(`${this.api}/account`, {
-        body: { password: this.deletePassword, confirm: this.deleteConfirm },
+        body: {
+          password: this.hasPassword() ? this.deletePassword : undefined,
+          confirm: this.deleteConfirm,
+          googleCredential,
+        },
       })
       .subscribe({
         next: () => {

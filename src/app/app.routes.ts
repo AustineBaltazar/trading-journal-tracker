@@ -17,6 +17,11 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/check-email').then((m) => m.CheckEmail),
   },
   {
+    path: 'welcome',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./auth/welcome').then((m) => m.Welcome),
+  },
+  {
     path: 'forgot-password',
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/forgot-password').then((m) => m.ForgotPassword),

@@ -6,9 +6,10 @@ import { environment } from '../../environments/environment';
 import { AuthService, formatWait } from '../auth/auth';
 import { Turnstile, turnstileOn } from '../auth/turnstile';
 import { AuthShell } from '../auth/auth-ui';
+import { GoogleEntry } from '../auth/google-entry';
 
 @Component({
-  imports: [FormsModule, RouterLink, Turnstile, AuthShell],
+  imports: [FormsModule, RouterLink, Turnstile, AuthShell, GoogleEntry],
   selector: 'app-login',
   styleUrl: './login.css',
   templateUrl: './login.html',

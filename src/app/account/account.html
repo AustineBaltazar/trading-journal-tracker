@@ -55,25 +55,98 @@
       </form>
     </section>
 
+    <!-- Sign-in methods -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Sign-in methods</h2>
+      <p class="text-xs text-slate-400 mb-3">The ways you can log in to this journal.</p>
+      <ul class="divide-y divide-[#1F293D]">
+        <li class="flex items-center gap-3 py-2.5">
+          <span
+            class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm font-bold text-slate-300"
+            aria-hidden="true"
+            >G</span
+          >
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-slate-200">Google</p>
+            <p class="text-[11px] text-slate-500 truncate">
+              {{ googleEmail() ?? 'Not connected' }}
+            </p>
+          </div>
+          @if (googleEmail()) {
+            <span
+              class="text-[10.5px] font-semibold px-2 py-px rounded-full border border-emerald-500/40 text-emerald-300"
+              >Connected</span
+            >
+            <button
+              type="button"
+              (click)="disconnectGoogle()"
+              [disabled]="demo() || !hasPassword()"
+              [title]="hasPassword() ? '' : 'Set a password first'"
+              class="text-xs px-3 py-1 rounded-lg border border-[#1F293D] text-slate-300 hover:border-slate-500 disabled:opacity-40"
+            >
+              Disconnect
+            </button>
+          }
+        </li>
+        @if (!googleEmail() && googleOn && !demo()) {
+          <li class="py-2.5">
+            <app-google-button
+              text="continue_with"
+              [width]="260"
+              (credential)="connectGoogle($event)"
+            />
+          </li>
+        }
+        <li class="flex items-center gap-3 py-2.5">
+          <span
+            class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm"
+            aria-hidden="true"
+            >🔑</span
+          >
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-slate-200">Email and password</p>
+            <p class="text-[11px] text-slate-500">
+              {{ hasPassword() ? 'Set' : 'No password yet: set one below' }}
+            </p>
+          </div>
+          @if (hasPassword()) {
+            <span
+              class="text-[10.5px] font-semibold px-2 py-px rounded-full border border-emerald-500/40 text-emerald-300"
+              >On</span
+            >
+          }
+        </li>
+      </ul>
+      <p class="text-xs text-slate-400 mt-2" role="status">{{ signInNote() }}</p>
+    </section>
+
     <!-- Change password -->
     <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
-      <h2 class="text-sm font-semibold text-white">Change password</h2>
+      <h2 class="text-sm font-semibold text-white">
+        {{ hasPassword() ? 'Change password' : 'Set a password' }}
+      </h2>
       <p class="text-xs text-slate-400 mb-4">
-        You'll stay logged in here; other devices are logged out.
+        @if (hasPassword()) {
+          You'll stay logged in here; other devices are logged out.
+        } @else {
+          So you can also log in with your email, without Google.
+        }
       </p>
       <form (ngSubmit)="changePassword()">
-        <label for="acct-current" class="block text-xs font-medium text-slate-300 mb-1.5"
-          >Current password</label
-        >
-        <input
-          id="acct-current"
-          type="password"
-          name="currentPassword"
-          autocomplete="current-password"
-          [(ngModel)]="currentPassword"
-          [disabled]="demo()"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
-        />
+        @if (hasPassword()) {
+          <label for="acct-current" class="block text-xs font-medium text-slate-300 mb-1.5"
+            >Current password</label
+          >
+          <input
+            id="acct-current"
+            type="password"
+            name="currentPassword"
+            autocomplete="current-password"
+            [(ngModel)]="currentPassword"
+            [disabled]="demo()"
+            class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+          />
+        }
         <label for="acct-new" class="block text-xs font-medium text-slate-300 mb-1.5"
           >New password</label
         >
@@ -101,13 +174,22 @@
         @if (passwordNote()) {
           <p role="status" class="text-xs text-emerald-300 mt-3">{{ passwordNote() }}</p>
         }
-        <button
-          type="submit"
-          [disabled]="!canChangePassword"
-          class="mt-4 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ changingPassword() ? 'Changing…' : 'Change password' }}
-        </button>
+        @if (hasPassword()) {
+          <button
+            type="submit"
+            [disabled]="!canChangePassword"
+            class="mt-4 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ changingPassword() ? 'Changing…' : 'Change password' }}
+          </button>
+        } @else if (canChangePassword) {
+          <p class="text-xs text-slate-400 mt-4 mb-2">Confirm it's you to save:</p>
+          <app-google-button
+            text="continue_with"
+            [width]="260"
+            (credential)="changePassword($event)"
+          />
+        }
       </form>
     </section>
 
@@ -258,28 +340,39 @@
           [disabled]="demo()"
           class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
         />
-        <label for="acct-delete-password" class="block text-xs font-medium text-slate-300 mb-1.5"
-          >Your password</label
-        >
-        <input
-          id="acct-delete-password"
-          type="password"
-          name="deletePassword"
-          autocomplete="current-password"
-          [(ngModel)]="deletePassword"
-          [disabled]="demo()"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
-        />
+        @if (hasPassword()) {
+          <label for="acct-delete-password" class="block text-xs font-medium text-slate-300 mb-1.5"
+            >Your password</label
+          >
+          <input
+            id="acct-delete-password"
+            type="password"
+            name="deletePassword"
+            autocomplete="current-password"
+            [(ngModel)]="deletePassword"
+            [disabled]="demo()"
+            class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+          />
+        }
         @if (deleteError()) {
           <p role="alert" class="text-xs text-rose-300 mb-3">{{ deleteError() }}</p>
         }
-        <button
-          type="submit"
-          [disabled]="!canDelete"
-          class="text-sm font-semibold px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {{ deleting() ? 'Deleting…' : 'Delete my account' }}
-        </button>
+        @if (hasPassword()) {
+          <button
+            type="submit"
+            [disabled]="!canDelete"
+            class="text-sm font-semibold px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {{ deleting() ? 'Deleting…' : 'Delete my account' }}
+          </button>
+        } @else if (canDelete) {
+          <p class="text-xs text-slate-400 mb-2">Confirm with Google to delete for good:</p>
+          <app-google-button
+            text="continue_with"
+            [width]="260"
+            (credential)="deleteAccount($event)"
+          />
+        }
       </form>
     </section>
   </div>

@@ -6,9 +6,10 @@ import { environment } from '../../environments/environment';
 import { AuthService, passwordStrength } from '../auth/auth';
 import { AuthShell, PasswordStrength, newPasswordOk } from '../auth/auth-ui';
 import { Turnstile, turnstileOn } from '../auth/turnstile';
+import { GoogleEntry } from '../auth/google-entry';
 
 @Component({
-  imports: [FormsModule, RouterLink, Turnstile, AuthShell, PasswordStrength],
+  imports: [FormsModule, RouterLink, Turnstile, AuthShell, PasswordStrength, GoogleEntry],
   selector: 'app-register',
   styleUrl: './register.css',
   templateUrl: './register.html',
