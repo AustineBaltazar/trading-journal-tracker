@@ -11,8 +11,20 @@ export interface Part {
   tone?: 'win' | 'loss';
 }
 
+// The filter chips on the page
+export type PatternGroup = 'behavior' | 'timing' | 'grades' | 'tags' | 'discipline';
+
+export const PATTERN_GROUPS: { key: PatternGroup; label: string }[] = [
+  { key: 'behavior', label: 'Behavior' },
+  { key: 'timing', label: 'Timing' },
+  { key: 'grades', label: 'Grades' },
+  { key: 'tags', label: 'Tags' },
+  { key: 'discipline', label: 'Mistakes & rules' },
+];
+
 export interface Pattern {
   kind: 'leak' | 'edge';
+  group: PatternGroup;
   category: string; // "Behavior", "Time of day", a tag group's name...
   icon: 'pink' | 'blue' | 'orange' | 'green' | 'slate' | 'cyan';
   parts: Part[];
@@ -138,8 +150,16 @@ export function buildPatterns(input: {
   const out: Pattern[] = [];
   const overall = summarize(trades);
   const enough = (g: { total: number }) => g.total >= MIN_SAMPLE;
-  const add = (p: Omit<Pattern, 'weight'>, net: number) =>
-    out.push({ ...p, weight: Math.abs(net) });
+  // Which chip a pattern sits under follows the Reports tab behind it; the
+  // sequence and overtrading ones (no tab) are behaviour
+  const groupOf = (p: Omit<Pattern, 'weight' | 'group'>): PatternGroup =>
+    p.tab === 'timing' || p.tab === 'tags' || p.tab === 'discipline'
+      ? p.tab
+      : p.category === 'Grade'
+        ? 'grades'
+        : 'behavior';
+  const add = (p: Omit<Pattern, 'weight' | 'group'>, net: number) =>
+    out.push({ ...p, group: groupOf(p), weight: Math.abs(net) });
   const record = (g: { wins?: number; total: number }) => `${g.wins ?? 0} of ${g.total} won`;
 
   const edge = buildEdgeAnalytics(trades);
