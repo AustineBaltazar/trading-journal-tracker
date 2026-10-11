@@ -20,6 +20,9 @@ export class AuthService {
   readonly user = signal<AuthUser | null>(null);
   // The address a link was just sent to, for the "check your email" page
   readonly pendingEmail = signal('');
+  // A first "Continue with Google": the token and what Google told us, until the
+  // welcome page sends the Terms with it
+  readonly pendingGoogle = signal<{ credential: string; email: string; name: string } | null>(null);
 
   constructor() {
     // Left over from before the cookie switch
@@ -45,6 +48,31 @@ export class AuthService {
   // The session ended on the server (logged out elsewhere, or expired)
   expired() {
     this.user.set(null);
+  }
+
+  // Signs in with a Google ID token. 'signup' means the welcome page should ask for the
+  // Terms first; 'link' means a password account already uses this email.
+  googleSignIn(
+    credential: string,
+  ): Observable<
+    { outcome: 'in'; user: AuthUser } | { outcome: 'signup' } | { outcome: 'link'; error: string }
+  > {
+    return this.http.post<any>(`${environment.apiUrl}/auth/google`, { credential }).pipe(
+      map((r) => {
+        if (r.needsSignup) {
+          this.pendingGoogle.set({ credential, email: r.email, name: r.name });
+          return { outcome: 'signup' as const };
+        }
+        this.user.set(r.user);
+        return { outcome: 'in' as const, user: r.user as AuthUser };
+      }),
+      catchError((err) => {
+        if (err instanceof HttpErrorResponse && err.status === 409) {
+          return of({ outcome: 'link' as const, error: err.error?.error as string });
+        }
+        return throwError(() => err);
+      }),
+    );
   }
 
   logout(): Observable<unknown> {
