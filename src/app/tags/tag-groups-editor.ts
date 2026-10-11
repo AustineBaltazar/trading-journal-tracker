@@ -12,23 +12,52 @@ import { Tag, TagGroup } from './tags';
   imports: [FormsModule, DecimalPipe],
   host: { class: 'block' },
   template: `
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl shadow-xl overflow-hidden">
-      <div class="px-6 py-5 border-b border-[#1F293D]/60">
-        <h2 class="text-sm font-semibold text-white tracking-tight">Tags</h2>
-        <p class="text-xs text-slate-400 mt-0.5">
-          Groups of tags you put on trades, like Setup, News or Market. Reports breaks your results
-          down by each group.
-        </p>
+    <section
+      class="h-full bg-[#0D1322] border border-[#1F293D] rounded-xl flex flex-col min-h-0 overflow-hidden"
+    >
+      <div class="px-4 pt-3 pb-2 flex items-baseline justify-between gap-2 shrink-0">
+        <h2 class="text-sm font-semibold text-white">
+          Tags
+          <span class="ml-1 text-[11px] font-normal text-slate-500">net P/L per tag</span>
+        </h2>
+        <button
+          type="button"
+          (click)="addingGroup.set(!addingGroup())"
+          [attr.aria-expanded]="addingGroup()"
+          class="shrink-0 text-xs text-blue-300 hover:text-blue-200 border border-dashed border-[#26354f] rounded-lg px-2.5 py-1"
+        >
+          {{ addingGroup() ? 'Close' : '+ Group' }}
+        </button>
       </div>
 
-      @if (error()) {
-        <p class="px-6 pt-4 text-xs text-rose-400" role="alert">{{ error() }}</p>
+      @if (addingGroup()) {
+        <form (ngSubmit)="addGroup()" class="px-4 pb-3 flex gap-2 shrink-0">
+          <input
+            type="text"
+            [(ngModel)]="newGroupName"
+            name="newGroupName"
+            maxlength="40"
+            placeholder="New group, e.g. Confluence"
+            aria-label="New tag group"
+            class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          />
+          <button
+            type="submit"
+            class="px-3 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500"
+          >
+            Add
+          </button>
+        </form>
       }
 
-      <div class="divide-y divide-[#1F293D]/40">
+      @if (error()) {
+        <p class="px-4 pb-2 text-xs text-rose-400" role="alert">{{ error() }}</p>
+      }
+
+      <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
         @for (group of groups(); track group.id) {
-          <div class="px-6 py-4 space-y-3">
-            <div class="flex items-center justify-between gap-3">
+          <div class="group py-2 border-t border-[#1F293D]/60 first:border-t-0 space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
               @if (editingGroupId() === group.id) {
                 <form (ngSubmit)="renameGroup(group)" class="flex gap-2 flex-1">
                   <input
@@ -37,7 +66,7 @@ import { Tag, TagGroup } from './tags';
                     name="editGroupName"
                     maxlength="40"
                     aria-label="Group name"
-                    class="flex-1 bg-[#0E131C] border border-blue-500 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none"
+                    class="flex-1 min-w-0 bg-[#0E131C] border border-blue-500 rounded-md px-2 py-0.5 text-sm text-slate-200 focus:outline-none"
                   />
                   <button type="submit" class="text-xs text-blue-300 hover:text-blue-200">
                     Save
@@ -51,8 +80,10 @@ import { Tag, TagGroup } from './tags';
                   </button>
                 </form>
               } @else {
-                <h3 class="text-sm font-semibold text-slate-100">{{ group.name }}</h3>
-                <div class="flex gap-3 text-xs">
+                <h3 class="text-[13px] font-semibold text-slate-100">{{ group.name }}</h3>
+                <div
+                  class="flex gap-2 text-[11px] opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                >
                   <button
                     type="button"
                     (click)="startRename(group)"
@@ -70,25 +101,27 @@ import { Tag, TagGroup } from './tags';
                 </div>
               }
             </div>
-            <div class="flex flex-wrap items-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-1">
               @for (tag of group.tags; track tag.id) {
+                @let st = statsByTag().get(tag.id);
                 <span
-                  class="inline-flex items-center gap-1.5 text-xs pl-3 pr-1.5 py-1 rounded-full border border-slate-400/35 bg-[#0E131C] text-slate-200"
+                  class="inline-flex items-center gap-1 text-[11.5px] pl-2.5 pr-1 py-0.5 rounded-full border border-slate-400/30 bg-[#0E131C] text-slate-200"
+                  [title]="(trades() ? (st?.count ?? 0) : (tag.count ?? 0)) + ' trades'"
                 >
                   {{ tag.name }}
-                  @let st = statsByTag().get(tag.id);
-                  <span class="font-mono text-[10px] text-slate-500">{{
-                    trades() ? (st?.count ?? 0) : (tag.count ?? 0)
-                  }}</span>
                   @if (trades() && st) {
                     <span
                       class="font-mono text-[10px]"
                       [class.text-emerald-400]="st.net > 0"
                       [class.text-rose-400]="st.net < 0"
                       >{{ st.net > 0 ? '+' : st.net < 0 ? '-' : '' }}\${{
-                        (st.net < 0 ? -st.net : st.net) | number: '1.2-2'
+                        (st.net < 0 ? -st.net : st.net) | number: '1.0-0'
                       }}</span
                     >
+                  } @else {
+                    <span class="font-mono text-[10px] text-slate-600">{{
+                      trades() ? 0 : (tag.count ?? 0)
+                    }}</span>
                   }
                   <button
                     type="button"
@@ -108,36 +141,16 @@ import { Tag, TagGroup } from './tags';
                   [name]="'newTag' + group.id"
                   maxlength="40"
                   [attr.aria-label]="'New ' + group.name + ' tag'"
-                  placeholder="+ Add tag"
-                  class="w-28 bg-transparent border border-dashed border-[#2b3a55] rounded-full px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:w-40 transition-all"
+                  placeholder="+ tag"
+                  class="w-16 bg-transparent border border-dashed border-[#2b3a55] rounded-full px-2.5 py-0.5 text-[11.5px] text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:w-36 transition-all"
                 />
               </form>
             </div>
           </div>
         } @empty {
-          <p class="px-6 py-4 text-sm text-slate-500">No tag groups yet. Add one below.</p>
+          <p class="py-3 text-sm text-slate-500">No tag groups yet. Use + Group.</p>
         }
       </div>
-
-      <form
-        (ngSubmit)="addGroup()"
-        class="px-6 py-4 border-t border-[#1F293D]/60 flex gap-2 bg-[#0E131C]/40"
-      >
-        <input
-          type="text"
-          [(ngModel)]="newGroupName"
-          name="newGroupName"
-          maxlength="40"
-          placeholder="New group, e.g. Confluence"
-          class="flex-1 bg-[#0E131C] border border-[#1F293D] rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
-        />
-        <button
-          type="submit"
-          class="px-3 py-2 rounded-lg text-xs font-medium text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-all"
-        >
-          + Add group
-        </button>
-      </form>
     </section>
   `,
 })
@@ -165,6 +178,7 @@ export class TagGroupsEditor {
   editingGroupId = signal<number | null>(null);
   newTagNames = signal<Record<number, string>>({});
   newGroupName = '';
+  addingGroup = signal(false);
   editGroupName = '';
 
   constructor() {
