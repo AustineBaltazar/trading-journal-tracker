@@ -198,7 +198,7 @@
           </form>
         }
 
-        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-14">
           @for (rule of rules(); track rule.id) {
             @let s = ruleStat(rule.id);
             @if (editingRuleId() === rule.id) {
@@ -381,14 +381,14 @@
             </button>
           </form>
         }
-        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-2">
+        <div class="flex-1 min-h-0 overflow-y-auto quiet-scroll px-4 pb-14">
           <table class="w-full text-[13px]">
             <thead>
               <tr class="text-[10px] uppercase tracking-wider text-slate-500 text-left">
                 <th class="font-semibold pb-1.5">Mistake</th>
                 <th class="font-semibold pb-1.5 text-right">Trades</th>
-                <th class="font-semibold pb-1.5 text-right">Cost</th>
-                <th class="font-semibold pb-1.5 text-right">Impact</th>
+                <th class="font-semibold pb-1.5 pl-4 text-right">Cost</th>
+                <th class="font-semibold pb-1.5 pl-3 text-right">Impact</th>
               </tr>
             </thead>
             <tbody>
