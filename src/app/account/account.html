@@ -1,0 +1,286 @@
+<div class="p-6 lg:p-8 max-w-6xl mx-auto">
+  <h1 class="text-2xl font-semibold text-white mb-1">Account &amp; security</h1>
+  <p class="text-sm text-slate-400 mb-6">
+    Your login, the devices you're logged in on, and your data.
+    @if (createdAt()) {
+      Member since {{ createdAt() | date: 'MMM d, y' }}.
+    }
+  </p>
+
+  @if (demo()) {
+    <p
+      class="text-xs text-amber-100 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-5"
+    >
+      This is the shared demo account, so changes here are switched off.
+    </p>
+  }
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <!-- Profile -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Profile</h2>
+      <p class="text-xs text-slate-400 mb-4">Your name and login email.</p>
+      <form (ngSubmit)="saveName()">
+        <label for="acct-name" class="block text-xs font-medium text-slate-300 mb-1.5">Name</label>
+        <input
+          id="acct-name"
+          name="name"
+          maxlength="60"
+          [(ngModel)]="name"
+          [disabled]="demo()"
+          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+        />
+        <p class="block text-xs font-medium text-slate-300 mb-1.5">Email</p>
+        <div
+          class="flex items-center justify-between bg-[#0E131C] border border-[#1F293D] text-slate-300 text-sm rounded-xl px-3.5 py-2.5 mb-4"
+        >
+          <span class="truncate">{{ email() }}</span>
+          @if (emailConfirmed()) {
+            <span
+              class="text-[10.5px] font-semibold px-2 py-px rounded-full border border-emerald-500/40 text-emerald-300"
+              >Confirmed</span
+            >
+          }
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            type="submit"
+            [disabled]="demo() || !name.trim()"
+            class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500 disabled:opacity-50"
+          >
+            Save
+          </button>
+          <span class="text-xs text-slate-400" role="status">{{ profileNote() }}</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Change password -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Change password</h2>
+      <p class="text-xs text-slate-400 mb-4">
+        You'll stay logged in here; other devices are logged out.
+      </p>
+      <form (ngSubmit)="changePassword()">
+        <label for="acct-current" class="block text-xs font-medium text-slate-300 mb-1.5"
+          >Current password</label
+        >
+        <input
+          id="acct-current"
+          type="password"
+          name="currentPassword"
+          autocomplete="current-password"
+          [(ngModel)]="currentPassword"
+          [disabled]="demo()"
+          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+        />
+        <label for="acct-new" class="block text-xs font-medium text-slate-300 mb-1.5"
+          >New password</label
+        >
+        <input
+          id="acct-new"
+          type="password"
+          name="newPassword"
+          autocomplete="new-password"
+          maxlength="128"
+          aria-describedby="acct-password-rules"
+          [(ngModel)]="newPassword"
+          [disabled]="demo()"
+          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 disabled:opacity-60"
+        />
+        @if (newPassword) {
+          <app-password-strength
+            rulesId="acct-password-rules"
+            [password]="newPassword"
+            [email]="email()"
+          />
+        }
+        @if (passwordError()) {
+          <p role="alert" class="text-xs text-rose-300 mt-3">{{ passwordError() }}</p>
+        }
+        @if (passwordNote()) {
+          <p role="status" class="text-xs text-emerald-300 mt-3">{{ passwordNote() }}</p>
+        }
+        <button
+          type="submit"
+          [disabled]="!canChangePassword"
+          class="mt-4 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {{ changingPassword() ? 'Changing…' : 'Change password' }}
+        </button>
+      </form>
+    </section>
+
+    <!-- Devices -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Where you're logged in</h2>
+      <p class="text-xs text-slate-400 mb-3">Log out anything you don't recognise.</p>
+      <ul class="divide-y divide-[#1F293D]">
+        @for (d of devices(); track d.id) {
+          <li class="flex items-center gap-3 py-2.5">
+            <span
+              class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm"
+              aria-hidden="true"
+              >{{ d.device.includes('iPhone') || d.device.includes('Android') ? '📱' : '💻' }}</span
+            >
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-slate-200 truncate">{{ d.device }}</p>
+              <p class="text-[11px] text-slate-500">
+                {{ d.current ? 'This device' : lastSeen(d.lastSeenAt) }}
+                @if (d.ip) {
+                  · {{ d.ip }}
+                }
+              </p>
+            </div>
+            @if (d.current) {
+              <span
+                class="text-[10.5px] font-semibold px-2 py-px rounded-full border border-emerald-500/40 text-emerald-300"
+                >This device</span
+              >
+            } @else {
+              <button
+                type="button"
+                (click)="logOutDevice(d)"
+                [disabled]="demo()"
+                class="text-xs px-3 py-1 rounded-lg border border-[#1F293D] text-slate-300 hover:border-slate-500 disabled:opacity-50"
+              >
+                Log out
+              </button>
+            }
+          </li>
+        }
+      </ul>
+      <div class="flex items-center gap-3 mt-3">
+        <button
+          type="button"
+          (click)="logOutOthers()"
+          [disabled]="demo() || devices().length < 2"
+          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500 disabled:opacity-50"
+        >
+          Log out all other devices
+        </button>
+        <span class="text-xs text-slate-400" role="status">{{ devicesNote() }}</span>
+      </div>
+    </section>
+
+    <!-- Login history -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Recent login activity</h2>
+      <p class="text-xs text-slate-400 mb-3">The last 10 sign-in attempts.</p>
+      @if (attempts().length === 0) {
+        <p class="text-xs text-slate-500">No logins recorded yet.</p>
+      } @else {
+        <table class="w-full text-xs">
+          <caption class="sr-only">
+            Recent login attempts
+          </caption>
+          <tbody>
+            @for (a of attempts(); track $index) {
+              <tr class="border-t border-[#1F293D] first:border-t-0">
+                <td class="py-2 text-slate-200">{{ a.device }}</td>
+                <td class="py-2 text-slate-400">{{ a.at | date: 'MMM d, h:mm a' }}</td>
+                <td
+                  class="py-2 text-right"
+                  [class]="a.succeeded ? 'text-emerald-400' : 'text-rose-400'"
+                >
+                  {{ a.succeeded ? 'Success' : 'Wrong password' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- Your data -->
+    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-white">Your data</h2>
+      <p class="text-xs text-slate-400 mb-4">
+        Download everything: trades, journal, rules, tags and review answers.
+      </p>
+      <div class="flex flex-wrap gap-2 mb-5">
+        <a
+          [href]="api + '/account/export/trades.csv'"
+          download
+          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500"
+          >Export trades (CSV)</a
+        >
+        <a
+          [href]="api + '/account/export'"
+          download
+          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500"
+          >Export everything (JSON)</a
+        >
+      </div>
+      <div class="flex items-baseline justify-between text-xs mb-1.5">
+        <span class="text-slate-300">Screenshot storage</span>
+        <span class="text-slate-400 font-mono"
+          >{{ formatBytes(storage().usedBytes) }} of {{ formatBytes(storage().limitBytes) }}</span
+        >
+      </div>
+      <div
+        class="h-2 rounded-full bg-slate-800 overflow-hidden"
+        role="progressbar"
+        aria-label="Screenshot storage used"
+        [attr.aria-valuenow]="storagePercent()"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <div
+          class="h-full rounded-full"
+          [class]="storagePercent() > 90 ? 'bg-rose-500' : 'bg-blue-500'"
+          [style.width.%]="storagePercent()"
+        ></div>
+      </div>
+      <p class="text-xs text-slate-500 mt-4">
+        Read the
+        <a routerLink="/privacy" class="text-blue-400 hover:text-blue-300">Privacy policy</a> and
+        <a routerLink="/terms" class="text-blue-400 hover:text-blue-300">Terms</a>.
+      </p>
+    </section>
+
+    <!-- Delete -->
+    <section class="bg-[#121722] border border-rose-500/35 rounded-2xl p-5">
+      <h2 class="text-sm font-semibold text-rose-300">Delete account</h2>
+      <p class="text-xs text-slate-400 mb-4">
+        Permanently deletes your account, every trade, journal entry and screenshot. This can't be
+        undone. Export your data first if you want a copy.
+      </p>
+      <form (ngSubmit)="deleteAccount()">
+        <label for="acct-delete-confirm" class="block text-xs font-medium text-slate-300 mb-1.5"
+          >Type <span class="font-mono">DELETE</span> to confirm</label
+        >
+        <input
+          id="acct-delete-confirm"
+          name="deleteConfirm"
+          autocomplete="off"
+          [(ngModel)]="deleteConfirm"
+          [disabled]="demo()"
+          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+        />
+        <label for="acct-delete-password" class="block text-xs font-medium text-slate-300 mb-1.5"
+          >Your password</label
+        >
+        <input
+          id="acct-delete-password"
+          type="password"
+          name="deletePassword"
+          autocomplete="current-password"
+          [(ngModel)]="deletePassword"
+          [disabled]="demo()"
+          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+        />
+        @if (deleteError()) {
+          <p role="alert" class="text-xs text-rose-300 mb-3">{{ deleteError() }}</p>
+        }
+        <button
+          type="submit"
+          [disabled]="!canDelete"
+          class="text-sm font-semibold px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {{ deleting() ? 'Deleting…' : 'Delete my account' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</div>

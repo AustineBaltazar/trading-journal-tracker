@@ -25,6 +25,7 @@ describe('Register', () => {
     component.email = 'bob@gmail.com';
     // The human check is tested through its token
     component.turnstileToken.set('ok');
+    component.acceptTerms = true;
   });
 
   it('needs 12+ characters that are not the email', () => {
@@ -34,6 +35,12 @@ describe('Register', () => {
     expect(component.canSubmit).toBe(false);
     component.password = 'correct-horse-candle';
     expect(component.canSubmit).toBe(true);
+  });
+
+  it('needs the Terms accepted', () => {
+    component.password = 'correct-horse-candle';
+    component.acceptTerms = false;
+    expect(component.canSubmit).toBe(false);
   });
 
   it('waits for the human check when it is on', () => {
@@ -52,6 +59,7 @@ describe('Register', () => {
       name: 'Bro',
       email: ' Bob@Gmail.com ',
       password: 'correct-horse-candle',
+      acceptTerms: true,
       turnstileToken: 'ok',
     });
     req.flush({ message: 'Check your email.' }, { status: 202, statusText: 'Accepted' });

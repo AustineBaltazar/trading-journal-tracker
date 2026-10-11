@@ -1,9 +1,11 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { passwordStrength, sameAsEmail } from './auth';
 
 // The logo and centred card shared by the login, sign-up and email pages
 @Component({
   selector: 'app-auth-shell',
+  imports: [RouterLink],
   template: `
     <div class="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4">
       <div class="w-full max-w-sm">
@@ -30,11 +32,19 @@ import { passwordStrength, sameAsEmail } from './auth';
             <span class="font-extrabold tracking-tight text-white text-lg">MNQ</span>
             <span class="text-sm text-slate-500 font-mono">/</span>
             <span class="text-sm font-semibold text-slate-300 tracking-wider">JOURNAL</span>
+            <span
+              class="ml-1 text-[9.5px] font-bold tracking-wider px-1.5 py-px rounded-full border border-amber-400/45 text-amber-300 bg-amber-400/10"
+              >BETA</span
+            >
           </div>
         </div>
         <div class="bg-[#121722] border border-[#1F293D] rounded-2xl p-6 shadow-xl">
           <ng-content />
         </div>
+        <p class="text-center text-[11px] text-slate-600 mt-5">
+          <a routerLink="/privacy" class="hover:text-slate-400">Privacy</a> ·
+          <a routerLink="/terms" class="hover:text-slate-400">Terms</a>
+        </p>
       </div>
     </div>
   `,
