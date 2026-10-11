@@ -3,6 +3,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/rou
 import { TradeModeService } from '../trade-mode';
 import { AuthService } from '../auth/auth';
 import { FeedbackButton } from '../feedback/feedback';
+import { AdminService } from '../admin/admin';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive, FeedbackButton],
@@ -13,10 +14,17 @@ import { FeedbackButton } from '../feedback/feedback';
 export class Layout {
   private router = inject(Router);
   private auth = inject(AuthService);
+  private admin = inject(AdminService);
   readonly tradeMode = inject(TradeModeService);
 
   userName = computed(() => this.auth.user()?.name || 'Account');
   isDemo = computed(() => !!this.auth.user()?.demo);
+  isAdmin = computed(() => !!this.auth.user()?.admin);
+  newFeedback = this.admin.newCount;
+
+  constructor() {
+    if (this.isAdmin()) this.admin.refreshNewCount();
+  }
 
   logout() {
     this.auth.logout().subscribe(() => this.router.navigate(['/login']));

@@ -1,6 +1,6 @@
 import { Component, effect, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NewTrade } from '../new-trade/new-trade';
@@ -9,6 +9,7 @@ import { ModeBadge, TradeModeService } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
 import { emotionsOf, formatR, outcomeOf } from '../outcome';
 import { environment } from '../../environments/environment';
+import { Pager } from '../pager/pager';
 import {
   currentMonth,
   EMOTIONS,
@@ -33,9 +34,20 @@ import {
 
 const BAD_EMOTIONS = new Set(['FOMO', 'Revenge']);
 const LOW_GRADES = new Set(['C+', 'C', 'D', 'F']);
+export const PAGE_SIZES = [10, 25, 50];
+const PAGE_SIZE_KEY = 'tradesPageSize';
+
+function savedPageSize() {
+  try {
+    const n = Number(localStorage.getItem(PAGE_SIZE_KEY));
+    return PAGE_SIZES.includes(n) ? n : 10;
+  } catch {
+    return 10;
+  }
+}
 
 @Component({
-  imports: [SlicePipe, DecimalPipe, FormsModule, NewTrade, MonthPicker, ModeBadge],
+  imports: [SlicePipe, DecimalPipe, FormsModule, NewTrade, MonthPicker, ModeBadge, Pager],
   selector: 'app-trades-list',
   styleUrl: './trades-list.css',
   templateUrl: './trades-list.html',
@@ -43,6 +55,7 @@ const LOW_GRADES = new Set(['C+', 'C', 'D', 'F']);
 export class TradesList {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   readonly tradeMode = inject(TradeModeService);
 
   trades = signal<any[]>([]);
@@ -68,8 +81,24 @@ export class TradesList {
     sortTrades(filterTrades(this.monthTrades(), this.filters()), this.sortKey(), this.sortDir()),
   );
 
-  // Summary bar follows the filters, so filtering to a session shows that session's stats
+  // Summary bar follows the filters (every page, not just this one)
   summary = computed(() => summarizeTrades(this.filteredTrades()));
+
+  // One page of the filtered list. The page number is kept in the address bar,
+  // so coming back from a trade returns to the same page.
+  readonly pageSizes = PAGE_SIZES;
+  pageSize = signal(savedPageSize());
+  page = signal(Math.max(1, Number(this.route.snapshot.queryParamMap.get('page')) || 1));
+  pages = computed(() => Math.max(1, Math.ceil(this.filteredTrades().length / this.pageSize())));
+  currentPage = computed(() => Math.min(this.page(), this.pages()));
+  pageTrades = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredTrades().slice(start, start + this.pageSize());
+  });
+  firstShown = computed(() =>
+    this.filteredTrades().length ? (this.currentPage() - 1) * this.pageSize() + 1 : 0,
+  );
+  lastShown = computed(() => (this.currentPage() - 1) * this.pageSize() + this.pageTrades().length);
 
   activeFilterCount = computed(() => {
     const f = this.filters();
@@ -103,6 +132,30 @@ export class TradesList {
 
   setFilter<K extends keyof TradeFilters>(key: K, value: TradeFilters[K]) {
     this.filters.update((f) => ({ ...f, [key]: value }));
+    this.setPage(1);
+  }
+
+  setPage(page: number) {
+    this.page.set(page);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { page: page > 1 ? page : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  setPageSize(size: number) {
+    this.pageSize.set(size);
+    try {
+      localStorage.setItem(PAGE_SIZE_KEY, String(size));
+    } catch {}
+    this.setPage(1);
+  }
+
+  setMonth(month: YearMonth) {
+    this.viewedMonth.set(month);
+    this.setPage(1);
   }
 
   readonly outcomeFilters: { value: Outcome; label: string }[] = [
@@ -118,6 +171,7 @@ export class TradesList {
 
   clearFilters() {
     this.filters.set({ ...NO_FILTERS });
+    this.setPage(1);
   }
 
   // First click on a column: date and P/L sort high-to-low, grade sorts best first
@@ -128,6 +182,7 @@ export class TradesList {
       this.sortKey.set(key);
       this.sortDir.set(key === 'grade' ? 'asc' : 'desc');
     }
+    this.setPage(1);
   }
 
   sortIndicator(key: SortKey): string {

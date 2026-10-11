@@ -8,6 +8,7 @@ import { Layout } from './layout/layout';
 import { authGuard, guestGuard } from './auth/auth';
 import { Playbook } from './playbook/playbook';
 import { Register } from './register/register';
+import { adminGuard } from './admin/admin';
 export const routes: Routes = [
   { path: 'login', component: Login, canActivate: [guestGuard] },
   { path: 'register', component: Register, canActivate: [guestGuard] },
@@ -66,6 +67,11 @@ export const routes: Routes = [
       {
         path: 'account',
         loadComponent: () => import('./account/account').then((m) => m.Account),
+      },
+      {
+        path: 'admin/feedback',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./admin/feedback-inbox').then((m) => m.FeedbackInbox),
       },
     ],
   },

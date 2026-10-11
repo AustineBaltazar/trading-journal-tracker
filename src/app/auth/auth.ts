@@ -10,6 +10,8 @@ export interface AuthUser {
   email: string;
   // The shared demo account, which is read-only
   demo?: boolean;
+  // Can open the admin pages (the server checks this too)
+  admin?: boolean;
 }
 
 // Who is logged in. The session itself lives in an HttpOnly cookie the page can't read,
