@@ -21,26 +21,16 @@ export class Questions implements OnInit {
   }
 
   loadQuestions() {
-    const token = localStorage.getItem('token');
-    this.http
-      .get<any>(`${environment.apiUrl}/questions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .subscribe((response) => {
-        this.questions.set(response.questions);
-      });
+    this.http.get<any>(`${environment.apiUrl}/questions`).subscribe((response) => {
+      this.questions.set(response.questions);
+    });
   }
 
   addQuestion() {
     this.errorMessage = '';
-    const token = localStorage.getItem('token');
 
     this.http
-      .post<any>(
-        `${environment.apiUrl}/questions`,
-        { question_text: this.newQuestionText },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
+      .post<any>(`${environment.apiUrl}/questions`, { question_text: this.newQuestionText })
       .subscribe({
         next: (newQuestion) => {
           this.questions.update((current) => [...current, newQuestion]);
@@ -53,13 +43,8 @@ export class Questions implements OnInit {
   }
 
   deleteQuestion(id: number) {
-    const token = localStorage.getItem('token');
-    this.http
-      .delete<any>(`${environment.apiUrl}/questions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .subscribe(() => {
-        this.questions.update((current) => current.filter((q) => q.id !== id));
-      });
+    this.http.delete<any>(`${environment.apiUrl}/questions/${id}`).subscribe(() => {
+      this.questions.update((current) => current.filter((q) => q.id !== id));
+    });
   }
 }

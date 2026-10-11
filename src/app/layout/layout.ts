@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TradeModeService } from '../trade-mode';
+import { AuthService } from '../auth/auth';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -10,13 +11,12 @@ import { TradeModeService } from '../trade-mode';
 })
 export class Layout {
   private router = inject(Router);
+  private auth = inject(AuthService);
   readonly tradeMode = inject(TradeModeService);
 
-  userName = signal(localStorage.getItem('userName') || 'Account');
+  userName = computed(() => this.auth.user()?.name || 'Account');
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userName');
-    this.router.navigate(['/login']);
+    this.auth.logout().subscribe(() => this.router.navigate(['/login']));
   }
 }

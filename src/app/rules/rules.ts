@@ -21,45 +21,28 @@ export class Rules implements OnInit {
   }
 
   loadRules() {
-    const token = localStorage.getItem('token');
-    this.http
-      .get<any>(`${environment.apiUrl}/rules`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .subscribe((response) => {
-        this.rules.set(response.rules);
-      });
+    this.http.get<any>(`${environment.apiUrl}/rules`).subscribe((response) => {
+      this.rules.set(response.rules);
+    });
   }
 
   addRule() {
     this.errorMessage = '';
-    const token = localStorage.getItem('token');
 
-    this.http
-      .post<any>(
-        `${environment.apiUrl}/rules`,
-        { name: this.newRuleName },
-        { headers: { Authorization: `Bearer ${token}` } },
-      )
-      .subscribe({
-        next: (newRule) => {
-          this.rules.update((current) => [...current, newRule]);
-          this.newRuleName = '';
-        },
-        error: (err) => {
-          this.errorMessage = err.error?.error || 'Something went wrong adding the rule.';
-        },
-      });
+    this.http.post<any>(`${environment.apiUrl}/rules`, { name: this.newRuleName }).subscribe({
+      next: (newRule) => {
+        this.rules.update((current) => [...current, newRule]);
+        this.newRuleName = '';
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.error || 'Something went wrong adding the rule.';
+      },
+    });
   }
 
   deleteRule(id: number) {
-    const token = localStorage.getItem('token');
-    this.http
-      .delete<any>(`${environment.apiUrl}/rules/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .subscribe(() => {
-        this.rules.update((current) => current.filter((rule) => rule.id !== id));
-      });
+    this.http.delete<any>(`${environment.apiUrl}/rules/${id}`).subscribe(() => {
+      this.rules.update((current) => current.filter((rule) => rule.id !== id));
+    });
   }
 }

@@ -112,7 +112,7 @@ export class Journal implements OnDestroy {
 
   constructor() {
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((r) => this.mistakes.set(r.mistakes));
 
     // Trades for the selected mode (day list P/L and "what happened")
@@ -142,25 +142,19 @@ export class Journal implements OnDestroy {
     this.flushSave();
   }
 
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  }
-
   private monthOf(date: string): YearMonth {
     return { year: Number(date.slice(0, 4)), month: Number(date.slice(5, 7)) - 1 };
   }
 
   private loadTrades(mode: TradeMode) {
     this.http
-      .get<any>(`${environment.apiUrl}/trades`, { ...this.authHeaders(), params: { mode } })
+      .get<any>(`${environment.apiUrl}/trades`, { params: { mode } })
       .subscribe((r) => this.tradeMode.mode() === mode && this.trades.set(r.trades));
   }
 
   private loadMonth(mode: TradeMode, month: YearMonth) {
     this.http
       .get<any>(`${environment.apiUrl}/journal`, {
-        ...this.authHeaders(),
         params: { mode, month: monthKey(month) },
       })
       .subscribe((r) => this.tradeMode.mode() === mode && this.monthEntries.set(r.entries));
@@ -171,7 +165,6 @@ export class Journal implements OnDestroy {
     this.saveState.set('idle');
     this.http
       .get<any>(`${environment.apiUrl}/journal/${date}`, {
-        ...this.authHeaders(),
         params: { mode },
       })
       .subscribe((r) => {
@@ -220,7 +213,6 @@ export class Journal implements OnDestroy {
 
     this.http
       .put<any>(`${environment.apiUrl}/journal/${date}`, body, {
-        ...this.authHeaders(),
         params: { mode },
       })
       .subscribe({

@@ -44,7 +44,7 @@ export class EditTrade extends TradeFormBase implements OnChanges {
     this.loadRules();
     this.loadLists();
     this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers`)
       .subscribe((response) => {
         const answers = new Map<number, AnswerChoice>();
         for (const a of response.answers ?? []) {
@@ -56,40 +56,38 @@ export class EditTrade extends TradeFormBase implements OnChanges {
   }
 
   loadTrade() {
-    this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
-      .subscribe((trade) => {
-        this.trade_date = trade.trade_date.substring(0, 10);
-        this.symbol = trade.symbol;
-        this.direction = trade.direction;
-        this.contracts = trade.contracts;
-        this.entry_price = trade.entry_price;
-        this.exit_price = trade.exit_price;
-        this.fees = trade.fees;
-        this.strategy = trade.strategy || '';
-        this.screenshot_link = trade.screenshot_link || '';
-        this.notes = trade.notes || '';
-        this.entry_time = trade.entry_time || '';
-        this.exit_time = trade.exit_time || '';
-        this.session = trade.session || '';
-        this.emotions = emotionsOf(trade);
-        this.grade = trade.grade || '';
-        this.result = trade.result ?? null;
-        this.stop_price = trade.stop_price;
-        this.target_price = trade.target_price;
-        this.selectedTagIds.set(new Set(trade.tagIds || []));
-        this.images.set(trade.images || []);
-        this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
-        this.selectedMistakeIds.set(new Set(trade.mistakeIds || []));
-        this.loaded.set(true);
-      });
+    this.http.get<any>(`${environment.apiUrl}/trades/${this.tradeId}`).subscribe((trade) => {
+      this.trade_date = trade.trade_date.substring(0, 10);
+      this.symbol = trade.symbol;
+      this.direction = trade.direction;
+      this.contracts = trade.contracts;
+      this.entry_price = trade.entry_price;
+      this.exit_price = trade.exit_price;
+      this.fees = trade.fees;
+      this.strategy = trade.strategy || '';
+      this.screenshot_link = trade.screenshot_link || '';
+      this.notes = trade.notes || '';
+      this.entry_time = trade.entry_time || '';
+      this.exit_time = trade.exit_time || '';
+      this.session = trade.session || '';
+      this.emotions = emotionsOf(trade);
+      this.grade = trade.grade || '';
+      this.result = trade.result ?? null;
+      this.stop_price = trade.stop_price;
+      this.target_price = trade.target_price;
+      this.selectedTagIds.set(new Set(trade.tagIds || []));
+      this.images.set(trade.images || []);
+      this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
+      this.selectedMistakeIds.set(new Set(trade.mistakeIds || []));
+      this.loaded.set(true);
+    });
   }
 
   loadRules() {
-    this.http.get<any>(`${environment.apiUrl}/rules`, this.authHeaders()).subscribe((response) => {
+    this.http.get<any>(`${environment.apiUrl}/rules`).subscribe((response) => {
       this.allRules.set(response.rules);
       this.http
-        .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
+        .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`)
         .subscribe((linkedResponse) => {
           const checked = new Set<number>(
             linkedResponse.rules.filter((r: any) => r.followed).map((r: any) => r.id),
@@ -103,15 +101,13 @@ export class EditTrade extends TradeFormBase implements OnChanges {
     if (this.saving() || !this.validate()) return;
     this.saving.set(true);
     this.rememberFees();
-    this.http
-      .put<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.payload(), this.authHeaders())
-      .subscribe({
-        next: () => this.saveLists(),
-        error: (err) => {
-          this.saving.set(false);
-          this.errorMessage.set(err.error?.error || 'Something went wrong updating the trade.');
-        },
-      });
+    this.http.put<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.payload()).subscribe({
+      next: () => this.saveLists(),
+      error: (err) => {
+        this.saving.set(false);
+        this.errorMessage.set(err.error?.error || 'Something went wrong updating the trade.');
+      },
+    });
   }
 
   // Mistakes and tags are always sent, so clearing every chip clears them;
@@ -119,7 +115,7 @@ export class EditTrade extends TradeFormBase implements OnChanges {
   private saveLists() {
     const put = (path: string, body: object, next: () => void) =>
       this.http
-        .put(`${environment.apiUrl}/trades/${this.tradeId}/${path}`, body, this.authHeaders())
+        .put(`${environment.apiUrl}/trades/${this.tradeId}/${path}`, body)
         .subscribe({ next, error: next });
     put('mistakes', { mistake_ids: [...this.selectedMistakeIds()] }, () =>
       put('tags', { tag_ids: [...this.selectedTagIds()] }, () =>
@@ -141,16 +137,16 @@ export class EditTrade extends TradeFormBase implements OnChanges {
     };
     for (const [questionId, choice] of entries) {
       const request = this.answeredBefore.has(questionId)
-        ? this.http.put(
-            `${environment.apiUrl}/trades/${this.tradeId}/answers/${questionId}`,
-            { choice, comment: null },
-            this.authHeaders(),
-          )
-        : this.http.post(
-            `${environment.apiUrl}/trade-answers`,
-            { trade_id: this.tradeId, question_id: questionId, choice, comment: null },
-            this.authHeaders(),
-          );
+        ? this.http.put(`${environment.apiUrl}/trades/${this.tradeId}/answers/${questionId}`, {
+            choice,
+            comment: null,
+          })
+        : this.http.post(`${environment.apiUrl}/trade-answers`, {
+            trade_id: this.tradeId,
+            question_id: questionId,
+            choice,
+            comment: null,
+          });
       request.subscribe({ next: one, error: one });
     }
   }
@@ -167,7 +163,7 @@ export class EditTrade extends TradeFormBase implements OnChanges {
     }
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`)
       .subscribe((linkedResponse) => {
         const linkedIds = new Set<number>(linkedResponse.rules.map((r: any) => r.id));
         let remaining = allRules.length;
@@ -178,16 +174,14 @@ export class EditTrade extends TradeFormBase implements OnChanges {
         for (const rule of allRules) {
           const followed = this.checkedRuleIds().has(rule.id);
           const request = linkedIds.has(rule.id)
-            ? this.http.put<any>(
-                `${environment.apiUrl}/trades/${this.tradeId}/rules/${rule.id}`,
-                { followed },
-                this.authHeaders(),
-              )
-            : this.http.post<any>(
-                `${environment.apiUrl}/trade-rules`,
-                { trade_id: this.tradeId, rule_id: rule.id, followed },
-                this.authHeaders(),
-              );
+            ? this.http.put<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules/${rule.id}`, {
+                followed,
+              })
+            : this.http.post<any>(`${environment.apiUrl}/trade-rules`, {
+                trade_id: this.tradeId,
+                rule_id: rule.id,
+                followed,
+              });
           request.subscribe({ next: done, error: done });
         }
       });

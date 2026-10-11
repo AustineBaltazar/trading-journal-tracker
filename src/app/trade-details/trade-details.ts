@@ -82,18 +82,13 @@ export class TradeDetails implements OnInit {
     this.tradeId = this.route.snapshot.paramMap.get('id')!;
     this.loadTrade();
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.allMistakes.set(response.mistakes));
     this.loadRules();
     this.loadQuestions();
     this.http
-      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`)
       .subscribe((response) => this.tagGroups.set(response.groups));
-  }
-
-  private authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
   }
 
   onImageAdded(image: GalleryImage) {
@@ -113,17 +108,17 @@ export class TradeDetails implements OnInit {
 
   loadTrade() {
     this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}`)
       .subscribe((trade) => this.trade.set(trade));
   }
 
   loadRules() {
     this.http
-      .get<any>(`${environment.apiUrl}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/rules`)
       .subscribe((response) => this.allRules.set(response.rules));
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/rules`)
       .subscribe((response) => this.linkedRules.set(response.rules));
   }
 
@@ -146,11 +141,11 @@ export class TradeDetails implements OnInit {
 
   loadQuestions() {
     this.http
-      .get<any>(`${environment.apiUrl}/questions`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/questions`)
       .subscribe((response) => this.allQuestions.set(response.questions));
 
     this.http
-      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers`)
       .subscribe((response) => {
         this.answers.set(response.answers);
         const draft = new Map<number, DraftAnswer>();
@@ -202,21 +197,16 @@ export class TradeDetails implements OnInit {
     for (const [questionId, draft] of entries) {
       const existing = this.getAnswer(questionId);
       const request = existing
-        ? this.http.put<any>(
-            `${environment.apiUrl}/trades/${this.tradeId}/answers/${questionId}`,
-            { choice: draft.choice, comment: draft.comment },
-            this.authHeaders(),
-          )
-        : this.http.post<any>(
-            `${environment.apiUrl}/trade-answers`,
-            {
-              trade_id: this.tradeId,
-              question_id: questionId,
-              choice: draft.choice,
-              comment: draft.comment,
-            },
-            this.authHeaders(),
-          );
+        ? this.http.put<any>(`${environment.apiUrl}/trades/${this.tradeId}/answers/${questionId}`, {
+            choice: draft.choice,
+            comment: draft.comment,
+          })
+        : this.http.post<any>(`${environment.apiUrl}/trade-answers`, {
+            trade_id: this.tradeId,
+            question_id: questionId,
+            choice: draft.choice,
+            comment: draft.comment,
+          });
 
       request.subscribe({
         next: () => {
@@ -262,7 +252,7 @@ export class TradeDetails implements OnInit {
 
   confirmDelete() {
     this.http
-      .delete<any>(`${environment.apiUrl}/trades/${this.tradeId}`, this.authHeaders())
+      .delete<any>(`${environment.apiUrl}/trades/${this.tradeId}`)
       .subscribe(() => this.router.navigate(['/trades']));
   }
 

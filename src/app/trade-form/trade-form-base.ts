@@ -293,20 +293,16 @@ export abstract class TradeFormBase {
   }
 
   // ---- shared loading and saving ----
-  protected authHeaders() {
-    const token = localStorage.getItem('token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  }
 
   protected loadLists() {
     this.http
-      .get<any>(`${environment.apiUrl}/mistakes`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/mistakes`)
       .subscribe((response) => this.mistakes.set(response.mistakes));
     this.http
-      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`, this.authHeaders())
+      .get<{ groups: TagGroup[] }>(`${environment.apiUrl}/tag-groups`)
       .subscribe((response) => this.tagGroups.set(response.groups));
     this.http
-      .get<any>(`${environment.apiUrl}/questions`, this.authHeaders())
+      .get<any>(`${environment.apiUrl}/questions`)
       .subscribe((response) => this.questions.set(response.questions));
   }
 
