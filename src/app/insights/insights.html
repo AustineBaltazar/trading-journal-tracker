@@ -1,0 +1,206 @@
+<!-- On wide screens the page fits the window and each column scrolls on its own -->
+<div class="bg-[#0B0E14] min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
+  <header class="px-6 pt-4 pb-3 flex flex-wrap items-end justify-between gap-3 shrink-0">
+    <div>
+      <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
+        Insights <app-mode-badge />
+      </h1>
+      <p class="text-xs text-slate-400">
+        Patterns found in your {{ rangeTrades().length }}
+        {{ rangeTrades().length === 1 ? 'trade' : 'trades' }}, strongest first. Updated every time
+        you log a trade.
+      </p>
+    </div>
+    <div
+      role="radiogroup"
+      aria-label="Date range"
+      class="flex flex-wrap gap-0.5 p-0.5 bg-[#121722] border border-[#1F293D] rounded-xl text-xs"
+    >
+      @for (r of ranges; track r.key) {
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="range() === r.key"
+          (click)="setRange(r.key)"
+          class="px-3 py-1.5 rounded-lg border transition-colors"
+          [class]="
+            range() === r.key
+              ? 'bg-blue-500/15 text-blue-100 border-blue-500/40'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          "
+        >
+          {{ r.label }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (!loaded()) {
+    <p class="px-6 text-sm text-slate-500">Loading...</p>
+  } @else if (rangeTrades().length === 0) {
+    <p class="px-6 text-sm text-slate-500">
+      No trades in this range. Pick a longer range, or log trades to see your patterns.
+    </p>
+  } @else {
+    @let p = patterns();
+    <div
+      class="px-6 pb-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3 xl:flex-1 xl:min-h-0 xl:grid-rows-[minmax(0,1fr)]"
+    >
+      <!-- Leaks -->
+      <section class="flex flex-col min-h-0" aria-labelledby="leaks-title">
+        <h2
+          id="leaks-title"
+          class="flex items-baseline gap-2 mb-2 text-sm font-semibold text-white"
+        >
+          <span class="text-rose-400" aria-hidden="true">▼</span> Leaks
+          <span class="text-[11px] font-normal text-slate-500">costing you money</span>
+        </h2>
+        <div class="flex flex-col gap-2 xl:overflow-y-auto xl:min-h-0 quiet-scroll xl:pr-1">
+          @for (item of p.leaks; track $index) {
+            <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
+          } @empty {
+            <p class="text-xs text-slate-500 bg-[#121722] border border-[#1F293D] rounded-xl p-3">
+              Nothing with 3+ trades is losing money in this range.
+            </p>
+          }
+        </div>
+      </section>
+
+      <!-- Edges -->
+      <section class="flex flex-col min-h-0" aria-labelledby="edges-title">
+        <h2
+          id="edges-title"
+          class="flex items-baseline gap-2 mb-2 text-sm font-semibold text-white"
+        >
+          <span class="text-emerald-400" aria-hidden="true">▲</span> Edges
+          <span class="text-[11px] font-normal text-slate-500">keep doing these</span>
+        </h2>
+        <div class="flex flex-col gap-2 xl:overflow-y-auto xl:min-h-0 quiet-scroll xl:pr-1">
+          @for (item of p.edges; track $index) {
+            <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
+          } @empty {
+            <p class="text-xs text-slate-500 bg-[#121722] border border-[#1F293D] rounded-xl p-3">
+              No pattern with 3+ trades is in profit yet in this range.
+            </p>
+          }
+        </div>
+      </section>
+
+      <!-- Streaks and records -->
+      @let r = records();
+      <section class="flex flex-col min-h-0" aria-labelledby="records-title">
+        <h2
+          id="records-title"
+          class="flex items-baseline gap-2 mb-2 text-sm font-semibold text-white"
+        >
+          <span class="text-amber-400" aria-hidden="true">★</span> Streaks &amp; records
+        </h2>
+        <div
+          class="bg-[#121722] border border-[#1F293D] rounded-2xl p-4 grid grid-cols-2 gap-x-4 gap-y-4"
+        >
+          <div>
+            <div class="text-[11px] text-slate-400">Current streak</div>
+            @if (r.current) {
+              <div
+                class="font-mono font-bold text-lg"
+                [class]="r.current.outcome === 'win' ? 'text-emerald-400' : 'text-rose-400'"
+              >
+                {{ r.current.length }} {{ r.current.outcome === 'win' ? 'win' : 'loss'
+                }}{{ r.current.length === 1 ? '' : r.current.outcome === 'win' ? 's' : 'es' }}
+              </div>
+            } @else {
+              <div class="font-mono font-bold text-lg text-slate-600">—</div>
+            }
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400">Best win streak</div>
+            <div class="font-mono font-bold text-lg text-white">{{ r.bestWinStreak.length }}</div>
+            <div class="text-[11px] text-slate-500">
+              {{ span(r.bestWinStreak.from, r.bestWinStreak.to) }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400">Rules kept in a row</div>
+            <div class="font-mono font-bold text-lg text-white">
+              {{ r.rulesKept }} {{ r.rulesKept === 1 ? 'trade' : 'trades' }}
+            </div>
+            <div class="text-[11px] text-slate-500">up to your last trade</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400">Worst loss streak</div>
+            <div class="font-mono font-bold text-lg text-rose-400">
+              {{ r.worstLossStreak.length }}
+            </div>
+            <div class="text-[11px] text-slate-500">
+              {{ span(r.worstLossStreak.from, r.worstLossStreak.to) }}
+            </div>
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400">Best day</div>
+            @if (r.bestDay) {
+              <div class="font-mono font-bold text-lg text-emerald-400">
+                {{ money(r.bestDay.net) }}
+              </div>
+              <div class="text-[11px] text-slate-500">{{ span(r.bestDay.date, null) }}</div>
+            } @else {
+              <div class="font-mono font-bold text-lg text-slate-600">—</div>
+            }
+          </div>
+          <div>
+            <div class="text-[11px] text-slate-400">Best month</div>
+            @if (r.bestMonth) {
+              <div class="font-mono font-bold text-lg text-emerald-400">
+                {{ money(r.bestMonth.net) }}
+              </div>
+              <div class="text-[11px] text-slate-500">{{ monthName(r.bestMonth.month) }}</div>
+            } @else {
+              <div class="font-mono font-bold text-lg text-slate-600">—</div>
+            }
+          </div>
+        </div>
+        <p class="mt-3 text-[11px] text-slate-500 leading-relaxed">
+          Patterns only use groups with 3 or more trades, so one lucky trade never shows up.
+          Break-evens don't count toward win rates or streaks.
+        </p>
+      </section>
+    </div>
+  }
+</div>
+
+<ng-template #card let-item>
+  <button
+    type="button"
+    (click)="open(item)"
+    [disabled]="!item.tab"
+    class="w-full text-left grid grid-cols-[30px_1fr] gap-3 bg-[#121722] border border-[#1F293D] rounded-xl px-3 py-2.5 enabled:hover:border-slate-600 transition-colors disabled:cursor-default"
+  >
+    <span
+      class="w-[30px] h-[30px] rounded-[9px]"
+      [class]="iconClass(item.icon)"
+      aria-hidden="true"
+    ></span>
+    <span class="min-w-0">
+      <span
+        class="block font-mono text-[9.5px] font-semibold tracking-[0.12em] uppercase text-slate-500"
+        >{{ item.category }}</span
+      >
+      <span class="block text-[13px] text-slate-200 mt-0.5">
+        @for (part of item.parts; track $index) {
+          <span
+            [class.font-semibold]="part.strong"
+            [class.text-white]="part.strong && !part.tone"
+            [class.text-emerald-400]="part.tone === 'win'"
+            [class.text-rose-400]="part.tone === 'loss'"
+            >{{ part.text }}</span
+          >
+        }
+      </span>
+      <span class="flex justify-between items-center mt-1 text-[11px] text-slate-500">
+        <span>{{ item.meta }}</span>
+        @if (item.tab) {
+          <span class="text-blue-300 capitalize">{{ item.tab }} ›</span>
+        }
+      </span>
+    </span>
+  </button>
+</ng-template>
