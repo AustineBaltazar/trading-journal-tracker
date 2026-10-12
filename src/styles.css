@@ -30,6 +30,210 @@
   --color-carbon-700: #1e293d;
   --color-carbon-600: #2d3b55;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* One-off surface and border colors, named by their dark value. Light values below. */
+  --color-tone-070a10: #070a10;
+  --color-tone-080c14: #080c14;
+  --color-tone-0a0f19: #0a0f19;
+  --color-tone-0a0f1a: #0a0f1a;
+  --color-tone-0b0e14: #0b0e14;
+  --color-tone-0b1220: #0b1220;
+  --color-tone-0c1017: #0c1017;
+  --color-tone-0c121e: #0c121e;
+  --color-tone-0d1322: #0d1322;
+  --color-tone-0e131c: #0e131c;
+  --color-tone-0e1420: #0e1420;
+  --color-tone-0e1423: #0e1423;
+  --color-tone-0e1626: #0e1626;
+  --color-tone-0e2a22: #0e2a22;
+  --color-tone-0f1522: #0f1522;
+  --color-tone-0f1523: #0f1523;
+  --color-tone-0f172a: #0f172a;
+  --color-tone-0f1a14: #0f1a14;
+  --color-tone-111622: #111622;
+  --color-tone-111726: #111726;
+  --color-tone-111826: #111826;
+  --color-tone-11192b: #11192b;
+  --color-tone-121722: #121722;
+  --color-tone-121a2a: #121a2a;
+  --color-tone-131b2e: #131b2e;
+  --color-tone-131d2e: #131d2e;
+  --color-tone-141b2a: #141b2a;
+  --color-tone-141c2c: #141c2c;
+  --color-tone-161e30: #161e30;
+  --color-tone-162033: #162033;
+  --color-tone-162035: #162035;
+  --color-tone-162136: #162136;
+  --color-tone-182133: #182133;
+  --color-tone-182239: #182239;
+  --color-tone-182337: #182337;
+  --color-tone-19243a: #19243a;
+  --color-tone-1b253b: #1b253b;
+  --color-tone-1c2840: #1c2840;
+  --color-tone-1d273b: #1d273b;
+  --color-tone-1d293f: #1d293f;
+  --color-tone-1e293b: #1e293b;
+  --color-tone-1e2a40: #1e2a40;
+  --color-tone-1e2a42: #1e2a42;
+  --color-tone-1f293d: #1f293d;
+  --color-tone-1f2b40: #1f2b40;
+  --color-tone-202c42: #202c42;
+  --color-tone-24334d: #24334d;
+  --color-tone-26354f: #26354f;
+  --color-tone-293854: #293854;
+  --color-tone-2a131b: #2a131b;
+  --color-tone-2b3a55: #2b3a55;
+
+  /* Text on solid colored buttons stays white in both themes */
+  --color-on-solid: #ffffff;
+  /* Darkens a panel on dark; on light it stays white */
+  --color-shade: #000000;
+}
+
+html {
+  color-scheme: dark;
+}
+
+/* ---------- Light theme: same pages, light colors ---------- */
+html[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces and borders */
+  --color-tone-070a10: #f5f7fb;
+  --color-tone-080c14: #f5f7fb;
+  --color-tone-0a0f19: #f5f7fb;
+  --color-tone-0a0f1a: #f5f7fb;
+  --color-tone-0b0e14: #f5f7fb;
+  --color-tone-0b1220: #f8fafc;
+  --color-tone-0c1017: #f5f7fb;
+  --color-tone-0c121e: #f8fafc;
+  --color-tone-0d1322: #f8fafc;
+  --color-tone-0e131c: #f8fafc;
+  --color-tone-0e1420: #f8fafc;
+  --color-tone-0e1423: #f8fafc;
+  --color-tone-0e1626: #f8fafc;
+  --color-tone-0e2a22: #d1fae5;
+  --color-tone-0f1522: #f8fafc;
+  --color-tone-0f1523: #f8fafc;
+  --color-tone-0f172a: #f1f5f9;
+  --color-tone-0f1a14: #ecfdf5;
+  --color-tone-111622: #ffffff;
+  --color-tone-111726: #ffffff;
+  --color-tone-111826: #ffffff;
+  --color-tone-11192b: #ffffff;
+  --color-tone-121722: #ffffff;
+  --color-tone-121a2a: #ffffff;
+  --color-tone-131b2e: #ffffff;
+  --color-tone-131d2e: #ffffff;
+  --color-tone-141b2a: #ffffff;
+  --color-tone-141c2c: #ffffff;
+  --color-tone-161e30: #f8fafc;
+  --color-tone-162033: #ffffff;
+  --color-tone-162035: #eef2f7;
+  --color-tone-162136: #eef2f7;
+  --color-tone-182133: #e2e8f0;
+  --color-tone-182239: #e2e8f0;
+  --color-tone-182337: #e2e8f0;
+  --color-tone-19243a: #e2e8f0;
+  --color-tone-1b253b: #e2e8f0;
+  --color-tone-1c2840: #e2e8f0;
+  --color-tone-1d273b: #e2e8f0;
+  --color-tone-1d293f: #e2e8f0;
+  --color-tone-1e293b: #e2e8f0;
+  --color-tone-1e2a40: #e2e8f0;
+  --color-tone-1e2a42: #e2e8f0;
+  --color-tone-1f293d: #e2e8f0;
+  --color-tone-1f2b40: #e2e8f0;
+  --color-tone-202c42: #e2e8f0;
+  --color-tone-24334d: #cbd5e1;
+  --color-tone-26354f: #cbd5e1;
+  --color-tone-293854: #cbd5e1;
+  --color-tone-2a131b: #ffe4e6;
+  --color-tone-2b3a55: #cbd5e1;
+
+  /* Gray text and lines: the scale flips, so "light text" becomes dark text */
+  --color-white: #0f172a;
+  --color-slate-50: #0f172a;
+  --color-slate-100: #0f172a;
+  --color-slate-200: #1e293b;
+  --color-slate-300: #334155;
+  --color-slate-400: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-600: #94a3b8;
+  --color-slate-700: #cbd5e1;
+  --color-slate-800: #e2e8f0;
+  --color-slate-900: #f1f5f9;
+  --color-slate-950: #f8fafc;
+
+  /* Colored text: the pale shades used on dark become deeper ones that read on white */
+  --color-emerald-50: #064e3b;
+  --color-emerald-100: #064e3b;
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-rose-100: #881337;
+  --color-rose-200: #9f1239;
+  --color-rose-300: #be123c;
+  --color-rose-400: #e11d48;
+  --color-blue-50: #172554;
+  --color-blue-100: #1e3a8a;
+  --color-blue-200: #1e40af;
+  --color-blue-300: #1d4ed8;
+  --color-blue-400: #2563eb;
+  --color-amber-100: #78350f;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-amber-400: #d97706;
+  --color-violet-200: #5b21b6;
+  --color-violet-300: #6d28d9;
+  --color-violet-400: #7c3aed;
+  --color-teal-300: #0f766e;
+  --color-teal-400: #0d9488;
+  --color-sky-400: #0284c7;
+  --color-cyan-300: #0e7490;
+  --color-cyan-400: #0891b2;
+
+  /* App palette */
+  --color-bg-app: #f5f7fb;
+  --color-bg-surface: #ffffff;
+  --color-bg-raised: #f1f5f9;
+  --color-border-default: #e2e8f0;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-success: #059669;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-danger: #e11d48;
+  --color-danger-bg: #fff1f2;
+  --color-danger-border: #fecdd3;
+  --color-accent: #1d4ed8;
+  --color-accent-bg: #eff6ff;
+  --color-accent-solid: #2563eb;
+  --color-space-950: #f5f7fb;
+  --color-space-900: #f1f5f9;
+  --color-space-850: #f8fafc;
+  --color-space-800: #e2e8f0;
+  --color-space-700: #cbd5e1;
+  --color-space-600: #94a3b8;
+  --color-carbon-950: #ffffff;
+  --color-carbon-900: #f8fafc;
+  --color-carbon-850: #f1f5f9;
+  --color-carbon-800: #e2e8f0;
+  --color-carbon-700: #cbd5e1;
+  --color-carbon-600: #94a3b8;
+
+  --color-shade: #ffffff;
+  --scroll-thumb: #cbd5e1;
+  --scroll-thumb-hover: #94a3b8;
+}
+
+html[data-theme='light'] .surface-card {
+  background: #ffffff;
+  backdrop-filter: none;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 4px 14px rgba(15, 23, 42, 0.04);
 }
 
 .surface-card {
@@ -58,9 +262,9 @@ body {
 /* A thin, faint scrollbar (only there when the area overflows), brighter under the pointer */
 .quiet-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #2b374d transparent;
+  scrollbar-color: var(--scroll-thumb, #2b374d) transparent;
 }
 .quiet-scroll:hover,
 .quiet-scroll:focus-within {
-  scrollbar-color: #475569 transparent;
+  scrollbar-color: var(--scroll-thumb-hover, #475569) transparent;
 }

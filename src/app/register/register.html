@@ -22,7 +22,7 @@
       maxlength="60"
       [(ngModel)]="name"
       name="name"
-      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+      class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
     />
 
     <label for="reg-email" class="block text-xs font-medium text-slate-300 mb-1.5">Email</label>
@@ -32,7 +32,7 @@
       autocomplete="email"
       [(ngModel)]="email"
       name="email"
-      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+      class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
     />
 
     <div class="flex items-baseline justify-between mb-1.5">
@@ -48,7 +48,7 @@
         [(ngModel)]="password"
         name="password"
         aria-describedby="reg-password-rules"
-        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
+        class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
       />
       <button
         type="button"
@@ -75,7 +75,7 @@
         type="checkbox"
         [(ngModel)]="acceptTerms"
         name="acceptTerms"
-        class="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
+        class="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-tone-0e131c accent-blue-600"
       />
       <span
         >I agree to the
@@ -90,7 +90,7 @@
     <button
       type="submit"
       [disabled]="!canSubmit"
-      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {{ submitting() ? 'Creating account…' : 'Create account' }}
     </button>

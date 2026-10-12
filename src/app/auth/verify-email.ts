@@ -31,7 +31,7 @@ import { AuthShell, takeTokenFromUrl } from './auth-ui';
             <button
               type="button"
               (click)="go()"
-              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all"
+              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all"
             >
               Go to dashboard
             </button>
@@ -43,7 +43,7 @@ import { AuthShell, takeTokenFromUrl } from './auth-ui';
             </p>
             <a
               routerLink="/check-email"
-              class="block w-full border border-[#1F293D] text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition mb-3"
+              class="block w-full border border-tone-1f293d text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition mb-3"
               >Send a new link</a
             >
             <a routerLink="/login" class="text-xs text-blue-400 hover:text-blue-300">Log in</a>

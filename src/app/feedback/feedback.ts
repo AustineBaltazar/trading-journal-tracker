@@ -16,7 +16,7 @@ type Kind = 'bug' | 'idea' | 'other';
         role="dialog"
         aria-modal="false"
         aria-labelledby="feedback-title"
-        class="fixed left-[17rem] bottom-5 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-[#121722] border border-[#1F293D] rounded-2xl p-4 shadow-2xl shadow-black/60"
+        class="fixed left-[17rem] bottom-5 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-tone-121722 border border-tone-1f293d rounded-2xl p-4 shadow-2xl shadow-black/60"
         (keydown.escape)="close()"
       >
         @if (sent()) {
@@ -25,7 +25,7 @@ type Kind = 'bug' | 'idea' | 'other';
           <button
             type="button"
             (click)="close()"
-            class="w-full border border-[#1F293D] text-slate-300 hover:text-white text-sm py-2 rounded-xl"
+            class="w-full border border-tone-1f293d text-slate-300 hover:text-white text-sm py-2 rounded-xl"
           >
             Close
           </button>
@@ -45,7 +45,7 @@ type Kind = 'bug' | 'idea' | 'other';
             <div
               role="radiogroup"
               aria-label="Kind of feedback"
-              class="grid grid-cols-3 gap-1 p-1 bg-[#0E131C] border border-[#1F293D] rounded-xl text-xs mb-3"
+              class="grid grid-cols-3 gap-1 p-1 bg-tone-0e131c border border-tone-1f293d rounded-xl text-xs mb-3"
             >
               @for (option of kinds; track option.value) {
                 <button
@@ -73,7 +73,7 @@ type Kind = 'bug' | 'idea' | 'other';
               maxlength="2000"
               [(ngModel)]="message"
               [placeholder]="placeholder()"
-              class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3 py-2 mb-2 resize-none"
+              class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3 py-2 mb-2 resize-none"
             ></textarea>
             <label class="flex items-center gap-2 text-[11px] text-slate-400 mb-3 cursor-pointer">
               <input
@@ -90,7 +90,7 @@ type Kind = 'bug' | 'idea' | 'other';
             <button
               type="submit"
               [disabled]="sending() || !message.trim()"
-              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-white font-semibold text-sm py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 text-on-solid font-semibold text-sm py-2 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ sending() ? 'Sending…' : 'Send' }}
             </button>
@@ -106,7 +106,7 @@ type Kind = 'bug' | 'idea' | 'other';
       [class]="
         open()
           ? 'bg-blue-500/10 text-blue-100 border-blue-500/30'
-          : 'border-dashed border-[#26354f] text-slate-400 hover:text-slate-100 hover:border-slate-500'
+          : 'border-dashed border-tone-26354f text-slate-400 hover:text-slate-100 hover:border-slate-500'
       "
     >
       <span aria-hidden="true">💬</span> Send feedback

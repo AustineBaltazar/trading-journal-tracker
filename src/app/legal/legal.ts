@@ -11,7 +11,7 @@ const CONTACT = 'brotradingjournal@gmail.com';
   selector: 'app-legal',
   imports: [RouterLink],
   template: `
-    <div class="min-h-screen bg-[#0B0E14] text-slate-300">
+    <div class="min-h-screen bg-tone-0b0e14 text-slate-300">
       <div class="max-w-2xl mx-auto px-5 py-10">
         <button
           type="button"
@@ -166,7 +166,7 @@ const CONTACT = 'brotradingjournal@gmail.com';
   `,
   styles: `
     .legal h2 {
-      color: #fff;
+      color: var(--color-white);
       font-size: 1rem;
       font-weight: 600;
       margin-top: 1.5rem;
@@ -179,10 +179,10 @@ const CONTACT = 'brotradingjournal@gmail.com';
       margin-top: 0.4rem;
     }
     .legal a {
-      color: #60a5fa;
+      color: var(--color-blue-400);
     }
     .legal b {
-      color: #e2e8f0;
+      color: var(--color-slate-200);
       font-weight: 600;
     }
   `,

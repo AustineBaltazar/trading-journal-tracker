@@ -43,7 +43,7 @@ export function estimateNetPnl(t: {
     <div
       role="radiogroup"
       aria-label="Result"
-      class="grid grid-cols-3 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+      class="grid grid-cols-3 gap-1 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
     >
       @for (option of options; track option.value) {
         <button
@@ -130,7 +130,7 @@ export class ResultPicker {
           class="text-xs px-3 py-1 rounded-full border transition-colors"
           [class]="
             !on
-              ? 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+              ? 'border-tone-26354f bg-tone-121a2a text-slate-300 hover:border-slate-500'
               : bad.has(emotion)
                 ? 'border-rose-500/55 bg-rose-500/12 text-rose-100'
                 : 'border-blue-400/55 bg-blue-600/15 text-blue-100'

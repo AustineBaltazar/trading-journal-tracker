@@ -53,7 +53,7 @@
       autocomplete="username"
       [(ngModel)]="email"
       name="email"
-      class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+      class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
     />
 
     <div class="flex items-baseline justify-between mb-1.5">
@@ -69,7 +69,7 @@
         autocomplete="current-password"
         [(ngModel)]="password"
         name="password"
-        class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
+        class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
       />
       <button
         type="button"
@@ -86,7 +86,7 @@
         type="checkbox"
         [(ngModel)]="remember"
         name="remember"
-        class="h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
+        class="h-3.5 w-3.5 rounded border-slate-600 bg-tone-0e131c accent-blue-600"
       />
       Keep me logged in for 30 days
     </label>
@@ -98,7 +98,7 @@
     <button
       type="submit"
       [disabled]="submitting() || waitSeconds() > 0"
-      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {{ submitting() ? 'Logging in…' : 'Log in' }}
     </button>

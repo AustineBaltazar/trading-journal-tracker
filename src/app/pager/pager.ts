@@ -23,7 +23,7 @@ export function pageList(page: number, pages: number): number[] {
         type="button"
         [disabled]="page() <= 1"
         (click)="go(page() - 1)"
-        class="px-2.5 py-1.5 rounded-lg border border-[#1F293D] text-slate-400 hover:text-white hover:bg-[#121722] disabled:opacity-40 disabled:pointer-events-none"
+        class="px-2.5 py-1.5 rounded-lg border border-tone-1f293d text-slate-400 hover:text-white hover:bg-tone-121722 disabled:opacity-40 disabled:pointer-events-none"
       >
         ‹ Prev
       </button>
@@ -39,7 +39,7 @@ export function pageList(page: number, pages: number): number[] {
             [class]="
               p === page()
                 ? 'bg-blue-500/15 border-blue-500/50 text-white font-semibold'
-                : 'border-[#1F293D] text-slate-400 hover:text-white hover:bg-[#121722]'
+                : 'border-tone-1f293d text-slate-400 hover:text-white hover:bg-tone-121722'
             "
           >
             {{ p }}
@@ -50,7 +50,7 @@ export function pageList(page: number, pages: number): number[] {
         type="button"
         [disabled]="page() >= pages()"
         (click)="go(page() + 1)"
-        class="px-2.5 py-1.5 rounded-lg border border-[#1F293D] text-slate-400 hover:text-white hover:bg-[#121722] disabled:opacity-40 disabled:pointer-events-none"
+        class="px-2.5 py-1.5 rounded-lg border border-tone-1f293d text-slate-400 hover:text-white hover:bg-tone-121722 disabled:opacity-40 disabled:pointer-events-none"
       >
         Next ›
       </button>

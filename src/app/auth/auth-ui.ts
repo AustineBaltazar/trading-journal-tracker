@@ -7,13 +7,15 @@ import { passwordStrength, sameAsEmail } from './auth';
   selector: 'app-auth-shell',
   imports: [RouterLink],
   template: `
-    <div class="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4">
+    <div class="min-h-screen bg-tone-0b0e14 flex items-center justify-center p-4">
       <div class="w-full max-w-sm">
         <div class="flex flex-col items-center gap-3 mb-8">
           <div
             class="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-emerald-400 p-[1.5px] flex items-center justify-center shadow-lg shadow-blue-500/20"
           >
-            <div class="h-full w-full bg-[#0B0E14] rounded-[14px] flex items-center justify-center">
+            <div
+              class="h-full w-full bg-tone-0b0e14 rounded-[14px] flex items-center justify-center"
+            >
               <svg
                 class="w-6 h-6 text-emerald-400"
                 fill="none"
@@ -38,7 +40,7 @@ import { passwordStrength, sameAsEmail } from './auth';
             >
           </div>
         </div>
-        <div class="bg-[#121722] border border-[#1F293D] rounded-2xl p-6 shadow-xl">
+        <div class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-6 shadow-xl">
           <ng-content />
         </div>
         <p class="text-center text-[11px] text-slate-600 mt-5">

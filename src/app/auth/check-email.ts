@@ -49,14 +49,14 @@ const RESEND_WAIT = 60;
           type="email"
           autocomplete="email"
           [(ngModel)]="typedEmail"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 transition"
+          class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 transition"
         />
       }
       <button
         type="button"
         (click)="resend()"
         [disabled]="wait() > 0 || sending()"
-        class="w-full border border-[#1F293D] text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full border border-tone-1f293d text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {{ wait() > 0 ? 'Resend email in 0:' + (wait() < 10 ? '0' : '') + wait() : 'Resend email' }}
       </button>

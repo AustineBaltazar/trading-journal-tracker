@@ -1,5 +1,5 @@
 <!-- On wide screens the page fits the window and each column scrolls on its own -->
-<div class="bg-[#0B0E14] min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
+<div class="bg-tone-0b0e14 min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
   <header class="px-6 pt-4 pb-3 flex flex-wrap items-end justify-between gap-3 shrink-0">
     <div>
       <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2.5">
@@ -13,7 +13,7 @@
     <div
       role="radiogroup"
       aria-label="Date range"
-      class="flex flex-wrap gap-0.5 p-0.5 bg-[#121722] border border-[#1F293D] rounded-xl text-xs"
+      class="flex flex-wrap gap-0.5 p-0.5 bg-tone-121722 border border-tone-1f293d rounded-xl text-xs"
     >
       @for (r of ranges; track r.key) {
         <button
@@ -46,7 +46,7 @@
       <!-- Streaks and records, one strip -->
       <section
         aria-label="Streaks and records"
-        class="bg-[#121722] border border-[#1F293D] rounded-2xl px-4 py-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-3 shrink-0"
+        class="bg-tone-121722 border border-tone-1f293d rounded-2xl px-4 py-3 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-x-4 gap-y-3 shrink-0"
       >
         <div>
           <div class="text-[11px] text-slate-400">Current streak</div>
@@ -130,7 +130,7 @@
             [class]="
               filter() === c.key
                 ? 'border-blue-500/50 bg-blue-500/12 text-blue-100'
-                : 'border-[#1F293D] text-slate-400 enabled:hover:text-slate-200'
+                : 'border-tone-1f293d text-slate-400 enabled:hover:text-slate-200'
             "
           >
             {{ c.label }}
@@ -155,7 +155,9 @@
             @for (item of shown().leaks; track $index) {
               <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
             } @empty {
-              <p class="text-xs text-slate-500 bg-[#121722] border border-[#1F293D] rounded-xl p-3">
+              <p
+                class="text-xs text-slate-500 bg-tone-121722 border border-tone-1f293d rounded-xl p-3"
+              >
                 Nothing here with 3+ trades is losing money in this range.
               </p>
             }
@@ -175,7 +177,9 @@
             @for (item of shown().edges; track $index) {
               <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
             } @empty {
-              <p class="text-xs text-slate-500 bg-[#121722] border border-[#1F293D] rounded-xl p-3">
+              <p
+                class="text-xs text-slate-500 bg-tone-121722 border border-tone-1f293d rounded-xl p-3"
+              >
                 Nothing here with 3+ trades is in profit yet in this range.
               </p>
             }
@@ -196,7 +200,7 @@
     type="button"
     (click)="open(item)"
     [disabled]="!item.tab"
-    class="w-full text-left grid grid-cols-[30px_1fr] gap-3 bg-[#121722] border border-[#1F293D] rounded-xl px-3 py-2.5 enabled:hover:border-slate-600 transition-colors disabled:cursor-default"
+    class="w-full text-left grid grid-cols-[30px_1fr] gap-3 bg-tone-121722 border border-tone-1f293d rounded-xl px-3 py-2.5 enabled:hover:border-slate-600 transition-colors disabled:cursor-default"
   >
     <span
       class="w-[30px] h-[30px] rounded-[9px]"

@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { TradesList } from './trades-list/trades-list';
+import { ThemeService } from './theme';
 
 @Component({
   imports: [RouterOutlet],
@@ -10,4 +10,6 @@ import { TradesList } from './trades-list/trades-list';
 })
 export class App {
   protected readonly title = signal('trading-journal-frontend');
+  // Started here so login pages follow the theme too
+  private readonly theme = inject(ThemeService);
 }

@@ -49,7 +49,7 @@ export function tagsByGroup(groups: TagGroup[], tagIds: number[] | undefined) {
                   [class]="
                     selected().has(tag.id)
                       ? 'border-slate-300/60 bg-slate-300/15 text-white'
-                      : 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+                      : 'border-tone-26354f bg-tone-121a2a text-slate-300 hover:border-slate-500'
                   "
                 >
                   {{ tag.name }}

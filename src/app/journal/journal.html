@@ -1,4 +1,4 @@
-<div class="bg-[#080c14] min-h-screen text-slate-300">
+<div class="bg-tone-080c14 min-h-screen text-slate-300">
   <div class="px-6 lg:px-8 py-6 grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)] gap-6">
     <!-- Day list -->
     <section>
@@ -10,7 +10,7 @@
       <button
         type="button"
         (click)="selectDate(today)"
-        class="w-full rounded-xl py-2 text-sm font-semibold text-white transition-colors mb-4"
+        class="w-full rounded-xl py-2 text-sm font-semibold text-on-solid transition-colors mb-4"
         [class]="
           tradeMode.isBacktest()
             ? 'bg-violet-600 hover:bg-violet-500'
@@ -129,12 +129,12 @@
           </p>
         </div>
         <div class="flex flex-wrap gap-2 font-mono text-xs">
-          <span class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b]"
+          <span class="px-2.5 py-1 rounded-lg bg-tone-111726 border border-tone-1e293b"
             >{{ dayTrades().length }} {{ dayTrades().length === 1 ? 'trade' : 'trades' }}</span
           >
           @if (dayTrades().length) {
             <span
-              class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b]"
+              class="px-2.5 py-1 rounded-lg bg-tone-111726 border border-tone-1e293b"
               [class.text-emerald-400]="dayPnl() > 0"
               [class.text-rose-400]="dayPnl() < 0"
               >{{ dayPnl() > 0 ? '+' : dayPnl() < 0 ? '-' : '' }}${{
@@ -143,7 +143,7 @@
             >
           }
           @if (entry().followed_plan) {
-            <span class="px-2.5 py-1 rounded-lg bg-[#111726] border border-[#1e293b] font-sans"
+            <span class="px-2.5 py-1 rounded-lg bg-tone-111726 border border-tone-1e293b font-sans"
               >Plan followed:
               <span
                 class="capitalize"
@@ -163,7 +163,7 @@
         @let e = entry();
 
         <!-- 1. Before the session -->
-        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5 mb-4">
+        <div class="bg-tone-111726 border border-tone-1e293b rounded-2xl p-5 mb-4">
           <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
             <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400">1</span>
             Before the session
@@ -173,7 +173,7 @@
             <div>
               <span class="block text-[11px] font-medium text-slate-300 mb-1.5">Bias</span>
               <div
-                class="grid grid-cols-3 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+                class="grid grid-cols-3 gap-1 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
               >
                 @for (b of biases; track b) {
                   <button
@@ -203,7 +203,7 @@
                 [value]="e.bias_reason || ''"
                 (input)="set('bias_reason', value($event))"
                 placeholder="Swept Asia low, holding above VWAP"
-                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
+                class="w-full bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
               />
             </label>
           </div>
@@ -221,7 +221,7 @@
                       (input)="updateLevel(i, { price: +value($event) })"
                       placeholder="Price"
                       aria-label="Level price"
-                      class="bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm font-mono text-slate-100 focus:outline-none"
+                      class="bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm font-mono text-slate-100 focus:outline-none"
                     />
                     <input
                       type="text"
@@ -230,7 +230,7 @@
                       (input)="updateLevel(i, { label: value($event) })"
                       placeholder="Previous day high"
                       aria-label="Level label"
-                      class="bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none"
+                      class="bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-lg px-2.5 py-1.5 text-sm text-slate-300 placeholder-slate-600 focus:outline-none"
                     />
                     <button
                       type="button"
@@ -261,7 +261,7 @@
                   [value]="e.plan || ''"
                   (input)="set('plan', value($event))"
                   placeholder="Longs only. IFVG reclaim in New York AM. Max 2 trades."
-                  class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none resize-y"
+                  class="w-full bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none resize-y"
                 ></textarea>
               </label>
               <label class="block">
@@ -271,7 +271,7 @@
                   [value]="e.news || ''"
                   (input)="set('news', value($event))"
                   placeholder="10:00 ET CPI"
-                  class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
+                  class="w-full bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none"
                 />
               </label>
             </div>
@@ -301,7 +301,7 @@
         </div>
 
         <!-- 2. What happened -->
-        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5 mb-4">
+        <div class="bg-tone-111726 border border-tone-1e293b rounded-2xl p-5 mb-4">
           <div class="flex items-center justify-between gap-2 mb-3">
             <h3 class="text-sm font-semibold text-white flex items-center gap-2">
               <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400"
@@ -314,7 +314,7 @@
           @if (dayTrades().length === 0) {
             <p class="text-sm text-slate-500">No trades this day.</p>
           } @else {
-            <div class="divide-y divide-[#1e293b]/60">
+            <div class="divide-y divide-tone-1e293b/60">
               @for (t of dayTrades(); track t.id) {
                 <a
                   [routerLink]="['/trades', t.id]"
@@ -356,7 +356,7 @@
         </div>
 
         <!-- 3. After the session -->
-        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-5">
+        <div class="bg-tone-111726 border border-tone-1e293b rounded-2xl p-5">
           <h3 class="text-sm font-semibold text-white flex items-center gap-2 mb-4">
             <span class="text-[10px] font-bold px-1.5 rounded bg-slate-800 text-slate-400">3</span>
             After the session
@@ -368,7 +368,7 @@
                 >Did I follow my plan?</span
               >
               <div
-                class="grid grid-cols-3 gap-1 p-1 bg-[#141c2c] border border-[#24334d] rounded-xl text-xs font-semibold"
+                class="grid grid-cols-3 gap-1 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
               >
                 @for (f of followed; track f) {
                   <button
@@ -403,7 +403,7 @@
                     [class]="
                       e.mood === m
                         ? 'border-blue-500/55 bg-blue-600/15 text-blue-100'
-                        : 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+                        : 'border-tone-26354f bg-tone-121a2a text-slate-300 hover:border-slate-500'
                     "
                   >
                     {{ m }}
@@ -422,7 +422,7 @@
                     class="w-8 py-1.5 rounded-lg border font-mono text-xs font-bold transition-colors"
                     [class]="
                       e.day_grade !== g
-                        ? 'border-[#26354f] text-slate-400 hover:text-slate-200'
+                        ? 'border-tone-26354f text-slate-400 hover:text-slate-200'
                         : g === 'A' || g === 'B'
                           ? 'border-emerald-500/50 bg-emerald-500/12 text-emerald-200'
                           : g === 'C'
@@ -446,7 +446,7 @@
                 rows="3"
                 [value]="e.went_well || ''"
                 (input)="set('went_well', value($event))"
-                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
+                class="w-full bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
               ></textarea>
             </label>
             <label class="block">
@@ -455,7 +455,7 @@
                 rows="3"
                 [value]="e.to_fix || ''"
                 (input)="set('to_fix', value($event))"
-                class="w-full bg-[#161e30] border border-[#26354f] focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
+                class="w-full bg-tone-161e30 border border-tone-26354f focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none resize-y"
               ></textarea>
             </label>
           </div>
