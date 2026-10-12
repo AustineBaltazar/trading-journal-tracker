@@ -24,7 +24,7 @@ import { AuthShell, PasswordStrength, newPasswordOk, takeTokenFromUrl } from './
             </p>
             <a
               routerLink="/forgot-password"
-              class="block w-full border border-[#1F293D] text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition"
+              class="block w-full border border-tone-1f293d text-slate-300 hover:text-white hover:border-slate-500 text-sm py-2.5 rounded-xl transition"
               >Send a new link</a
             >
           </div>
@@ -55,7 +55,7 @@ import { AuthShell, PasswordStrength, newPasswordOk, takeTokenFromUrl } from './
                 [(ngModel)]="password"
                 name="password"
                 aria-describedby="reset-password-rules"
-                class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
+                class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl pl-3.5 pr-16 py-2.5 transition"
               />
               <button
                 type="button"
@@ -78,7 +78,7 @@ import { AuthShell, PasswordStrength, newPasswordOk, takeTokenFromUrl } from './
                 type="checkbox"
                 [(ngModel)]="logoutOthers"
                 name="logoutOthers"
-                class="h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
+                class="h-3.5 w-3.5 rounded border-slate-600 bg-tone-0e131c accent-blue-600"
               />
               Log out all my other devices
             </label>
@@ -86,7 +86,7 @@ import { AuthShell, PasswordStrength, newPasswordOk, takeTokenFromUrl } from './
             <button
               type="submit"
               [disabled]="!canSave"
-              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ saving() ? 'Saving…' : 'Save new password' }}
             </button>

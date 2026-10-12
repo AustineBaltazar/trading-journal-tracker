@@ -1,6 +1,6 @@
 <div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
   <header
-    class="px-2 py-3 border-b border-[#1F293D]/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
+    class="px-2 py-3 border-b border-tone-1f293d/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
   >
     <div>
       <h1 class="text-xl font-semibold text-white tracking-tight flex items-center gap-2.5">
@@ -44,7 +44,7 @@
             type="date"
             [value]="custom().from ?? ''"
             (change)="setCustom('from', $any($event.target).value)"
-            class="bg-[#161e30] border border-[#26354f] rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
+            class="bg-tone-161e30 border border-tone-26354f rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
           />
         </label>
         <label class="flex items-center gap-1.5 text-xs text-slate-400">
@@ -53,7 +53,7 @@
             type="date"
             [value]="custom().to ?? ''"
             (change)="setCustom('to', $any($event.target).value)"
-            class="bg-[#161e30] border border-[#26354f] rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
+            class="bg-tone-161e30 border border-tone-26354f rounded-md px-2 py-1 text-slate-200 font-mono text-xs"
           />
         </label>
       }
@@ -634,7 +634,7 @@
                   <div>
                     @if (hour.total < minSample) {
                       <div
-                        class="h-12 rounded-lg border border-slate-800 bg-[#0e1423] flex items-center justify-center text-xs text-slate-600"
+                        class="h-12 rounded-lg border border-slate-800 bg-tone-0e1423 flex items-center justify-center text-xs text-slate-600"
                       >
                         —
                       </div>
@@ -1106,7 +1106,7 @@
                     >
                       <td class="py-2.5 pr-3 font-sans">
                         <span
-                          class="text-xs px-2.5 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
+                          class="text-xs px-2.5 py-0.5 rounded-full border border-slate-400/35 bg-tone-121a2a text-slate-200"
                           >{{ row.name }}</span
                         >
                       </td>

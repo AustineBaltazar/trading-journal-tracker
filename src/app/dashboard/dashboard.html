@@ -1,6 +1,6 @@
 <div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
   <header
-    class="px-2 py-3 border-b border-[#1F293D]/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
+    class="px-2 py-3 border-b border-tone-1f293d/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
   >
     <div>
       <div class="flex items-center gap-2">
@@ -13,14 +13,14 @@
 
     <div class="flex items-center flex-wrap gap-2.5">
       <div
-        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1322] border border-[#1b253b] text-[11px] text-slate-300"
+        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-tone-0d1322 border border-tone-1b253b text-[11px] text-slate-300"
       >
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
         <span>MNQ Futures</span>
       </div>
       @if (trades().length > 0) {
         <div
-          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#0D1322] border border-[#1b253b] text-[11px] text-slate-400 font-mono"
+          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-tone-0d1322 border border-tone-1b253b text-[11px] text-slate-400 font-mono"
         >
           <span>{{ dateRangeLabel() }}</span>
         </div>
@@ -30,7 +30,7 @@
         class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold shadow-sm transition"
         [class]="
           tradeMode.isBacktest()
-            ? 'bg-violet-600 hover:bg-violet-500 text-white'
+            ? 'bg-violet-600 hover:bg-violet-500 text-on-solid'
             : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950'
         "
       >
@@ -54,12 +54,12 @@
       (click)="closeDayPopover()"
     >
       <div
-        class="w-full max-w-xl rounded-2xl bg-[#0c1017] border border-white/10 overflow-hidden flex flex-col"
+        class="w-full max-w-xl rounded-2xl bg-tone-0c1017 border border-white/10 overflow-hidden flex flex-col"
         style="box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85)"
         (click)="$event.stopPropagation()"
       >
         <div
-          class="px-5 py-4 border-b border-white/5 bg-[#111622]/60 flex items-center justify-between"
+          class="px-5 py-4 border-b border-white/5 bg-tone-111622/60 flex items-center justify-between"
         >
           <div class="flex items-center gap-3">
             <div
@@ -106,7 +106,7 @@
 
         <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto quiet-scroll">
           <div
-            class="grid grid-cols-4 gap-2.5 p-3 rounded-xl bg-black/30 border border-white/5 text-center"
+            class="grid grid-cols-4 gap-2.5 p-3 rounded-xl bg-shade/30 border border-white/5 text-center"
           >
             <div class="flex flex-col">
               <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold"
@@ -157,7 +157,7 @@
             </div>
           </div>
 
-          <div class="rounded-xl border border-[#1e293b] bg-[#0f1522] px-4 py-3 text-xs">
+          <div class="rounded-xl border border-tone-1e293b bg-tone-0f1522 px-4 py-3 text-xs">
             @if (selectedDayJournal(); as j) {
               <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-slate-400">
                 <span>Bias</span>
@@ -187,7 +187,7 @@
                 }
               </div>
               @if (j.lesson) {
-                <p class="mt-2.5 border-l-2 border-[#26354f] pl-2.5 text-slate-300">
+                <p class="mt-2.5 border-l-2 border-tone-26354f pl-2.5 text-slate-300">
                   Lesson: {{ j.lesson }}
                 </p>
               }
@@ -222,7 +222,7 @@
             @for (trade of selectedDayTrades(); track trade.id) {
               <div
                 (click)="goToTrade(trade.id)"
-                class="group relative rounded-xl border border-white/10 bg-[#111622]/80 hover:bg-[#111622] p-3.5 transition duration-150 flex items-center justify-between cursor-pointer"
+                class="group relative rounded-xl border border-white/10 bg-tone-111622/80 hover:bg-tone-111622 p-3.5 transition duration-150 flex items-center justify-between cursor-pointer"
                 [class.hover:border-emerald-500]="trade.netPnl >= 0"
                 [class.hover:border-rose-500]="trade.netPnl < 0"
               >
@@ -456,12 +456,12 @@
                 <rect x="0" [attr.y]="chart.zeroY" [attr.width]="layout.width" height="1000" />
               </clipPath>
               <linearGradient id="equityGain" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#34D399" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#34D399" stop-opacity="0" />
+                <stop offset="0%" style="stop-color: var(--color-emerald-400)" stop-opacity="0.3" />
+                <stop offset="100%" style="stop-color: var(--color-emerald-400)" stop-opacity="0" />
               </linearGradient>
               <linearGradient id="equityLoss" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#FB7185" stop-opacity="0" />
-                <stop offset="100%" stop-color="#FB7185" stop-opacity="0.3" />
+                <stop offset="0%" style="stop-color: var(--color-rose-400)" stop-opacity="0" />
+                <stop offset="100%" style="stop-color: var(--color-rose-400)" stop-opacity="0.3" />
               </linearGradient>
             </defs>
 
@@ -471,7 +471,7 @@
                 [attr.y]="layout.top"
                 [attr.width]="chart.drawdown.width"
                 [attr.height]="layout.curveHeight"
-                fill="#F43F5E"
+                style="fill: var(--color-rose-500)"
                 fill-opacity="0.07"
               />
             }
@@ -482,13 +482,13 @@
                 [attr.x2]="layout.width - layout.right"
                 [attr.y1]="tick.y"
                 [attr.y2]="tick.y"
-                stroke="#1E293B"
+                style="stroke: var(--color-slate-800)"
                 stroke-dasharray="4 4"
               />
               <text
                 [attr.x]="layout.left - 8"
                 [attr.y]="tick.y + 4"
-                fill="#64748B"
+                style="fill: var(--color-slate-500)"
                 font-size="11"
                 text-anchor="end"
               >
@@ -500,7 +500,7 @@
               [attr.x2]="layout.width - layout.right"
               [attr.y1]="chart.zeroY"
               [attr.y2]="chart.zeroY"
-              stroke="#475569"
+              style="stroke: var(--color-slate-600)"
             />
 
             <path [attr.d]="chart.areaPath" fill="url(#equityGain)" clip-path="url(#equityAbove)" />
@@ -508,7 +508,7 @@
             <path
               [attr.d]="chart.linePath"
               fill="none"
-              stroke="#34D399"
+              style="stroke: var(--color-emerald-400)"
               stroke-width="2.5"
               stroke-linejoin="round"
               clip-path="url(#equityAbove)"
@@ -516,7 +516,7 @@
             <path
               [attr.d]="chart.linePath"
               fill="none"
-              stroke="#FB7185"
+              style="stroke: var(--color-rose-400)"
               stroke-width="2.5"
               stroke-linejoin="round"
               clip-path="url(#equityBelow)"
@@ -526,7 +526,7 @@
               <text
                 [attr.x]="label.x"
                 [attr.y]="chart.labelY"
-                fill="#64748B"
+                style="fill: var(--color-slate-500)"
                 font-size="11"
                 [attr.text-anchor]="label.anchor"
               >
@@ -541,7 +541,7 @@
                 [attr.x2]="point.x"
                 [attr.y1]="layout.top"
                 [attr.y2]="layout.top + layout.curveHeight"
-                stroke="#94A3B8"
+                style="stroke: var(--color-slate-400)"
                 stroke-opacity="0.4"
                 stroke-dasharray="3 3"
               />
@@ -549,8 +549,10 @@
                 [attr.cx]="point.x"
                 [attr.cy]="point.y"
                 r="4.5"
-                [attr.fill]="point.total >= 0 ? '#34D399' : '#FB7185'"
-                stroke="#0B0F17"
+                [style.fill]="
+                  point.total >= 0 ? 'var(--color-emerald-400)' : 'var(--color-rose-400)'
+                "
+                style="stroke: var(--color-space-900)"
                 stroke-width="2"
               />
             } @else {
@@ -558,7 +560,9 @@
                 [attr.cx]="last.x"
                 [attr.cy]="last.y"
                 r="8"
-                [attr.fill]="last.total >= 0 ? '#34D399' : '#FB7185'"
+                [style.fill]="
+                  last.total >= 0 ? 'var(--color-emerald-400)' : 'var(--color-rose-400)'
+                "
                 opacity="0.3"
                 class="animate-ping"
               />
@@ -566,8 +570,10 @@
                 [attr.cx]="last.x"
                 [attr.cy]="last.y"
                 r="4.5"
-                [attr.fill]="last.total >= 0 ? '#34D399' : '#FB7185'"
-                stroke="#0B0F17"
+                [style.fill]="
+                  last.total >= 0 ? 'var(--color-emerald-400)' : 'var(--color-rose-400)'
+                "
+                style="stroke: var(--color-space-900)"
                 stroke-width="2"
               />
             }
@@ -575,7 +581,7 @@
 
           @if (hoveredPoint(); as point) {
             <div
-              class="absolute top-0 pointer-events-none -translate-x-1/2 bg-[#0e1423] border border-slate-700 rounded-lg px-3 py-2 text-[11px] font-mono shadow-lg whitespace-nowrap"
+              class="absolute top-0 pointer-events-none -translate-x-1/2 bg-tone-0e1423 border border-slate-700 rounded-lg px-3 py-2 text-[11px] font-mono shadow-lg whitespace-nowrap"
               [style.left.%]="tooltipLeft()"
             >
               <div class="text-slate-400">Trade {{ hoverIndex() }} · {{ point.date }}</div>

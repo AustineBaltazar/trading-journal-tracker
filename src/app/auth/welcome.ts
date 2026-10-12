@@ -36,7 +36,7 @@ import { AuthShell } from './auth-ui';
           maxlength="60"
           autocomplete="name"
           [(ngModel)]="name"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+          class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
         />
 
         <label class="flex items-start gap-2 text-xs text-slate-400 mb-5 cursor-pointer">
@@ -44,7 +44,7 @@ import { AuthShell } from './auth-ui';
             type="checkbox"
             [(ngModel)]="acceptTerms"
             name="acceptTerms"
-            class="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-[#0E131C] accent-blue-600"
+            class="mt-0.5 h-3.5 w-3.5 rounded border-slate-600 bg-tone-0e131c accent-blue-600"
           />
           <span
             >I agree to the
@@ -61,7 +61,7 @@ import { AuthShell } from './auth-ui';
         <button
           type="submit"
           [disabled]="saving() || !acceptTerms || !name.trim()"
-          class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ saving() ? 'Creating…' : 'Create my journal' }}
         </button>

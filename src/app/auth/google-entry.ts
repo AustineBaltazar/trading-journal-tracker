@@ -24,8 +24,8 @@ import { GoogleButton, googleOn } from './google-button';
         (failed)="error.set('Google sign-in could not load. Use your email below.')"
       />
       <div class="flex items-center gap-3 my-4 text-[11px] text-slate-500" aria-hidden="true">
-        <span class="flex-1 h-px bg-[#1F293D]"></span>or use your email<span
-          class="flex-1 h-px bg-[#1F293D]"
+        <span class="flex-1 h-px bg-tone-1f293d"></span>or use your email<span
+          class="flex-1 h-px bg-tone-1f293d"
         ></span>
       </div>
     }

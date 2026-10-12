@@ -1,5 +1,5 @@
 <!-- On wide screens the page fits the window: only the side columns scroll -->
-<div class="bg-[#070A10] min-h-full xl:h-full xl:flex xl:flex-col text-slate-200 font-sans">
+<div class="bg-tone-070a10 min-h-full xl:h-full xl:flex xl:flex-col text-slate-200 font-sans">
   @if (showEditModal() && trade()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div class="w-full max-w-5xl max-h-[94vh] overflow-y-auto quiet-scroll">
@@ -11,7 +11,7 @@
   @if (showDeleteConfirm()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div
-        class="w-full max-w-sm bg-[#111726] border border-white/10 rounded-2xl p-6"
+        class="w-full max-w-sm bg-tone-111726 border border-white/10 rounded-2xl p-6"
         style="box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8)"
       >
         <h3 class="text-base font-semibold text-white mb-2">Delete this trade?</h3>
@@ -21,13 +21,13 @@
         <div class="grid grid-cols-2 gap-3">
           <button
             (click)="confirmDelete()"
-            class="w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs py-2.5 rounded-xl transition-all"
+            class="w-full bg-rose-600 hover:bg-rose-500 text-on-solid font-semibold text-xs py-2.5 rounded-xl transition-all"
           >
             Delete
           </button>
           <button
             (click)="closeDeleteConfirm()"
-            class="w-full bg-[#182133] hover:bg-[#202c42] text-slate-300 hover:text-white font-medium text-xs py-2.5 rounded-xl border border-[#2b3a55] transition-all"
+            class="w-full bg-tone-182133 hover:bg-tone-202c42 text-slate-300 hover:text-white font-medium text-xs py-2.5 rounded-xl border border-tone-2b3a55 transition-all"
           >
             Cancel
           </button>
@@ -40,7 +40,7 @@
     <p class="text-slate-500 p-6">Loading...</p>
   } @else {
     <header
-      class="sticky xl:static top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-white/10 bg-[#070A10]/80 backdrop-blur-xl flex-wrap gap-3 shrink-0"
+      class="sticky xl:static top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-white/10 bg-tone-070a10/80 backdrop-blur-xl flex-wrap gap-3 shrink-0"
     >
       <div class="flex items-center gap-3 min-w-0 flex-wrap">
         <a
@@ -135,7 +135,7 @@
       <div class="flex items-center gap-2.5">
         <button
           (click)="openEdit()"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-[#131B2E] hover:bg-[#182239] border border-white/10 transition-all"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-200 bg-tone-131b2e hover:bg-tone-182239 border border-white/10 transition-all"
         >
           Edit
         </button>
@@ -153,35 +153,35 @@
     >
       <!-- Left: every field, scrolls on its own -->
       <aside
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 px-4 py-1 divide-y divide-white/10 text-[13px] overflow-x-hidden xl:overflow-y-auto xl:min-h-0 quiet-scroll"
+        class="rounded-xl border border-white/10 bg-tone-131b2e/50 px-4 py-1 divide-y divide-white/10 text-[13px] overflow-x-hidden xl:overflow-y-auto xl:min-h-0 quiet-scroll"
       >
         <div class="py-3 space-y-2">
           <h3 class="text-[10px] uppercase tracking-widest font-semibold text-slate-500">Trade</h3>
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Mode</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 text-slate-100"
               >{{ trade().mode === 'backtest' ? 'Backtest' : 'Live' }}</span
             >
           </div>
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Strategy</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 text-slate-100"
               >{{ trade().strategy || '—' }}</span
             >
           </div>
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Session</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 text-slate-100"
               >{{ trade().session || '—' }}</span
             >
           </div>
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Contracts</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-slate-100"
               >{{ trade().contracts }} {{ trade().symbol }}</span
             >
           </div>
@@ -189,7 +189,7 @@
             <span class="text-slate-400">Entry → exit</span>
             <span class="flex items-center gap-1.5 whitespace-nowrap"
               ><span
-                class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                class="px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-slate-100"
                 >{{ trade().entry_time?.substring(0, 5) || '—' }} →
                 {{ trade().exit_time?.substring(0, 5) || '—' }}</span
               ><span class="text-[11px] text-slate-500 font-mono">{{
@@ -204,7 +204,7 @@
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Entry</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-slate-100"
               >{{ trade().entry_price | number: '1.2-2' }}</span
             >
           </div>
@@ -213,7 +213,7 @@
             @if (trade().stop_price !== null) {
               <span class="flex items-center gap-1.5 whitespace-nowrap"
                 ><span
-                  class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-rose-300"
+                  class="px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-rose-300"
                   >{{ trade().stop_price | number: '1.2-2' }}</span
                 ><span class="text-[11px] text-slate-500 font-mono"
                   >{{ priceGap(trade().stop_price) }} pts</span
@@ -228,7 +228,7 @@
             @if (trade().target_price !== null) {
               <span class="flex items-center gap-1.5 whitespace-nowrap"
                 ><span
-                  class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-emerald-300"
+                  class="px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-emerald-300"
                   >{{ trade().target_price | number: '1.2-2' }}</span
                 ><span class="text-[11px] text-slate-500 font-mono"
                   >{{ priceGap(trade().target_price) }} pts</span
@@ -242,7 +242,7 @@
             <span class="text-slate-400">Exit</span>
             <span class="flex items-center gap-1.5 whitespace-nowrap"
               ><span
-                class="px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+                class="px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-slate-100"
                 >{{ trade().exit_price | number: '1.2-2' }}</span
               ><span
                 class="text-[11px] font-mono"
@@ -255,17 +255,17 @@
           </div>
           @if (trade().rMultiple !== null) {
             <div class="grid grid-cols-3 gap-1.5 pt-1 font-mono">
-              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+              <div class="rounded-lg border border-white/10 bg-shade/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Risk</span>
                 <b class="text-rose-300">${{ riskDollars() | number: '1.0-0' }}</b>
               </div>
-              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+              <div class="rounded-lg border border-white/10 bg-shade/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Planned</span>
                 <b class="text-slate-100">{{
                   trade().plannedR !== null ? '1 : ' + trade().plannedR : '—'
                 }}</b>
               </div>
-              <div class="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+              <div class="rounded-lg border border-white/10 bg-shade/20 px-2 py-1.5">
                 <span class="block text-[10px] text-slate-500 font-sans">Result</span>
                 <b
                   [class.text-emerald-400]="trade().rMultiple > 0"
@@ -325,7 +325,7 @@
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
             <span class="text-slate-400">Grade</span>
             <span
-              class="justify-self-start px-2 py-0.5 rounded-md bg-[#121a2a] border border-[#1f2b40] font-mono text-slate-100"
+              class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 font-mono text-slate-100"
               >{{ trade().grade || '—' }}</span
             >
           </div>
@@ -354,7 +354,7 @@
               <span class="flex flex-wrap gap-1">
                 @for (tag of group.tags; track tag.id) {
                   <span
-                    class="text-xs px-2 py-0.5 rounded-full border border-slate-400/35 bg-[#121a2a] text-slate-200"
+                    class="text-xs px-2 py-0.5 rounded-full border border-slate-400/35 bg-tone-121a2a text-slate-200"
                     >{{ tag.name }}</span
                   >
                 } @empty {
@@ -413,11 +413,11 @@
 
       <!-- Right: the review, always in view -->
       <aside
-        class="rounded-xl border border-white/10 bg-[#131B2E]/50 p-4 space-y-4 overflow-x-hidden xl:overflow-y-auto xl:min-h-0 quiet-scroll"
+        class="rounded-xl border border-white/10 bg-tone-131b2e/50 p-4 space-y-4 overflow-x-hidden xl:overflow-y-auto xl:min-h-0 quiet-scroll"
       >
         @if (score(); as q) {
           <div
-            class="grid grid-cols-[64px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-white/10 bg-black/20 p-3"
+            class="grid grid-cols-[64px_minmax(0,1fr)] gap-3 items-center rounded-lg border border-white/10 bg-shade/20 p-3"
           >
             <svg
               viewBox="0 0 80 80"
@@ -425,7 +425,14 @@
               role="img"
               [attr.aria-label]="'Trade quality ' + q.score + ' out of 100'"
             >
-              <circle cx="40" cy="40" r="34" fill="none" stroke="#1e293b" stroke-width="7" />
+              <circle
+                cx="40"
+                cy="40"
+                r="34"
+                fill="none"
+                style="stroke: var(--color-slate-800)"
+                stroke-width="7"
+              />
               <circle
                 cx="40"
                 cy="40"
@@ -434,7 +441,13 @@
                 stroke-width="7"
                 stroke-linecap="round"
                 transform="rotate(-90 40 40)"
-                [attr.stroke]="q.score >= 65 ? '#10b981' : q.score >= 45 ? '#3b82f6' : '#f43f5e'"
+                [style.stroke]="
+                  q.score >= 65
+                    ? 'var(--color-emerald-500)'
+                    : q.score >= 45
+                      ? 'var(--color-blue-500)'
+                      : 'var(--color-rose-500)'
+                "
                 [attr.stroke-dasharray]="(213.6 * q.score) / 100 + ' 213.6'"
               />
               <text
@@ -443,7 +456,7 @@
                 text-anchor="middle"
                 font-size="20"
                 font-weight="700"
-                fill="#f1f5f9"
+                style="fill: var(--color-slate-100)"
                 font-family="ui-monospace, monospace"
               >
                 {{ q.score }}
@@ -480,14 +493,14 @@
           } @else {
             <div class="space-y-2">
               @for (q of allQuestions(); track q.id) {
-                <div class="rounded-lg border border-white/10 bg-black/20 p-2.5">
+                <div class="rounded-lg border border-white/10 bg-shade/20 p-2.5">
                   <p class="text-[13px] text-slate-100 mb-2" [id]="'q-label-' + q.id">
                     {{ q.question_text }}
                   </p>
                   <div
                     role="radiogroup"
                     [attr.aria-labelledby]="'q-label-' + q.id"
-                    class="grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-[#141c2c] border border-[#24334d] text-[11px] font-semibold"
+                    class="grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-tone-141c2c border border-tone-24334d text-[11px] font-semibold"
                   >
                     @for (
                       option of [
@@ -527,7 +540,7 @@
                       maxlength="200"
                       [attr.aria-label]="'Details for: ' + q.question_text"
                       placeholder="Add a short note…"
-                      class="mt-2 w-full rounded-md border border-white/10 bg-[#0F1523]/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y p-2"
+                      class="mt-2 w-full rounded-md border border-white/10 bg-tone-0f1523/80 text-xs text-slate-200 placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-y p-2"
                     ></textarea>
                   }
                 </div>
@@ -545,7 +558,7 @@
               <button
                 (click)="saveAllAnswers()"
                 [disabled]="saveStatus() === 'saving'"
-                class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs disabled:opacity-60"
+                class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-on-solid font-medium text-xs disabled:opacity-60"
               >
                 {{ saveStatus() === 'saving' ? 'Saving…' : 'Save answers' }}
               </button>

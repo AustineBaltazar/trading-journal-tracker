@@ -1,4 +1,4 @@
-<div class="bg-[#0B0E14] min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
+<div class="bg-tone-0b0e14 min-h-full xl:h-full flex flex-col text-slate-200 font-sans">
   <header class="px-6 pt-4 pb-3 flex flex-wrap items-end justify-between gap-3 shrink-0">
     <div>
       <h1 class="text-xl font-bold tracking-tight text-white">Feedback</h1>
@@ -20,23 +20,23 @@
     @let d = data();
     <!-- Whole-inbox numbers -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 shrink-0">
-      <div class="bg-[#121722] border border-[#1F293D] rounded-xl px-3.5 py-2.5">
+      <div class="bg-tone-121722 border border-tone-1f293d rounded-xl px-3.5 py-2.5">
         <span class="text-[11px] text-slate-400">New</span>
         <b class="block font-mono text-xl text-white">{{ d?.counts?.new ?? '–' }}</b>
       </div>
-      <div class="bg-[#121722] border border-[#1F293D] rounded-xl px-3.5 py-2.5">
+      <div class="bg-tone-121722 border border-tone-1f293d rounded-xl px-3.5 py-2.5">
         <span class="text-[11px] text-slate-400">Bugs</span>
         <b class="block font-mono text-xl text-rose-300">{{ d?.counts?.bug ?? '–' }}</b>
       </div>
-      <div class="bg-[#121722] border border-[#1F293D] rounded-xl px-3.5 py-2.5">
+      <div class="bg-tone-121722 border border-tone-1f293d rounded-xl px-3.5 py-2.5">
         <span class="text-[11px] text-slate-400">Ideas</span>
         <b class="block font-mono text-xl text-blue-200">{{ d?.counts?.idea ?? '–' }}</b>
       </div>
-      <div class="bg-[#121722] border border-[#1F293D] rounded-xl px-3.5 py-2.5">
+      <div class="bg-tone-121722 border border-tone-1f293d rounded-xl px-3.5 py-2.5">
         <span class="text-[11px] text-slate-400">This week</span>
         <b class="block font-mono text-xl text-white">{{ d?.counts?.thisWeek ?? '–' }}</b>
       </div>
-      <div class="bg-[#121722] border border-[#1F293D] rounded-xl px-3.5 py-2.5">
+      <div class="bg-tone-121722 border border-tone-1f293d rounded-xl px-3.5 py-2.5">
         <span class="text-[11px] text-slate-400">Users · signed up this week</span>
         <b class="block font-mono text-xl text-white"
           >{{ d?.users?.total ?? '–' }}
@@ -50,7 +50,7 @@
       <div
         role="radiogroup"
         aria-label="Show"
-        class="flex flex-wrap gap-0.5 p-0.5 bg-[#121722] border border-[#1F293D] rounded-xl text-xs"
+        class="flex flex-wrap gap-0.5 p-0.5 bg-tone-121722 border border-tone-1f293d rounded-xl text-xs"
       >
         @for (f of filters; track f.key) {
           <button
@@ -76,14 +76,14 @@
         name="q"
         aria-label="Search messages or emails"
         placeholder="Search messages or emails…"
-        class="flex-1 min-w-48 bg-[#121722] border border-[#1F293D] rounded-xl px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+        class="flex-1 min-w-48 bg-tone-121722 border border-tone-1f293d rounded-xl px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
       />
     </div>
 
     <div class="grid gap-3.5 xl:grid-cols-[minmax(0,1fr)_400px] xl:flex-1 xl:min-h-0">
       <!-- The list, one page at a time -->
       <section
-        class="bg-[#121722] border border-[#1F293D] rounded-2xl overflow-hidden flex flex-col xl:min-h-0"
+        class="bg-tone-121722 border border-tone-1f293d rounded-2xl overflow-hidden flex flex-col xl:min-h-0"
       >
         <div
           class="flex-1 xl:overflow-y-auto xl:min-h-0 quiet-scroll"
@@ -94,7 +94,7 @@
               type="button"
               (click)="pick(item)"
               [attr.aria-pressed]="selected()?.id === item.id"
-              class="w-full text-left grid grid-cols-[64px_minmax(0,1fr)_88px] gap-3 px-4 py-2.5 border-t border-[#1F293D] first:border-t-0 items-start hover:bg-white/[0.02]"
+              class="w-full text-left grid grid-cols-[64px_minmax(0,1fr)_88px] gap-3 px-4 py-2.5 border-t border-tone-1f293d first:border-t-0 items-start hover:bg-white/[0.02]"
               [class]="
                 selected()?.id === item.id
                   ? 'bg-blue-500/[0.07] shadow-[inset_3px_0_0_#3b82f6]'
@@ -154,7 +154,7 @@
         </div>
         @if (d && d.total > 0) {
           <div
-            class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-t border-[#1F293D] bg-[#0E131C] text-xs shrink-0"
+            class="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-t border-tone-1f293d bg-tone-0e131c text-xs shrink-0"
           >
             <span class="text-slate-400">
               Showing
@@ -169,7 +169,7 @@
       <!-- The message you picked -->
       @if (selected(); as item) {
         <section
-          class="bg-[#121722] border border-[#1F293D] rounded-2xl p-4 flex flex-col gap-3 xl:overflow-y-auto xl:min-h-0 quiet-scroll"
+          class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-4 flex flex-col gap-3 xl:overflow-y-auto xl:min-h-0 quiet-scroll"
         >
           <div class="flex items-center justify-between">
             <h2 class="text-[15px] font-semibold text-white">{{ kindTitle[item.kind] }}</h2>
@@ -182,7 +182,7 @@
             }
           </div>
           <p
-            class="bg-[#0E131C] border border-[#1F293D] rounded-xl p-3 text-[13.5px] leading-relaxed whitespace-pre-wrap break-words"
+            class="bg-tone-0e131c border border-tone-1f293d rounded-xl p-3 text-[13.5px] leading-relaxed whitespace-pre-wrap break-words"
           >
             {{ item.message }}
           </p>
@@ -220,7 +220,7 @@
               maxlength="2000"
               rows="3"
               placeholder="Only you see this…"
-              class="mt-1 w-full bg-[#0E131C] border border-[#1F293D] rounded-xl p-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+              class="mt-1 w-full bg-tone-0e131c border border-tone-1f293d rounded-xl p-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 resize-none"
             ></textarea>
             <div class="flex items-center justify-end gap-2 mt-1">
               @if (noteSaved()) {
@@ -230,7 +230,7 @@
                 type="button"
                 (click)="saveNote(item)"
                 [disabled]="saving() || note() === (item.note ?? '')"
-                class="text-xs px-3 py-1 rounded-lg border border-[#1F293D] text-slate-300 hover:text-white disabled:opacity-40"
+                class="text-xs px-3 py-1 rounded-lg border border-tone-1f293d text-slate-300 hover:text-white disabled:opacity-40"
               >
                 Save note
               </button>
@@ -241,7 +241,7 @@
             @if (replyLink(item); as mail) {
               <a
                 [href]="mail"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-on-solid"
                 >Reply by email</a
               >
             }
@@ -250,7 +250,7 @@
                 type="button"
                 (click)="setStatus(item, 'working')"
                 [disabled]="saving()"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-[#1F293D] text-slate-200 hover:bg-white/5"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-200 hover:bg-white/5"
               >
                 Working on
               </button>
@@ -269,7 +269,7 @@
                 type="button"
                 (click)="setStatus(item, 'new')"
                 [disabled]="saving()"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-[#1F293D] text-slate-300 hover:bg-white/5"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-300 hover:bg-white/5"
               >
                 Reopen
               </button>
@@ -279,7 +279,7 @@
                 type="button"
                 (click)="openPage(path)"
                 title="Opens that page in your own account"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-[#1F293D] text-slate-300 hover:bg-white/5"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-300 hover:bg-white/5"
               >
                 Open that page
               </button>

@@ -16,8 +16,17 @@
   }
 
   <div class="grid gap-4 lg:grid-cols-2">
+    <!-- Appearance -->
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5 lg:col-span-2">
+      <h2 class="text-sm font-semibold text-white">Appearance</h2>
+      <p class="text-xs text-slate-400 mt-0.5 mb-4">
+        Choose how MNQ Journal looks on this device. System follows your computer or phone.
+      </p>
+      <div class="max-w-lg"><app-theme-switch variant="cards" /></div>
+    </section>
+
     <!-- Profile -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">Profile</h2>
       <p class="text-xs text-slate-400 mb-4">Your name and login email.</p>
       <form (ngSubmit)="saveName()">
@@ -28,11 +37,11 @@
           maxlength="60"
           [(ngModel)]="name"
           [disabled]="demo()"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+          class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
         />
         <p class="block text-xs font-medium text-slate-300 mb-1.5">Email</p>
         <div
-          class="flex items-center justify-between bg-[#0E131C] border border-[#1F293D] text-slate-300 text-sm rounded-xl px-3.5 py-2.5 mb-4"
+          class="flex items-center justify-between bg-tone-0e131c border border-tone-1f293d text-slate-300 text-sm rounded-xl px-3.5 py-2.5 mb-4"
         >
           <span class="truncate">{{ email() }}</span>
           @if (emailConfirmed()) {
@@ -46,7 +55,7 @@
           <button
             type="submit"
             [disabled]="demo() || !name.trim()"
-            class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500 disabled:opacity-50"
+            class="text-sm px-4 py-2 rounded-xl border border-tone-1f293d text-slate-200 hover:border-slate-500 disabled:opacity-50"
           >
             Save
           </button>
@@ -56,13 +65,13 @@
     </section>
 
     <!-- Sign-in methods -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">Sign-in methods</h2>
       <p class="text-xs text-slate-400 mb-3">The ways you can log in to this journal.</p>
-      <ul class="divide-y divide-[#1F293D]">
+      <ul class="divide-y divide-tone-1f293d">
         <li class="flex items-center gap-3 py-2.5">
           <span
-            class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm font-bold text-slate-300"
+            class="w-8 h-8 shrink-0 rounded-lg bg-tone-0e131c border border-tone-1f293d grid place-items-center text-sm font-bold text-slate-300"
             aria-hidden="true"
             >G</span
           >
@@ -82,7 +91,7 @@
               (click)="disconnectGoogle()"
               [disabled]="demo() || !hasPassword()"
               [title]="hasPassword() ? '' : 'Set a password first'"
-              class="text-xs px-3 py-1 rounded-lg border border-[#1F293D] text-slate-300 hover:border-slate-500 disabled:opacity-40"
+              class="text-xs px-3 py-1 rounded-lg border border-tone-1f293d text-slate-300 hover:border-slate-500 disabled:opacity-40"
             >
               Disconnect
             </button>
@@ -99,7 +108,7 @@
         }
         <li class="flex items-center gap-3 py-2.5">
           <span
-            class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm"
+            class="w-8 h-8 shrink-0 rounded-lg bg-tone-0e131c border border-tone-1f293d grid place-items-center text-sm"
             aria-hidden="true"
             >🔑</span
           >
@@ -121,7 +130,7 @@
     </section>
 
     <!-- Change password -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">
         {{ hasPassword() ? 'Change password' : 'Set a password' }}
       </h2>
@@ -144,7 +153,7 @@
             autocomplete="current-password"
             [(ngModel)]="currentPassword"
             [disabled]="demo()"
-            class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+            class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
           />
         }
         <label for="acct-new" class="block text-xs font-medium text-slate-300 mb-1.5"
@@ -159,7 +168,7 @@
           aria-describedby="acct-password-rules"
           [(ngModel)]="newPassword"
           [disabled]="demo()"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 disabled:opacity-60"
+          class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 disabled:opacity-60"
         />
         @if (newPassword) {
           <app-password-strength
@@ -178,7 +187,7 @@
           <button
             type="submit"
             [disabled]="!canChangePassword"
-            class="mt-4 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            class="mt-4 text-sm font-semibold px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-500 text-on-solid disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ changingPassword() ? 'Changing…' : 'Change password' }}
           </button>
@@ -194,14 +203,14 @@
     </section>
 
     <!-- Devices -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">Where you're logged in</h2>
       <p class="text-xs text-slate-400 mb-3">Log out anything you don't recognise.</p>
-      <ul class="divide-y divide-[#1F293D]">
+      <ul class="divide-y divide-tone-1f293d">
         @for (d of devices(); track d.id) {
           <li class="flex items-center gap-3 py-2.5">
             <span
-              class="w-8 h-8 shrink-0 rounded-lg bg-[#0E131C] border border-[#1F293D] grid place-items-center text-sm"
+              class="w-8 h-8 shrink-0 rounded-lg bg-tone-0e131c border border-tone-1f293d grid place-items-center text-sm"
               aria-hidden="true"
               >{{ d.device.includes('iPhone') || d.device.includes('Android') ? '📱' : '💻' }}</span
             >
@@ -224,7 +233,7 @@
                 type="button"
                 (click)="logOutDevice(d)"
                 [disabled]="demo()"
-                class="text-xs px-3 py-1 rounded-lg border border-[#1F293D] text-slate-300 hover:border-slate-500 disabled:opacity-50"
+                class="text-xs px-3 py-1 rounded-lg border border-tone-1f293d text-slate-300 hover:border-slate-500 disabled:opacity-50"
               >
                 Log out
               </button>
@@ -237,7 +246,7 @@
           type="button"
           (click)="logOutOthers()"
           [disabled]="demo() || devices().length < 2"
-          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500 disabled:opacity-50"
+          class="text-sm px-4 py-2 rounded-xl border border-tone-1f293d text-slate-200 hover:border-slate-500 disabled:opacity-50"
         >
           Log out all other devices
         </button>
@@ -246,7 +255,7 @@
     </section>
 
     <!-- Login history -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">Recent login activity</h2>
       <p class="text-xs text-slate-400 mb-3">The last 10 sign-in attempts.</p>
       @if (attempts().length === 0) {
@@ -258,7 +267,7 @@
           </caption>
           <tbody>
             @for (a of attempts(); track $index) {
-              <tr class="border-t border-[#1F293D] first:border-t-0">
+              <tr class="border-t border-tone-1f293d first:border-t-0">
                 <td class="py-2 text-slate-200">{{ a.device }}</td>
                 <td class="py-2 text-slate-400">{{ a.at | date: 'MMM d, h:mm a' }}</td>
                 <td
@@ -275,7 +284,7 @@
     </section>
 
     <!-- Your data -->
-    <section class="bg-[#121722] border border-[#1F293D] rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-tone-1f293d rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-white">Your data</h2>
       <p class="text-xs text-slate-400 mb-4">
         Download everything: trades, journal, rules, tags and review answers.
@@ -284,13 +293,13 @@
         <a
           [href]="api + '/account/export/trades.csv'"
           download
-          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500"
+          class="text-sm px-4 py-2 rounded-xl border border-tone-1f293d text-slate-200 hover:border-slate-500"
           >Export trades (CSV)</a
         >
         <a
           [href]="api + '/account/export'"
           download
-          class="text-sm px-4 py-2 rounded-xl border border-[#1F293D] text-slate-200 hover:border-slate-500"
+          class="text-sm px-4 py-2 rounded-xl border border-tone-1f293d text-slate-200 hover:border-slate-500"
           >Export everything (JSON)</a
         >
       </div>
@@ -322,7 +331,7 @@
     </section>
 
     <!-- Delete -->
-    <section class="bg-[#121722] border border-rose-500/35 rounded-2xl p-5">
+    <section class="bg-tone-121722 border border-rose-500/35 rounded-2xl p-5">
       <h2 class="text-sm font-semibold text-rose-300">Delete account</h2>
       <p class="text-xs text-slate-400 mb-4">
         Permanently deletes your account, every trade, journal entry and screenshot. This can't be
@@ -338,7 +347,7 @@
           autocomplete="off"
           [(ngModel)]="deleteConfirm"
           [disabled]="demo()"
-          class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+          class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
         />
         @if (hasPassword()) {
           <label for="acct-delete-password" class="block text-xs font-medium text-slate-300 mb-1.5"
@@ -351,7 +360,7 @@
             autocomplete="current-password"
             [(ngModel)]="deletePassword"
             [disabled]="demo()"
-            class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
+            class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-3 disabled:opacity-60"
           />
         }
         @if (deleteError()) {
@@ -361,7 +370,7 @@
           <button
             type="submit"
             [disabled]="!canDelete"
-            class="text-sm font-semibold px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+            class="text-sm font-semibold px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-600 text-on-solid disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {{ deleting() ? 'Deleting…' : 'Delete my account' }}
           </button>

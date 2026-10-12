@@ -44,7 +44,7 @@ import { Turnstile, turnstileOn } from './turnstile';
             autocomplete="email"
             [(ngModel)]="email"
             name="email"
-            class="w-full bg-[#0E131C] border border-[#1F293D] focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
+            class="w-full bg-tone-0e131c border border-tone-1f293d focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-200 text-sm rounded-xl px-3.5 py-2.5 mb-4 transition"
           />
           @if (turnstileOn) {
             <app-turnstile class="mb-4" (token)="turnstileToken.set($event)" />
@@ -52,7 +52,7 @@ import { Turnstile, turnstileOn } from './turnstile';
           <button
             type="submit"
             [disabled]="sending() || !email.trim() || (turnstileOn && !turnstileToken())"
-            class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-on-solid font-semibold text-sm py-2.5 rounded-xl shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ sending() ? 'Sending…' : 'Send reset link' }}
           </button>

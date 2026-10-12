@@ -78,7 +78,7 @@ export function buildMistakeCost(
             [class]="
               selected().has(m.id)
                 ? 'border-rose-500/55 bg-rose-500/12 text-rose-100'
-                : 'border-[#26354f] bg-[#121a2a] text-slate-300 hover:border-slate-500'
+                : 'border-tone-26354f bg-tone-121a2a text-slate-300 hover:border-slate-500'
             "
           >
             {{ selected().has(m.id) ? '✓ ' : '' }}{{ m.name }}

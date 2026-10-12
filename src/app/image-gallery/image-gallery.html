@@ -6,13 +6,13 @@
 >
   @for (image of shown(); track image.id; let i = $index) {
     <figure
-      class="m-0 rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden group relative"
+      class="m-0 rounded-xl border border-tone-26354f bg-tone-0b1220 overflow-hidden group relative"
       [class.md:col-span-2]="featured() && i === 0"
     >
       <button
         type="button"
         (click)="open(i)"
-        class="block w-full aspect-video bg-[#0f172a]"
+        class="block w-full aspect-video bg-tone-0f172a"
         [attr.aria-label]="'View ' + (image.caption || 'image') + ' full size'"
       >
         <img
@@ -36,7 +36,7 @@
           >Uploads on save</span
         >
       }
-      <figcaption class="px-2.5 py-1.5 border-t border-[#1e293b] text-[11px]">
+      <figcaption class="px-2.5 py-1.5 border-t border-tone-1e293b text-[11px]">
         @if (editingCaptionId() === image.id) {
           <input
             #captionInput
@@ -47,7 +47,7 @@
             (keydown.enter)="saveCaption(image, captionInput.value)"
             (keydown.escape)="editingCaptionId.set(null)"
             (blur)="saveCaption(image, captionInput.value)"
-            class="w-full bg-[#161e30] border border-blue-500 rounded px-1.5 py-0.5 text-slate-200 focus:outline-none"
+            class="w-full bg-tone-161e30 border border-blue-500 rounded px-1.5 py-0.5 text-slate-200 focus:outline-none"
             aria-label="Caption"
           />
         } @else {
@@ -66,15 +66,15 @@
   }
 
   @for (upload of uploads(); track upload.id) {
-    <div class="rounded-xl border border-[#26354f] bg-[#0b1220] overflow-hidden">
-      <div class="aspect-video bg-[#0f172a] relative flex items-center justify-center">
+    <div class="rounded-xl border border-tone-26354f bg-tone-0b1220 overflow-hidden">
+      <div class="aspect-video bg-tone-0f172a relative flex items-center justify-center">
         <span class="text-[11px] text-slate-500 px-2 truncate">{{ upload.name }}</span>
         <div
           class="absolute left-0 bottom-0 h-[3px] bg-blue-400 transition-all"
           [style.width.%]="upload.progress"
         ></div>
       </div>
-      <div class="px-2.5 py-1.5 border-t border-[#1e293b] text-[11px] text-blue-300">
+      <div class="px-2.5 py-1.5 border-t border-tone-1e293b text-[11px] text-blue-300">
         Uploading {{ upload.progress }}%
       </div>
     </div>

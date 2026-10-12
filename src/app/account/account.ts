@@ -7,6 +7,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth';
 import { PasswordStrength, newPasswordOk } from '../auth/auth-ui';
 import { GoogleButton, googleOn } from '../auth/google-button';
+import { ThemeSwitch } from '../theme-switch';
 
 interface Device {
   id: number;
@@ -41,7 +42,7 @@ export function formatBytes(bytes: number) {
 
 @Component({
   selector: 'app-account',
-  imports: [FormsModule, RouterLink, DatePipe, PasswordStrength, GoogleButton],
+  imports: [FormsModule, RouterLink, DatePipe, PasswordStrength, GoogleButton, ThemeSwitch],
   templateUrl: './account.html',
 })
 export class Account implements OnInit {

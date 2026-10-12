@@ -1,7 +1,9 @@
-<div class="bg-[#080c14] min-h-screen text-slate-300 font-sans">
+<div class="bg-tone-080c14 min-h-screen text-slate-300 font-sans">
   @if (showNewTradeModal()) {
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-carbon-950 rounded-lg max-h-[94vh] w-full max-w-5xl mx-4 overflow-y-auto quiet-scroll">
+      <div
+        class="bg-carbon-950 rounded-lg max-h-[94vh] w-full max-w-5xl mx-4 overflow-y-auto quiet-scroll"
+      >
         <app-new-trade
           (saved)="onTradeCreated()"
           (added)="onTradeAdded()"
@@ -12,7 +14,7 @@
   }
 
   <header
-    class="px-6 lg:px-10 py-6 border-b border-[#141b2a] flex flex-col md:flex-row md:items-center justify-between gap-4"
+    class="px-6 lg:px-10 py-6 border-b border-tone-141b2a flex flex-col md:flex-row md:items-center justify-between gap-4"
   >
     <div>
       <div class="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1">
@@ -24,7 +26,7 @@
         Trades
         <app-mode-badge />
         <span
-          class="text-xs font-normal text-slate-400 px-2.5 py-1 rounded-full bg-[#111726] border border-[#1d273b]"
+          class="text-xs font-normal text-slate-400 px-2.5 py-1 rounded-full bg-tone-111726 border border-tone-1d273b"
         >
           Micro E-mini NQ (MNQ)
         </span>
@@ -40,7 +42,7 @@
 
       <button
         (click)="openNewTradeModal()"
-        class="glow-btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white font-semibold text-sm transition-all shadow-md active:scale-95"
+        class="glow-btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-on-solid font-semibold text-sm transition-all shadow-md active:scale-95"
         [class]="
           tradeMode.isBacktest()
             ? 'bg-violet-600 hover:bg-violet-500'
@@ -64,7 +66,7 @@
   <div class="px-6 lg:px-10 py-6 space-y-6">
     @let s = summary();
     <section
-      class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#0d1322] border border-[#182337] shadow-lg shadow-black/20"
+      class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-tone-0d1322 border border-tone-182337 shadow-lg shadow-black/20"
     >
       <div class="flex items-baseline flex-wrap gap-x-6 gap-y-3 lg:gap-x-7 font-mono">
         <div class="flex items-baseline gap-2">
@@ -73,28 +75,28 @@
           >
           <span class="text-lg font-bold text-slate-100">{{ s.total }}</span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Wins</span
           >
           <span class="text-lg font-bold text-emerald-400">{{ s.wins }}</span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Losses</span
           >
           <span class="text-lg font-bold text-rose-400">{{ s.losses }}</span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >BE</span
           >
           <span class="text-lg font-bold text-slate-300">{{ s.breakEvens }}</span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2.5">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Net P/L</span
@@ -108,7 +110,7 @@
             {{ s.netPnl > 0 ? '+' : s.netPnl < 0 ? '-' : '' }}{{ abs(s.netPnl) | number: '1.2-2' }}
           </span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Avg win</span
@@ -117,7 +119,7 @@
             {{ s.avgWin === null ? '—' : '+' + (s.avgWin | number: '1.2-2') }}
           </span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Avg loss</span
@@ -126,7 +128,7 @@
             {{ s.avgLoss === null ? '—' : '-' + (abs(s.avgLoss) | number: '1.2-2') }}
           </span>
         </div>
-        <div class="w-px h-4 bg-[#1e2a40] hidden sm:block self-center"></div>
+        <div class="w-px h-4 bg-tone-1e2a40 hidden sm:block self-center"></div>
         <div class="flex items-baseline gap-2">
           <span class="text-xs font-medium text-slate-400 uppercase tracking-wider font-sans"
             >Profit factor</span
@@ -146,9 +148,11 @@
       }
     </section>
 
-    <section class="bg-[#0c121e] border border-[#19243a] rounded-2xl shadow-xl overflow-hidden">
+    <section class="bg-tone-0c121e border border-tone-19243a rounded-2xl shadow-xl overflow-hidden">
       @let f = filters();
-      <div class="p-4 border-b border-[#162035] flex flex-wrap items-center gap-2.5 bg-[#0a0f19]">
+      <div
+        class="p-4 border-b border-tone-162035 flex flex-wrap items-center gap-2.5 bg-tone-0a0f19"
+      >
         <div class="relative flex-1 min-w-[200px] max-w-xs">
           <svg
             class="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2"
@@ -165,7 +169,7 @@
             [ngModel]="f.search"
             (ngModelChange)="setFilter('search', $event)"
             placeholder="Filter strategy (IFVG, SMT...)"
-            class="w-full bg-[#111826] border border-[#1d293f] rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+            class="w-full bg-tone-111826 border border-tone-1d293f rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
           />
         </div>
 
@@ -173,9 +177,9 @@
           [ngModel]="f.session"
           (ngModelChange)="setFilter('session', $event)"
           aria-label="Filter by session"
-          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          class="bg-tone-111826 border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
           [class]="
-            f.session ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+            f.session ? 'border-blue-500/60 text-blue-200' : 'border-tone-1d293f text-slate-300'
           "
         >
           <option value="">Session: All</option>
@@ -187,9 +191,9 @@
           [ngModel]="f.emotion"
           (ngModelChange)="setFilter('emotion', $event)"
           aria-label="Filter by emotion"
-          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          class="bg-tone-111826 border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
           [class]="
-            f.emotion ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+            f.emotion ? 'border-blue-500/60 text-blue-200' : 'border-tone-1d293f text-slate-300'
           "
         >
           <option value="">Emotion: All</option>
@@ -201,8 +205,10 @@
           [ngModel]="f.grade"
           (ngModelChange)="setFilter('grade', $event)"
           aria-label="Filter by grade"
-          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
-          [class]="f.grade ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'"
+          class="bg-tone-111826 border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          [class]="
+            f.grade ? 'border-blue-500/60 text-blue-200' : 'border-tone-1d293f text-slate-300'
+          "
         >
           <option value="">Grade: All</option>
           @for (o of grades; track o) {
@@ -214,9 +220,9 @@
           [ngModel]="f.mistake"
           (ngModelChange)="setFilter('mistake', $event)"
           aria-label="Filter by mistake"
-          class="bg-[#111826] border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
+          class="bg-tone-111826 border rounded-xl px-2.5 py-1.5 text-xs cursor-pointer focus:outline-none"
           [class]="
-            f.mistake ? 'border-blue-500/60 text-blue-200' : 'border-[#1d293f] text-slate-300'
+            f.mistake ? 'border-blue-500/60 text-blue-200' : 'border-tone-1d293f text-slate-300'
           "
         >
           <option value="">Mistake: All</option>
@@ -236,7 +242,7 @@
           [class]="
             f.rulesBrokenOnly
               ? 'border-rose-500/50 bg-rose-500/10 text-rose-300'
-              : 'border-[#1d293f] bg-[#111826] text-slate-300'
+              : 'border-tone-1d293f bg-tone-111826 text-slate-300'
           "
         >
           <span
@@ -293,7 +299,7 @@
           <table class="w-full min-w-[980px] text-left border-collapse text-sm">
             <thead>
               <tr
-                class="border-b border-[#162136] text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-[#0a0f19]/60"
+                class="border-b border-tone-162136 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-tone-0a0f19/60"
               >
                 <th class="py-3.5 px-5">
                   <button
@@ -344,11 +350,11 @@
                 <th class="py-3.5 px-3"></th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-[#131d2e] font-mono">
+            <tbody class="divide-y divide-tone-131d2e font-mono">
               @for (trade of pageTrades(); track trade.id) {
                 <tr
                   (click)="viewTrade(trade.id)"
-                  class="hover:bg-[#11192b]/80 transition-colors group cursor-pointer"
+                  class="hover:bg-tone-11192b/80 transition-colors group cursor-pointer"
                   [class.shadow-[inset_3px_0_0_#f43f5e]]="trade.rulesFollowed === false"
                 >
                   <td class="py-3.5 px-5 text-slate-300 text-xs font-semibold whitespace-nowrap">
@@ -392,12 +398,12 @@
                   <td class="py-3.5 px-3 text-center whitespace-nowrap font-sans">
                     @if (trade.rulesFollowed === true) {
                       <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#0e2a22] text-emerald-400 border border-emerald-700/40"
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tone-0e2a22 text-emerald-400 border border-emerald-700/40"
                         >Yes</span
                       >
                     } @else if (trade.rulesFollowed === false) {
                       <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2a131b] text-rose-400 border border-rose-800/40"
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-tone-2a131b text-rose-400 border border-rose-800/40"
                         >No</span
                       >
                     } @else {
@@ -446,7 +452,7 @@
         </div>
 
         <div
-          class="px-4 py-3 border-t border-[#162136] bg-[#0a0f1a] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-slate-400 font-medium"
+          class="px-4 py-3 border-t border-tone-162136 bg-tone-0a0f1a flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-slate-400 font-medium"
         >
           <span>
             Showing
@@ -468,7 +474,7 @@
                 (ngModelChange)="setPageSize(+$event)"
                 name="pageSize"
                 aria-label="Rows per page"
-                class="bg-[#0E131C] border border-[#1F293D] rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+                class="bg-tone-0e131c border border-tone-1f293d rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
               >
                 @for (n of pageSizes; track n) {
                   <option [ngValue]="n">{{ n }}</option>
