@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
+import { BRAND } from '../brand';
 
 const UPDATED = 'October 11, 2026';
 const CONTACT = 'brotradingjournal@gmail.com';
@@ -28,8 +29,8 @@ const CONTACT = 'brotradingjournal@gmail.com';
           <h1 class="text-2xl font-semibold text-white mb-6">Privacy policy</h1>
           <div class="legal space-y-4 text-sm leading-relaxed">
             <p>
-              MNQ Journal is a trading journal run by an independent developer. This page explains
-              what it stores about you, why, and what you can do about it.
+              {{ brand.name }} is a trading journal run by an independent developer. This page
+              explains what it stores about you, why, and what you can do about it.
             </p>
             <h2>What we store</h2>
             <ul>
@@ -96,7 +97,7 @@ const CONTACT = 'brotradingjournal@gmail.com';
               </li>
             </ul>
             <h2>Children</h2>
-            <p>MNQ Journal isn't meant for anyone under 16.</p>
+            <p>{{ brand.name }} isn't meant for anyone under 16.</p>
             <h2>Changes</h2>
             <p>
               If this policy changes in a way that matters, we'll say so in the app or by email
@@ -109,13 +110,13 @@ const CONTACT = 'brotradingjournal@gmail.com';
             <p>By creating an account you agree to these terms.</p>
             <h2>A free beta</h2>
             <p>
-              MNQ Journal is free while it's in beta. It's provided as is: features may change, and
-              the app may be unavailable or stop altogether. Keep your own copy of anything
+              {{ brand.name }} is free while it's in beta. It's provided as is: features may change,
+              and the app may be unavailable or stop altogether. Keep your own copy of anything
               important using the export on your Account &amp; security page.
             </p>
             <h2>Not financial advice</h2>
             <p>
-              MNQ Journal is a journal. Nothing in it, including its statistics, reports and
+              {{ brand.name }} is a journal. Nothing in it, including its statistics, reports and
               suggestions, is financial, investment or trading advice. Trading futures is risky and
               your trading decisions are yours alone.
             </p>
@@ -188,6 +189,7 @@ const CONTACT = 'brotradingjournal@gmail.com';
   `,
 })
 export class Legal {
+  readonly brand = BRAND;
   private location = inject(Location);
   readonly page = inject(ActivatedRoute).snapshot.data['page'] as 'privacy' | 'terms';
   readonly updated = UPDATED;

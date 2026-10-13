@@ -4,6 +4,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth';
+import { BRAND } from '../brand';
 
 export type FeedbackStatus = 'new' | 'working' | 'done';
 export type FeedbackKind = 'bug' | 'idea' | 'other';
@@ -90,7 +91,7 @@ export function replyLink(item: FeedbackItem) {
     .split('\n')
     .map((line) => `> ${line}`)
     .join('\n');
-  const subject = 'Re: your MNQ Journal feedback';
+  const subject = `Re: your ${BRAND.name} feedback`;
   const body = `Hi ${item.user.name},\n\n\n\n${quoted}`;
   return `mailto:${item.user.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

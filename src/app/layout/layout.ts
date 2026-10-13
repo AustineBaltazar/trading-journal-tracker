@@ -6,6 +6,7 @@ import { FeedbackButton } from '../feedback/feedback';
 import { AdminService } from '../admin/admin';
 import { ThemeSwitch } from '../theme-switch';
 import { SearchPalette } from '../search/search-palette';
+import { BRAND } from '../brand';
 
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive, FeedbackButton, ThemeSwitch, SearchPalette],
@@ -18,6 +19,7 @@ export class Layout {
   private auth = inject(AuthService);
   private admin = inject(AdminService);
   readonly tradeMode = inject(TradeModeService);
+  readonly brand = BRAND;
 
   userName = computed(() => this.auth.user()?.name || 'Account');
   isDemo = computed(() => !!this.auth.user()?.demo);
