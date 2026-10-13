@@ -10,6 +10,18 @@ import { Playbook } from './playbook/playbook';
 import { Register } from './register/register';
 import { adminGuard } from './admin/admin';
 export const routes: Routes = [
+  // Public homepage and the ad sign-up page; logged-in visitors go to their journal
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./landing/landing').then((m) => m.Landing),
+  },
+  {
+    path: 'start',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./landing/start').then((m) => m.Start),
+  },
   { path: 'login', component: Login, canActivate: [guestGuard] },
   { path: 'register', component: Register, canActivate: [guestGuard] },
   {
@@ -83,5 +95,4 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];

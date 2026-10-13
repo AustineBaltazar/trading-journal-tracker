@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth';
 import { PasswordStrength, newPasswordOk } from '../auth/auth-ui';
 import { GoogleButton, googleOn } from '../auth/google-button';
 import { ThemeSwitch } from '../theme-switch';
+import { BRAND } from '../brand';
 
 interface Device {
   id: number;
@@ -46,6 +47,7 @@ export function formatBytes(bytes: number) {
   templateUrl: './account.html',
 })
 export class Account implements OnInit {
+  readonly brand = BRAND;
   private http = inject(HttpClient);
   private router = inject(Router);
   private auth = inject(AuthService);

@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 import { AuthShell } from './auth-ui';
+import { BRAND } from '../brand';
 
 // First "Continue with Google": the name and the Terms, then the account is made
 @Component({
@@ -13,7 +14,7 @@ import { AuthShell } from './auth-ui';
   template: `
     <app-auth-shell>
       <form (ngSubmit)="create()">
-        <h1 class="text-lg font-semibold text-white mb-1">Welcome to MNQ Journal</h1>
+        <h1 class="text-lg font-semibold text-white mb-1">Welcome to {{ brand.name }}</h1>
         <p class="text-xs text-slate-400 mb-6">
           Signing up with Google as <b class="text-slate-200">{{ email }}</b>
         </p>
@@ -54,7 +55,7 @@ import { AuthShell } from './auth-ui';
             and
             <a routerLink="/privacy" target="_blank" class="text-blue-400 hover:text-blue-300"
               >Privacy policy</a
-            >. MNQ Journal is a journal, not financial advice.</span
+            >. {{ brand.name }} is a journal, not financial advice.</span
           >
         </label>
 
@@ -73,6 +74,7 @@ import { AuthShell } from './auth-ui';
   `,
 })
 export class Welcome implements OnInit {
+  readonly brand = BRAND;
   private http = inject(HttpClient);
   private router = inject(Router);
   private auth = inject(AuthService);

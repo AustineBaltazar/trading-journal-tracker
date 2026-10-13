@@ -1,6 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { passwordStrength, sameAsEmail } from './auth';
+import { BRAND } from '../brand';
 
 // The logo and centred card shared by the login, sign-up and email pages
 @Component({
@@ -31,9 +32,11 @@ import { passwordStrength, sameAsEmail } from './auth';
             </div>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="font-extrabold tracking-tight text-white text-lg">MNQ</span>
+            <span class="font-extrabold tracking-tight text-white text-lg">{{ brand.first }}</span>
             <span class="text-sm text-slate-500 font-mono">/</span>
-            <span class="text-sm font-semibold text-slate-300 tracking-wider">JOURNAL</span>
+            <span class="text-sm font-semibold text-slate-300 tracking-wider">{{
+              brand.second
+            }}</span>
             <span
               class="ml-1 text-[9.5px] font-bold tracking-wider px-1.5 py-px rounded-full border border-amber-400/45 text-amber-300 bg-amber-400/10"
               >BETA</span
@@ -51,7 +54,9 @@ import { passwordStrength, sameAsEmail } from './auth';
     </div>
   `,
 })
-export class AuthShell {}
+export class AuthShell {
+  readonly brand = BRAND;
+}
 
 // Strength bars and the live rules under a new-password field
 @Component({
