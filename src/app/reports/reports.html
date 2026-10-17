@@ -1,4 +1,4 @@
-<div class="p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
+<div class="p-4 md:p-6 bg-space-950 min-h-screen text-slate-300 font-sans">
   <header
     class="px-2 py-3 border-b border-tone-1f293d/40 flex flex-col md:flex-row md:items-center justify-between gap-4"
   >
@@ -76,13 +76,16 @@
     </div>
   </section>
 
-  <nav class="flex gap-1 border-b border-slate-800 mb-6" aria-label="Report sections">
+  <nav
+    class="flex gap-1 border-b border-slate-800 mb-6 overflow-x-auto [scrollbar-width:none]"
+    aria-label="Report sections"
+  >
     @for (t of tabs; track t.key) {
       <button
         type="button"
         (click)="setTab(t.key)"
         [attr.aria-current]="tab() === t.key ? 'page' : null"
-        class="px-4 py-2 text-sm -mb-px border-b-2 transition-colors"
+        class="px-4 py-2 text-sm -mb-px border-b-2 transition-colors whitespace-nowrap"
         [class]="
           tab() === t.key
             ? 'border-blue-500 text-white'
@@ -200,7 +203,7 @@
             <button
               type="button"
               (click)="setTab(item.tab)"
-              class="w-full flex items-baseline justify-between gap-3 py-1 text-left text-[13px] hover:text-white"
+              class="w-full flex flex-wrap items-baseline justify-between gap-x-3 py-1 text-left text-[13px] hover:text-white"
             >
               <span class="min-w-0 truncate"
                 >{{ item.label }}
@@ -222,7 +225,7 @@
             <button
               type="button"
               (click)="setTab(item.tab)"
-              class="w-full flex items-baseline justify-between gap-3 py-1 text-left text-[13px] hover:text-white"
+              class="w-full flex flex-wrap items-baseline justify-between gap-x-3 py-1 text-left text-[13px] hover:text-white"
             >
               <span class="min-w-0 truncate"
                 >{{ item.label }}
