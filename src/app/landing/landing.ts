@@ -34,12 +34,6 @@ const FEATURES = [
     title: 'Live and backtest, kept apart',
     text: 'One switch. Practice a setup without mixing it into your real stats.',
   },
-  {
-    icon: '⌕',
-    tint: 'bg-slate-500/15',
-    title: 'Search everything you wrote',
-    text: 'Find every note that says "tired" and see how those trades went.',
-  },
 ];
 
 const FAQ = [

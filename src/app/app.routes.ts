@@ -79,10 +79,6 @@ export const routes: Routes = [
         path: 'insights',
         loadComponent: () => import('./insights/insights').then((m) => m.Insights),
       },
-      {
-        path: 'search',
-        loadComponent: () => import('./search/search-page').then((m) => m.SearchPage),
-      },
       { path: 'playbook', component: Playbook },
       {
         path: 'account',

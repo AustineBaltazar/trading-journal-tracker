@@ -5,11 +5,10 @@ import { AuthService } from '../auth/auth';
 import { FeedbackButton } from '../feedback/feedback';
 import { AdminService } from '../admin/admin';
 import { ThemeSwitch } from '../theme-switch';
-import { SearchPalette } from '../search/search-palette';
 import { BRAND } from '../brand';
 
 @Component({
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, FeedbackButton, ThemeSwitch, SearchPalette],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FeedbackButton, ThemeSwitch],
   selector: 'app-layout',
   styleUrl: './layout.css',
   templateUrl: './layout.html',
