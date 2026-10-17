@@ -8,6 +8,7 @@ import { TagPicker } from '../tags/tags';
 import { EmotionPicker, ResultPicker } from '../trade-form-fields';
 import { ImageGallery } from '../image-gallery/image-gallery';
 import { AnswerChoice, TradeFormBase } from '../trade-form/trade-form-base';
+import { asMode } from '../trade-mode';
 
 @Component({
   imports: [
@@ -77,7 +78,7 @@ export class EditTrade extends TradeFormBase implements OnChanges {
       this.target_price = trade.target_price;
       this.selectedTagIds.set(new Set(trade.tagIds || []));
       this.images.set(trade.images || []);
-      this.mode = trade.mode === 'backtest' ? 'backtest' : 'live';
+      this.mode = asMode(trade.mode);
       this.selectedMistakeIds.set(new Set(trade.mistakeIds || []));
       this.loaded.set(true);
     });

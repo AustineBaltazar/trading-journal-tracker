@@ -10,6 +10,7 @@ import { buildEquityChart, CHART, CHART_HEIGHT } from './equity-chart';
 import { buildCalendarMonth, dayStyle } from './calendar';
 import { MonthPicker } from '../month-picker/month-picker';
 import { ModeBadge, TradeMode, TradeModeService } from '../trade-mode';
+import { EvalPanel } from '../eval/eval-panel';
 import { buildMistakeCost, Mistake } from '../mistakes/mistakes';
 import { countOutcomes } from '../outcome';
 import {
@@ -21,7 +22,7 @@ import {
 } from '../trade-journal';
 
 @Component({
-  imports: [RouterLink, DecimalPipe, UpperCasePipe, MonthPicker, ModeBadge],
+  imports: [RouterLink, DecimalPipe, UpperCasePipe, MonthPicker, ModeBadge, EvalPanel],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',

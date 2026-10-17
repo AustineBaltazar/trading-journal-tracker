@@ -11,6 +11,7 @@ import { GalleryImage, ImageGallery, ImageTarget } from '../image-gallery/image-
 import { TagGroup, tagsByGroup } from '../tags/tags';
 import { formatR } from '../outcome';
 import { qualityScore } from '../trade-form/trade-form-logic';
+import { asMode, MODE_LABELS } from '../trade-mode';
 
 // The trades just before and after one trade, oldest to newest
 export function neighboursOf(trades: { id: number; trade_date: string }[], id: number) {
@@ -35,6 +36,7 @@ interface DraftAnswer {
 })
 export class TradeDetails implements OnInit {
   private http = inject(HttpClient);
+  readonly modeLabel = (mode: unknown) => MODE_LABELS[asMode(mode)];
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -156,7 +158,7 @@ export class TradeDetails implements OnInit {
   loadTrade() {
     this.http.get<any>(`${environment.apiUrl}/trades/${this.tradeId}`).subscribe((trade) => {
       this.trade.set(trade);
-      this.loadNeighbours(trade.mode === 'backtest' ? 'backtest' : 'live');
+      this.loadNeighbours(asMode(trade.mode));
     });
   }
 
