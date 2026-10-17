@@ -79,8 +79,8 @@ const CONTACT = 'brotradingjournal@gmail.com';
             <h2>Cookies</h2>
             <p>
               One cookie keeps you logged in. It can't be read by the page's scripts and is needed
-              for the app to work. Your browser also remembers a few display choices (like live or
-              backtest mode) on your device only.
+              for the app to work. Your browser also remembers a few display choices (like light or
+              dark theme) on your device only.
             </p>
             <h2>Your choices</h2>
             <ul>

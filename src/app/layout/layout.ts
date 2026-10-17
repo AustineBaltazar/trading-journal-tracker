@@ -1,6 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { TradeMode, TradeModeService } from '../trade-mode';
+import { MODE_SWITCH, TradeMode, TradeModeService } from '../trade-mode';
 import { AuthService } from '../auth/auth';
 import { FeedbackButton } from '../feedback/feedback';
 import { AdminService } from '../admin/admin';
@@ -18,6 +18,7 @@ export class Layout {
   private auth = inject(AuthService);
   private admin = inject(AdminService);
   readonly tradeMode = inject(TradeModeService);
+  readonly modeSwitch = MODE_SWITCH;
   readonly modes: { key: TradeMode; label: string; on: string }[] = [
     { key: 'live', label: 'Live', on: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
     { key: 'eval', label: 'Eval', on: 'bg-amber-500/15 text-amber-300 border-amber-500/45' },

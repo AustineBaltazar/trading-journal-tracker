@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MODE_SWITCH } from '../trade-mode';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { NewTrade } from './new-trade';
@@ -65,7 +66,8 @@ describe('NewTrade', () => {
     expect(component).toBeTruthy();
   });
 
-  it('starts in the app mode and sends it with the trade', async () => {
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)('starts in the app mode and sends it with the trade', async () => {
     TestBed.inject(TradeModeService).set('backtest');
     await create();
     expect(component.mode).toBe('backtest');

@@ -29,10 +29,10 @@ const FEATURES = [
     text: 'Your rules, mistakes and review questions. A plan before the session and a review after it.',
   },
   {
-    icon: '🧪',
+    icon: '💡',
     tint: 'bg-amber-500/15',
-    title: 'Live and backtest, kept apart',
-    text: 'One switch. Practice a setup without mixing it into your real stats.',
+    title: "Patterns you can't see",
+    text: 'Insights finds what costs you money and what makes it, straight from your own trades.',
   },
 ];
 
