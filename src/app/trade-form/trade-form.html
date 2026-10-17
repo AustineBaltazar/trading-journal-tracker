@@ -11,7 +11,9 @@
     [class]="
       mode === 'backtest'
         ? 'bg-violet-600'
-        : 'bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600'
+        : mode === 'eval'
+          ? 'bg-amber-500'
+          : 'bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600'
     "
   ></div>
 
@@ -25,6 +27,11 @@
         <span
           class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
           >BACKTEST</span
+        >
+      } @else if (mode === 'eval') {
+        <span
+          class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-amber-300 bg-amber-500/15 border border-amber-500/45"
+          >EVAL</span
         >
       }
     </div>
@@ -122,7 +129,7 @@
             <div
               role="radiogroup"
               aria-label="Trade mode"
-              class="grid grid-cols-2 gap-2 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
+              class="grid grid-cols-3 gap-2 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
             >
               <button
                 type="button"
@@ -137,6 +144,20 @@
                 "
               >
                 Live
+              </button>
+              <button
+                type="button"
+                role="radio"
+                [attr.aria-checked]="mode === 'eval'"
+                (click)="setMode('eval')"
+                class="py-1.5 rounded-lg border transition-colors"
+                [class]="
+                  mode === 'eval'
+                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/45'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                "
+              >
+                Eval
               </button>
               <button
                 type="button"

@@ -1,0 +1,560 @@
+@if (!loaded()) {
+  <p class="text-slate-500 text-sm mb-6">Loading your evaluation...</p>
+} @else if (!current()) {
+  <!-- No evaluation yet: pick the firm's rules -->
+  <section class="surface-card border border-amber-500/30 rounded-xl p-5 mb-6">
+    <h2 class="text-base font-semibold text-white">Set up your evaluation</h2>
+    <p class="text-xs text-slate-400 mt-1 mb-4">
+      Pick your account's rules and the dashboard tracks the profit target, drawdown and daily limit
+      from the trades you log in Eval mode. You can change every number.
+    </p>
+    <div class="flex flex-wrap gap-2">
+      @for (p of presets; track p.key) {
+        <button
+          type="button"
+          (click)="setUp(p.rules)"
+          class="px-3.5 py-2 rounded-lg text-xs font-semibold border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+        >
+          {{ p.label }}
+        </button>
+      }
+      <button
+        type="button"
+        (click)="setUp()"
+        class="px-3.5 py-2 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-300 hover:text-white"
+      >
+        Other firm…
+      </button>
+    </div>
+    @if (attempts().length) {
+      <p class="text-[11px] text-slate-500 mt-3">
+        {{ attempts().length }} earlier {{ attempts().length === 1 ? 'attempt' : 'attempts' }}. Your
+        eval trades and journal stay as they are.
+      </p>
+    }
+  </section>
+} @else {
+  @let a = current()!;
+  @let p = progress()!;
+  <div class="flex flex-wrap items-center gap-2 mb-3 text-xs text-slate-400">
+    <span
+      class="px-2.5 py-0.5 rounded-full font-bold text-[10.5px] border border-amber-500/45 text-amber-300 bg-amber-500/10"
+      >{{ a.name }} · attempt {{ attemptNumber(a) }}</span
+    >
+    <span>Started {{ shortDate(a.startedOn) }}</span>
+    <span>·</span>
+    <span
+      >Status
+      <b
+        [class]="
+          p.status === 'breached'
+            ? 'text-rose-400'
+            : p.status === 'target-reached'
+              ? 'text-emerald-400'
+              : 'text-amber-300'
+        "
+        >{{ statusText[p.status] }}</b
+      ></span
+    >
+  </div>
+
+  <div class="grid gap-4 xl:grid-cols-[1fr_1.5fr] mb-6">
+    <!-- Today -->
+    <section class="surface-card border border-amber-500/35 rounded-xl p-5">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-white">Today · {{ todayLabel() }}</h2>
+        @if (p.today.canLose !== null) {
+          <span
+            class="text-[10.5px] font-bold px-2 py-0.5 rounded-full"
+            [class]="
+              p.today.canLose === 0
+                ? 'text-rose-300 bg-rose-500/15'
+                : p.status === 'close'
+                  ? 'text-amber-300 bg-amber-500/15'
+                  : 'text-emerald-300 bg-emerald-500/15'
+            "
+            >{{
+              p.today.canLose === 0 ? 'stop for today' : p.status === 'close' ? 'careful' : 'safe'
+            }}</span
+          >
+        }
+      </div>
+      @if (p.today.canLose !== null) {
+        <div class="text-[11px] text-slate-400 mt-3">You can still lose today</div>
+        <div class="text-4xl font-bold font-mono text-white">{{ plain(p.today.canLose) }}</div>
+        @if (a.dailyLossLimit !== null) {
+          <div class="h-2 rounded-full bg-slate-800 overflow-hidden mt-2.5 mb-1.5">
+            <div
+              class="h-full rounded-full"
+              [class]="dangerClass(p.today.left, a.dailyLossLimit)"
+              [style.width.%]="usedPct(p.today.left, a.dailyLossLimit)"
+            ></div>
+          </div>
+          <p class="text-[11.5px] text-slate-500">
+            Today {{ money(p.today.net) }} against your {{ plain(a.dailyLossLimit) }} daily limit ·
+            {{ p.today.trades }} {{ p.today.trades === 1 ? 'trade' : 'trades' }}
+          </p>
+        } @else {
+          <p class="text-[11.5px] text-slate-500 mt-1.5">
+            No daily limit on this account, so this is your room before the drawdown.
+          </p>
+        }
+      } @else {
+        <p class="text-xs text-slate-500 mt-3">
+          Add a max drawdown or daily loss limit to see what you can still risk today.
+        </p>
+      }
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <div class="rounded-lg border border-tone-1f293d bg-tone-0e131c p-3">
+          <div class="text-[11px] text-slate-400">Room before failing</div>
+          <div class="font-mono font-bold text-white">{{ plain(p.roomLeft) }}</div>
+          <div class="text-[11px] text-slate-500">
+            @if (p.floor !== null) {
+              fail below {{ plain(p.floor) }}
+            } @else {
+              no max drawdown set
+            }
+          </div>
+        </div>
+        <div class="rounded-lg border border-tone-1f293d bg-tone-0e131c p-3">
+          <div class="text-[11px] text-slate-400">Stop-loss budget</div>
+          <div class="font-mono font-bold text-white">
+            {{
+              p.stopsLeft === null
+                ? '—'
+                : '≈ ' + p.stopsLeft + (p.stopsLeft === 1 ? ' trade' : ' trades')
+            }}
+          </div>
+          <div class="text-[11px] text-slate-500">
+            {{
+              p.avgLoss === null ? 'no losing trades yet' : 'at your avg loss ' + plain(p.avgLoss)
+            }}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Road to pass -->
+    <section class="surface-card border border-slate-800/80 rounded-xl p-5 min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-sm font-semibold text-white">Road to pass</h2>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            (click)="editRules()"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-tone-1f293d text-slate-300 hover:text-white"
+          >
+            Edit rules
+          </button>
+          <button
+            type="button"
+            (click)="openEnd()"
+            class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-amber-500/45 text-amber-300 hover:bg-amber-500/10"
+          >
+            Passed / Failed…
+          </button>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-3 gap-4 mt-4">
+        <div>
+          <div class="text-[11px] text-slate-400">Profit target</div>
+          @if (a.profitTarget !== null) {
+            <div class="font-mono font-bold">
+              <span [class]="p.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{
+                money(p.profit)
+              }}</span>
+              <span class="text-xs text-slate-500"> / {{ plain(a.profitTarget) }}</span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-800 overflow-hidden mt-1.5">
+              <div class="h-full rounded-full bg-emerald-500" [style.width.%]="p.targetPct"></div>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-1">
+              {{ p.targetLeft ? plain(p.targetLeft) + ' to go' : 'reached' }}
+            </div>
+          } @else {
+            <div class="font-mono font-bold text-white">{{ money(p.profit) }}</div>
+            <div class="text-[11px] text-slate-500">no target set</div>
+          }
+        </div>
+        <div>
+          <div class="text-[11px] text-slate-400">Trading days</div>
+          <div class="font-mono font-bold text-white">
+            {{ p.daysTraded }}
+            @if (a.minDays !== null) {
+              <span class="text-xs text-slate-500"> / {{ a.minDays }}</span>
+            }
+          </div>
+          @if (a.minDays !== null) {
+            <div class="h-2 rounded-full bg-slate-800 overflow-hidden mt-1.5">
+              <div
+                class="h-full rounded-full bg-slate-500"
+                [style.width.%]="Math.min(100, (p.daysTraded / a.minDays) * 100)"
+              ></div>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-1">
+              {{ p.daysNeeded ? p.daysNeeded + ' more needed' : 'minimum met' }}
+            </div>
+          } @else {
+            <div class="text-[11px] text-slate-500">no minimum</div>
+          }
+        </div>
+        <div>
+          <div class="text-[11px] text-slate-400">Consistency</div>
+          @if (a.consistencyPct !== null) {
+            <div class="font-mono font-bold text-white">
+              {{ p.consistency === null ? '—' : p.consistency + '%' }}
+              <span class="text-xs text-slate-500"> / {{ a.consistencyPct }}%</span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-800 overflow-hidden mt-1.5">
+              <div
+                class="h-full rounded-full"
+                [class]="p.consistencyOk ? 'bg-slate-500' : 'bg-rose-500'"
+                [style.width.%]="Math.min(100, ((p.consistency ?? 0) / a.consistencyPct) * 100)"
+              ></div>
+            </div>
+            <div class="text-[11px] text-slate-500 mt-1">best day ÷ total profit</div>
+          } @else {
+            <div class="font-mono font-bold text-slate-500">—</div>
+            <div class="text-[11px] text-slate-500">no consistency rule</div>
+          }
+        </div>
+      </div>
+
+      <div class="text-[11px] text-slate-400 mt-5 mb-1.5">Each eval day</div>
+      @if (p.days.length === 0 && neededTiles().length === 0) {
+        <p class="text-xs text-slate-500">Log a trade in Eval mode and your days show up here.</p>
+      } @else {
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          @for (d of p.days.slice(-12); track d.date) {
+            <div
+              class="rounded-lg border bg-tone-0e131c p-2 text-center text-[11px] text-slate-500"
+              [class]="
+                d.today
+                  ? 'border-amber-500/50'
+                  : d.hitDailyLimit
+                    ? 'border-rose-500/50'
+                    : 'border-tone-1f293d'
+              "
+            >
+              {{ dayLabel(d.date) }}
+              <b
+                class="block font-mono text-sm my-0.5"
+                [class]="d.net >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+                >{{ money(d.net) }}</b
+              >
+              {{
+                d.today
+                  ? 'today'
+                  : d.hitDailyLimit
+                    ? 'limit hit'
+                    : d.trades + (d.trades === 1 ? ' trade ✓' : ' trades ✓')
+              }}
+            </div>
+          }
+          @for (n of neededTiles(); track n) {
+            <div
+              class="rounded-lg border border-dashed border-tone-1f293d p-2 text-center text-[11px] text-slate-500"
+            >
+              day {{ p.daysTraded + n + 1 }}
+              <b class="block font-mono text-sm my-0.5 text-slate-600">—</b>
+              needed
+            </div>
+          }
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2">
+          Based on the trades you've logged. Your firm's dashboard is the final word.
+          @if (a.drawdownType === 'eod_trailing') {
+            The drawdown floor moves up at the end of each day.
+          }
+        </p>
+      }
+    </section>
+  </div>
+}
+
+<!-- Rules dialog -->
+@if (dialog() === 'rules') {
+  @let f = form();
+  <div
+    class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+    (click)="dialog.set(null)"
+  >
+    <form
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eval-rules-title"
+      class="w-full max-w-lg max-h-[92vh] overflow-y-auto quiet-scroll bg-tone-121722 border border-tone-1f293d rounded-2xl p-5"
+      (click)="$event.stopPropagation()"
+      (ngSubmit)="saveRules()"
+      (keydown.escape)="dialog.set(null)"
+    >
+      <h2 id="eval-rules-title" class="text-base font-semibold text-white">Evaluation rules</h2>
+      <p class="text-xs text-slate-400 mt-1 mb-3">
+        From your firm's rules page. Leave a rule empty if your account doesn't have it.
+      </p>
+      <label class="flex items-center justify-between gap-3 text-xs text-slate-400 mb-3">
+        Start from
+        <select
+          (change)="usePreset($any($event.target).value)"
+          class="bg-tone-0e131c border border-tone-1f293d rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+        >
+          <option value="">Keep these numbers</option>
+          @for (pr of presets; track pr.key) {
+            <option [value]="pr.key">{{ pr.label }}</option>
+          }
+        </select>
+      </label>
+      <div class="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-x-3 gap-y-2.5 text-[13px]">
+        <label for="ev-name">Name</label>
+        <input
+          id="ev-name"
+          name="name"
+          [ngModel]="f.name"
+          (ngModelChange)="patch('name', $event)"
+          maxlength="60"
+          required
+          class="ev-input"
+        />
+        <label for="ev-size">Account size ($)</label>
+        <input
+          id="ev-size"
+          name="size"
+          type="number"
+          min="1"
+          [ngModel]="f.accountSize"
+          (ngModelChange)="patch('accountSize', $event)"
+          required
+          class="ev-input font-mono"
+        />
+        <label for="ev-target">Profit target ($)</label>
+        <input
+          id="ev-target"
+          name="target"
+          type="number"
+          min="1"
+          [ngModel]="f.profitTarget"
+          (ngModelChange)="patch('profitTarget', $event)"
+          class="ev-input font-mono"
+        />
+        <label for="ev-dd">Max drawdown ($)</label>
+        <div class="flex gap-2">
+          <input
+            id="ev-dd"
+            name="dd"
+            type="number"
+            min="1"
+            [ngModel]="f.maxDrawdown"
+            (ngModelChange)="patch('maxDrawdown', $event)"
+            class="ev-input font-mono flex-1 min-w-0"
+          />
+          <select
+            name="ddType"
+            aria-label="Drawdown type"
+            [ngModel]="f.drawdownType"
+            (ngModelChange)="patch('drawdownType', $event)"
+            class="ev-input !w-40 shrink-0"
+          >
+            <option value="eod_trailing">Trailing, end of day</option>
+            <option value="trailing">Trailing, live</option>
+            <option value="static">Fixed</option>
+          </select>
+        </div>
+        <label for="ev-daily">Daily loss limit ($)</label>
+        <input
+          id="ev-daily"
+          name="daily"
+          type="number"
+          min="1"
+          [ngModel]="f.dailyLossLimit"
+          (ngModelChange)="patch('dailyLossLimit', $event)"
+          class="ev-input font-mono"
+        />
+        <label for="ev-days">Minimum trading days</label>
+        <input
+          id="ev-days"
+          name="days"
+          type="number"
+          min="1"
+          max="60"
+          [ngModel]="f.minDays"
+          (ngModelChange)="patch('minDays', $event)"
+          class="ev-input font-mono"
+        />
+        <label for="ev-cons">Consistency (%)</label>
+        <input
+          id="ev-cons"
+          name="cons"
+          type="number"
+          min="10"
+          max="100"
+          [ngModel]="f.consistencyPct"
+          (ngModelChange)="patch('consistencyPct', $event)"
+          placeholder="e.g. 40 (best day ≤ 40% of profit)"
+          class="ev-input font-mono"
+        />
+        <label for="ev-start">Attempt started</label>
+        <input
+          id="ev-start"
+          name="start"
+          type="date"
+          [ngModel]="f.startedOn"
+          (ngModelChange)="patch('startedOn', $event)"
+          class="ev-input font-mono"
+        />
+      </div>
+      @if (error()) {
+        <p class="text-rose-400 text-xs mt-3" role="alert">{{ error() }}</p>
+      }
+      <div class="flex justify-end gap-2 mt-5">
+        <button
+          type="button"
+          (click)="dialog.set(null)"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="saving()"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 disabled:opacity-50"
+        >
+          {{ editingId() ? 'Save rules' : 'Start evaluation' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}
+
+<!-- Passed / failed dialog -->
+@if (dialog() === 'end' && current(); as a) {
+  <div
+    class="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+    (click)="dialog.set(null)"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="eval-end-title"
+      class="w-full max-w-lg max-h-[92vh] overflow-y-auto quiet-scroll bg-tone-121722 border border-tone-1f293d rounded-2xl p-5"
+      (click)="$event.stopPropagation()"
+      (keydown.escape)="dialog.set(null)"
+    >
+      <h2 id="eval-end-title" class="text-base font-semibold text-white">
+        How did this attempt end?
+      </h2>
+      <p class="text-xs text-slate-400 mt-1 mb-3">
+        {{ a.name }} · attempt {{ attemptNumber(a) }} · {{ shortDate(a.startedOn) }} – today ·
+        <span
+          class="font-mono"
+          [class]="progress()!.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+          >{{ money(progress()!.profit) }}</span
+        >
+      </p>
+      <div class="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="Result">
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="endResult() === 'passed'"
+          (click)="endResult.set('passed')"
+          class="text-left rounded-xl border p-3"
+          [class]="
+            endResult() === 'passed'
+              ? 'border-emerald-500/60 bg-emerald-500/10'
+              : 'border-tone-1f293d'
+          "
+        >
+          <b class="text-emerald-400 text-sm">✓ Passed</b>
+          <span class="block text-xs text-slate-400 mt-0.5"
+            >Hit the target without breaking a rule.</span
+          >
+        </button>
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="endResult() === 'failed'"
+          (click)="endResult.set('failed')"
+          class="text-left rounded-xl border p-3"
+          [class]="
+            endResult() === 'failed' ? 'border-rose-500/60 bg-rose-500/10' : 'border-tone-1f293d'
+          "
+        >
+          <b class="text-rose-400 text-sm">✗ Failed</b>
+          <span class="block text-xs text-slate-400 mt-0.5">Broke a rule.</span>
+        </button>
+      </div>
+      @if (endResult() === 'failed') {
+        <label class="flex items-center justify-between gap-3 text-xs text-slate-400 mt-3">
+          Which rule?
+          <select
+            [ngModel]="endReason()"
+            (ngModelChange)="endReason.set($event)"
+            class="bg-tone-0e131c border border-tone-1f293d rounded-lg px-2.5 py-1.5 text-xs text-slate-200"
+          >
+            <option value="">Not sure</option>
+            @for (r of failReasons; track r) {
+              <option [value]="r">{{ r }}</option>
+            }
+          </select>
+        </label>
+      }
+      <label class="flex items-center gap-2 text-xs text-slate-300 mt-3">
+        <input type="checkbox" [ngModel]="startNext()" (ngModelChange)="startNext.set($event)" />
+        Start attempt {{ attemptNumber(a) + 1 }} today with the same rules
+      </label>
+      <p class="text-[11px] text-slate-500 mt-1">
+        Your trades stay in the Eval journal; the new attempt only counts trades from today.
+      </p>
+      @if (error()) {
+        <p class="text-rose-400 text-xs mt-3" role="alert">{{ error() }}</p>
+      }
+      <div class="flex justify-end gap-2 mt-4">
+        <button
+          type="button"
+          (click)="dialog.set(null)"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-tone-1f293d text-slate-300"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="endAttempt()"
+          [disabled]="!endResult() || saving()"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 disabled:opacity-50"
+        >
+          Save
+        </button>
+      </div>
+
+      <h3 class="text-xs font-semibold text-white mt-5 mb-1">Attempts</h3>
+      <table class="w-full text-xs">
+        <tbody>
+          @for (x of attempts(); track x.id) {
+            <tr class="border-t border-tone-1f293d">
+              <td class="py-1.5 text-slate-500">{{ attemptNumber(x) }}</td>
+              <td class="py-1.5 text-slate-300">
+                {{ shortDate(x.startedOn) }} – {{ shortDate(x.endedOn) }}
+              </td>
+              <td class="py-1.5">
+                @if (!x.result) {
+                  <span class="text-amber-300">in progress</span>
+                } @else if (x.result === 'passed') {
+                  <span class="text-emerald-400">passed</span>
+                } @else {
+                  <span class="text-rose-400"
+                    >failed{{ x.failReason ? ' · ' + x.failReason : '' }}</span
+                  >
+                }
+              </td>
+              <td
+                class="py-1.5 text-right font-mono"
+                [class]="attemptNet(x) >= 0 ? 'text-emerald-400' : 'text-rose-400'"
+              >
+                {{ money(attemptNet(x)) }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

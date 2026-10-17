@@ -40,36 +40,24 @@
       <div
         role="radiogroup"
         aria-label="Trade mode"
-        class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-tone-0e1626 border border-tone-1c2840 text-xs font-semibold"
+        class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-tone-0e1626 border border-tone-1c2840 text-xs font-semibold"
       >
-        <button
-          type="button"
-          role="radio"
-          [attr.aria-checked]="!tradeMode.isBacktest()"
-          (click)="tradeMode.set('live')"
-          class="py-1.5 rounded-lg border transition-colors"
-          [class]="
-            tradeMode.isBacktest()
-              ? 'border-transparent text-slate-400 hover:text-slate-200'
-              : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-          "
-        >
-          Live
-        </button>
-        <button
-          type="button"
-          role="radio"
-          [attr.aria-checked]="tradeMode.isBacktest()"
-          (click)="tradeMode.set('backtest')"
-          class="py-1.5 rounded-lg border transition-colors"
-          [class]="
-            tradeMode.isBacktest()
-              ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
-          "
-        >
-          Backtest
-        </button>
+        @for (m of modes; track m.key) {
+          <button
+            type="button"
+            role="radio"
+            [attr.aria-checked]="tradeMode.mode() === m.key"
+            (click)="tradeMode.set(m.key)"
+            class="py-1.5 rounded-lg border transition-colors"
+            [class]="
+              tradeMode.mode() === m.key
+                ? m.on
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            "
+          >
+            {{ m.label }}
+          </button>
+        }
       </div>
     </div>
 
@@ -268,6 +256,7 @@
     <div
       class="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable]"
       [class.shadow-[inset_0_3px_0_#8b5cf6]]="tradeMode.isBacktest()"
+      [class.shadow-[inset_0_3px_0_#f59e0b]]="tradeMode.isEval()"
     >
       <router-outlet />
     </div>

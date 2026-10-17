@@ -119,6 +119,11 @@
             class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-violet-300 bg-violet-500/15 border border-violet-500/45"
             >BACKTEST</span
           >
+        } @else if (trade().mode === 'eval') {
+          <span
+            class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-widest text-amber-300 bg-amber-500/15 border border-amber-500/45"
+            >EVAL</span
+          >
         }
         <span
           class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase border"
@@ -161,7 +166,7 @@
             <span class="text-slate-400">Mode</span>
             <span
               class="justify-self-start px-2 py-0.5 rounded-md bg-tone-121a2a border border-tone-1f2b40 text-slate-100"
-              >{{ trade().mode === 'backtest' ? 'Backtest' : 'Live' }}</span
+              >{{ modeLabel(trade().mode) }}</span
             >
           </div>
           <div class="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-2">
