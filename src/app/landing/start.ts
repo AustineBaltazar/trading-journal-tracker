@@ -12,7 +12,7 @@ const BADGES = [
   { title: 'Free', text: 'during the whole beta' },
   { title: 'Private', text: 'only you see your trades' },
   { title: 'Yours', text: 'export or delete any time' },
-  { title: 'Live + backtest', text: 'kept apart, one switch' },
+  { title: 'Insights', text: 'leaks and edges found for you' },
 ];
 
 // Short sign-up page for people arriving from an ad: what it is, and the form right there

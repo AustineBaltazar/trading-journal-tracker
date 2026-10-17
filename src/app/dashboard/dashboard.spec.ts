@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MODE_SWITCH } from '../trade-mode';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TradeModeService } from '../trade-mode';
@@ -24,24 +25,28 @@ describe('Dashboard', () => {
     expect(component).toBeTruthy();
   });
 
-  it('requests every stat for the current mode and reloads on switch', async () => {
-    const http = TestBed.inject(HttpTestingController);
-    const requests = () =>
-      http
-        .match((r) => !r.url.endsWith('/mistakes'))
-        .map(
-          (r) => `${r.request.url.split('/').slice(3).join('/')}?${r.request.params.get('mode')}`,
-        )
-        .sort();
-    expect(requests()).toEqual(['rule-adherence?live', 'trades/summary?live', 'trades?live']);
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)(
+    'requests every stat for the current mode and reloads on switch',
+    async () => {
+      const http = TestBed.inject(HttpTestingController);
+      const requests = () =>
+        http
+          .match((r) => !r.url.endsWith('/mistakes'))
+          .map(
+            (r) => `${r.request.url.split('/').slice(3).join('/')}?${r.request.params.get('mode')}`,
+          )
+          .sort();
+      expect(requests()).toEqual(['rule-adherence?live', 'trades/summary?live', 'trades?live']);
 
-    TestBed.inject(TradeModeService).set('backtest');
-    await fixture.whenStable();
-    expect(requests()).toEqual([
-      'rule-adherence?backtest',
-      'trades/summary?backtest',
-      'trades?backtest',
-    ]);
-    localStorage.removeItem('tradeMode');
-  });
+      TestBed.inject(TradeModeService).set('backtest');
+      await fixture.whenStable();
+      expect(requests()).toEqual([
+        'rule-adherence?backtest',
+        'trades/summary?backtest',
+        'trades?backtest',
+      ]);
+      localStorage.removeItem('tradeMode');
+    },
+  );
 });

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ModeBadge, TradeModeService } from './trade-mode';
+import { ModeBadge, TradeModeService, MODE_SWITCH } from './trade-mode';
 
 describe('TradeModeService', () => {
   beforeEach(() => localStorage.removeItem('tradeMode'));
@@ -9,12 +9,22 @@ describe('TradeModeService', () => {
     expect(TestBed.inject(TradeModeService).mode()).toBe('live');
   });
 
-  it('remembers the chosen mode', () => {
+  it.skipIf(MODE_SWITCH)('stays live while the switch is off, even with a stored mode', () => {
+    localStorage.setItem('tradeMode', 'backtest');
+    const service = TestBed.inject(TradeModeService);
+    expect(service.mode()).toBe('live');
+    service.set('eval');
+    expect(service.mode()).toBe('live');
+  });
+
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)('remembers the chosen mode', () => {
     TestBed.inject(TradeModeService).set('backtest');
     expect(localStorage.getItem('tradeMode')).toBe('backtest');
   });
 
-  it('restores a stored mode and ignores junk values', () => {
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)('restores a stored mode and ignores junk values', () => {
     localStorage.setItem('tradeMode', 'backtest');
     expect(new TradeModeService().isBacktest()).toBe(true);
     localStorage.setItem('tradeMode', 'paper');
@@ -25,7 +35,8 @@ describe('TradeModeService', () => {
 describe('ModeBadge', () => {
   afterEach(() => localStorage.removeItem('tradeMode'));
 
-  it('shows only in backtest mode', async () => {
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)('shows only in backtest mode', async () => {
     const fixture = TestBed.createComponent(ModeBadge);
     await fixture.whenStable();
     expect(fixture.nativeElement.textContent).not.toContain('BACKTEST');

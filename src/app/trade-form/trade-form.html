@@ -124,57 +124,59 @@
         <!-- All steps stay rendered (only hidden), so nothing typed or queued is lost -->
         <!-- ============ Step 1: Essentials ============ -->
         <div [hidden]="step() !== 0" class="space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-slate-300 mb-1.5">Mode</label>
-            <div
-              role="radiogroup"
-              aria-label="Trade mode"
-              class="grid grid-cols-3 gap-2 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
-            >
-              <button
-                type="button"
-                role="radio"
-                [attr.aria-checked]="mode === 'live'"
-                (click)="setMode('live')"
-                class="py-1.5 rounded-lg border transition-colors"
-                [class]="
-                  mode === 'live'
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                "
+          @if (modeSwitch) {
+            <div>
+              <label class="block text-xs font-medium text-slate-300 mb-1.5">Mode</label>
+              <div
+                role="radiogroup"
+                aria-label="Trade mode"
+                class="grid grid-cols-3 gap-2 p-1 bg-tone-141c2c border border-tone-24334d rounded-xl text-xs font-semibold"
               >
-                Live
-              </button>
-              <button
-                type="button"
-                role="radio"
-                [attr.aria-checked]="mode === 'eval'"
-                (click)="setMode('eval')"
-                class="py-1.5 rounded-lg border transition-colors"
-                [class]="
-                  mode === 'eval'
-                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/45'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                "
-              >
-                Eval
-              </button>
-              <button
-                type="button"
-                role="radio"
-                [attr.aria-checked]="mode === 'backtest'"
-                (click)="setMode('backtest')"
-                class="py-1.5 rounded-lg border transition-colors"
-                [class]="
-                  mode === 'backtest'
-                    ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
-                    : 'border-transparent text-slate-400 hover:text-slate-200'
-                "
-              >
-                Backtest
-              </button>
+                <button
+                  type="button"
+                  role="radio"
+                  [attr.aria-checked]="mode === 'live'"
+                  (click)="setMode('live')"
+                  class="py-1.5 rounded-lg border transition-colors"
+                  [class]="
+                    mode === 'live'
+                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  "
+                >
+                  Live
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  [attr.aria-checked]="mode === 'eval'"
+                  (click)="setMode('eval')"
+                  class="py-1.5 rounded-lg border transition-colors"
+                  [class]="
+                    mode === 'eval'
+                      ? 'bg-amber-500/15 text-amber-300 border-amber-500/45'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  "
+                >
+                  Eval
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  [attr.aria-checked]="mode === 'backtest'"
+                  (click)="setMode('backtest')"
+                  class="py-1.5 rounded-lg border transition-colors"
+                  [class]="
+                    mode === 'backtest'
+                      ? 'bg-violet-500/15 text-violet-300 border-violet-500/45'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  "
+                >
+                  Backtest
+                </button>
+              </div>
             </div>
-          </div>
+          }
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
             <div>

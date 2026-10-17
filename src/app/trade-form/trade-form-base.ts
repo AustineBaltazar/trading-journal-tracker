@@ -2,7 +2,7 @@ import { computed, Directive, inject, signal, WritableSignal } from '@angular/co
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { GRADES, SESSIONS, todayLocal, tradeDuration } from '../trade-journal';
-import { TradeMode } from '../trade-mode';
+import { MODE_SWITCH, TradeMode } from '../trade-mode';
 import { Mistake } from '../mistakes/mistakes';
 import { autoOutcome, estimateR, formatR, TradeOutcome } from '../outcome';
 import { TagGroup } from '../tags/tags';
@@ -30,6 +30,8 @@ export abstract class TradeFormBase {
 
   // ---- fields ----
   mode: TradeMode = 'live';
+  // Live / Eval / Backtest picker, off while the app is live-only
+  readonly modeSwitch = MODE_SWITCH;
   trade_date = todayLocal();
   symbol = 'MNQ';
   direction = 'long';

@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MODE_SWITCH } from '../trade-mode';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TradeModeService } from '../trade-mode';
@@ -24,7 +25,8 @@ describe('TradesList', () => {
     expect(component).toBeTruthy();
   });
 
-  it('loads the current mode and reloads when it changes', async () => {
+  // Only while the Live / Eval / Backtest switch is on
+  it.skipIf(!MODE_SWITCH)('loads the current mode and reloads when it changes', async () => {
     const http = TestBed.inject(HttpTestingController);
     const modeOf = () =>
       http.match((r) => r.url.endsWith('/trades')).map((r) => r.request.params.get('mode'));

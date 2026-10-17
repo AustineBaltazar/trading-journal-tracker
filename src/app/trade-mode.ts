@@ -5,6 +5,10 @@ export const TRADE_MODES: TradeMode[] = ['live', 'eval', 'backtest'];
 
 const STORAGE_KEY = 'tradeMode';
 
+// Off for now: the app is one live journal. Backtest and eval trades stay in the
+// database; set this back to true to bring the Live / Eval / Backtest switch back.
+export const MODE_SWITCH = false;
+
 function readStoredMode(): TradeMode {
   try {
     const stored = localStorage.getItem(STORAGE_KEY) as TradeMode;
@@ -29,7 +33,7 @@ export const MODE_LABELS: Record<TradeMode, string> = {
 // mode() and reload when it changes; the choice is remembered per browser.
 @Injectable({ providedIn: 'root' })
 export class TradeModeService {
-  readonly mode = signal<TradeMode>(readStoredMode());
+  readonly mode = signal<TradeMode>(MODE_SWITCH ? readStoredMode() : 'live');
   readonly isBacktest = computed(() => this.mode() === 'backtest');
   readonly isEval = computed(() => this.mode() === 'eval');
   // "New trade", "New eval trade", "New backtest trade"
@@ -38,6 +42,7 @@ export class TradeModeService {
   );
 
   set(mode: TradeMode) {
+    if (!MODE_SWITCH) return;
     this.mode.set(mode);
     try {
       localStorage.setItem(STORAGE_KEY, mode);

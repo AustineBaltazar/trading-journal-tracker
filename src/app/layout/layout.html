@@ -35,31 +35,33 @@
       </div>
     </div>
 
-    <!-- Live / backtest switch: decides which trades every page shows -->
-    <div class="px-3 pt-3">
-      <div
-        role="radiogroup"
-        aria-label="Trade mode"
-        class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-tone-0e1626 border border-tone-1c2840 text-xs font-semibold"
-      >
-        @for (m of modes; track m.key) {
-          <button
-            type="button"
-            role="radio"
-            [attr.aria-checked]="tradeMode.mode() === m.key"
-            (click)="tradeMode.set(m.key)"
-            class="py-1.5 rounded-lg border transition-colors"
-            [class]="
-              tradeMode.mode() === m.key
-                ? m.on
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            "
-          >
-            {{ m.label }}
-          </button>
-        }
+    @if (modeSwitch) {
+      <!-- Live / backtest switch: decides which trades every page shows -->
+      <div class="px-3 pt-3">
+        <div
+          role="radiogroup"
+          aria-label="Trade mode"
+          class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-tone-0e1626 border border-tone-1c2840 text-xs font-semibold"
+        >
+          @for (m of modes; track m.key) {
+            <button
+              type="button"
+              role="radio"
+              [attr.aria-checked]="tradeMode.mode() === m.key"
+              (click)="tradeMode.set(m.key)"
+              class="py-1.5 rounded-lg border transition-colors"
+              [class]="
+                tradeMode.mode() === m.key
+                  ? m.on
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              "
+            >
+              {{ m.label }}
+            </button>
+          }
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Nav links -->
     <div class="p-3 flex flex-col gap-1">
