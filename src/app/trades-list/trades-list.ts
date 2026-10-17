@@ -13,6 +13,7 @@ import { Pager } from '../pager/pager';
 import {
   currentMonth,
   EMOTIONS,
+  MONTH_NAMES,
   GRADES,
   monthLabel as formatMonth,
   monthsWithTrades,
@@ -189,6 +190,12 @@ export class TradesList {
     if (this.sortKey() !== key) return '↕';
     if (key === 'grade') return this.sortDir() === 'asc' ? '↓' : '↑';
     return this.sortDir() === 'desc' ? '↓' : '↑';
+  }
+
+  // "Oct 8" for the phone cards
+  cardDate(date: string): string {
+    const [, m, d] = date.slice(0, 10).split('-').map(Number);
+    return `${MONTH_NAMES[m - 1].slice(0, 3)} ${d}`;
   }
 
   hold(trade: any): string {

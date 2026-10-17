@@ -1,5 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { MODE_SWITCH, TradeMode, TradeModeService } from '../trade-mode';
 import { AuthService } from '../auth/auth';
 import { FeedbackButton } from '../feedback/feedback';
@@ -29,6 +31,30 @@ export class Layout {
     },
   ];
   readonly brand = BRAND;
+
+  // Phones: the "More" sheet and what's in it
+  readonly moreOpen = signal(false);
+  readonly moreLinks = [
+    { path: '/reports', label: 'Reports', icon: '📊', badge: '' },
+    { path: '/insights', label: 'Insights', icon: '💡', badge: 'NEW' },
+    { path: '/playbook', label: 'Playbook', icon: '📘', badge: '' },
+    { path: '/account', label: 'Account & security', icon: '👤', badge: '' },
+  ];
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map((e) => (e as NavigationEnd).urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+  // Phones hide the tabs while a trade is being filled in: the form has its own buttons
+  readonly onTradeForm = computed(() => this.url().startsWith('/trades/new'));
+  // "More" lights up while on one of its pages
+  readonly onMorePage = computed(() =>
+    ['/reports', '/insights', '/playbook', '/account', '/admin'].some((p) =>
+      this.url().startsWith(p),
+    ),
+  );
 
   userName = computed(() => this.auth.user()?.name || 'Account');
   isDemo = computed(() => !!this.auth.user()?.demo);

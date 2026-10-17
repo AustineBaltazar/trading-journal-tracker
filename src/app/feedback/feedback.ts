@@ -16,7 +16,7 @@ type Kind = 'bug' | 'idea' | 'other';
         role="dialog"
         aria-modal="false"
         aria-labelledby="feedback-title"
-        class="fixed left-[17rem] bottom-5 z-50 w-[340px] max-w-[calc(100vw-2rem)] bg-tone-121722 border border-tone-1f293d rounded-2xl p-4 shadow-2xl shadow-black/60"
+        class="fixed inset-x-4 bottom-24 md:inset-x-auto md:left-[17rem] md:bottom-5 z-50 md:w-[340px] md:max-w-[calc(100vw-2rem)] bg-tone-121722 border border-tone-1f293d rounded-2xl p-4 shadow-2xl shadow-black/60"
         (keydown.escape)="close()"
       >
         @if (sent()) {
