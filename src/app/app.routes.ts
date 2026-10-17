@@ -1,14 +1,8 @@
 import { Routes } from '@angular/router';
-import { Login } from './login/login';
-import { TradesList } from './trades-list/trades-list';
-import { NewTrade } from './new-trade/new-trade';
-import { TradeDetails } from './trade-details/trade-details';
-import { Dashboard } from './dashboard/dashboard';
 import { Layout } from './layout/layout';
 import { authGuard, guestGuard } from './auth/auth';
-import { Playbook } from './playbook/playbook';
-import { Register } from './register/register';
 import { adminGuard } from './admin/admin';
+// Every page loads on demand; only the app shell (Layout) is in the first download
 export const routes: Routes = [
   // Public homepage and the ad sign-up page; logged-in visitors go to their journal
   {
@@ -22,8 +16,16 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () => import('./landing/start').then((m) => m.Start),
   },
-  { path: 'login', component: Login, canActivate: [guestGuard] },
-  { path: 'register', component: Register, canActivate: [guestGuard] },
+  {
+    path: 'login',
+    loadComponent: () => import('./login/login').then((m) => m.Login),
+    canActivate: [guestGuard],
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./register/register').then((m) => m.Register),
+    canActivate: [guestGuard],
+  },
   {
     path: 'check-email',
     canActivate: [guestGuard],
@@ -63,10 +65,22 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', component: Dashboard },
-      { path: 'trades', component: TradesList },
-      { path: 'trades/new', component: NewTrade },
-      { path: 'trades/:id', component: TradeDetails },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'trades',
+        loadComponent: () => import('./trades-list/trades-list').then((m) => m.TradesList),
+      },
+      {
+        path: 'trades/new',
+        loadComponent: () => import('./new-trade/new-trade').then((m) => m.NewTrade),
+      },
+      {
+        path: 'trades/:id',
+        loadComponent: () => import('./trade-details/trade-details').then((m) => m.TradeDetails),
+      },
       {
         path: 'journal',
         loadComponent: () => import('./journal/journal').then((m) => m.Journal),
@@ -79,7 +93,10 @@ export const routes: Routes = [
         path: 'insights',
         loadComponent: () => import('./insights/insights').then((m) => m.Insights),
       },
-      { path: 'playbook', component: Playbook },
+      {
+        path: 'playbook',
+        loadComponent: () => import('./playbook/playbook').then((m) => m.Playbook),
+      },
       {
         path: 'account',
         loadComponent: () => import('./account/account').then((m) => m.Account),
