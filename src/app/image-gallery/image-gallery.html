@@ -103,8 +103,9 @@
           class="font-mono text-[10px] border border-slate-600 rounded px-1"
           >V</kbd
         >, drop a file, or
-        <label class="text-blue-300 hover:text-blue-200 underline underline-offset-2 cursor-pointer"
-          >browse<input
+        <label
+          class="relative text-blue-300 hover:text-blue-200 underline underline-offset-2 cursor-pointer"
+          >browse<!-- relative: keeps the hidden input inside this box, not stretching the page --><input
             type="file"
             accept="image/png,image/jpeg,image/webp"
             multiple
